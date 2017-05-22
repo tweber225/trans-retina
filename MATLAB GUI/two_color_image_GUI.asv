@@ -59,6 +59,13 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % START TDW EDIT
+% Black out both image frames - and generate handles for image data
+blankFrame = zeros(520);
+imshow(blankFrame, 'Parent', handles.LED1Ax)
+handles.imgHandLED1 = get(handles.LED1Ax,'Children');
+imshow(blankFrame, 'Parent', handles.LED2Ax)
+handles.imgHandLED2 = get(handles.LED2Ax,'Children');
+guidata(hObject, handles);
 
 % Open the camera adapters
 disp('Starting Camera')
@@ -77,17 +84,6 @@ handles = update_all_settings_on_GUI(handles);
 handles.srcObj = set_all_camera_settings(handles.srcObj,handles.settingsStruct);
 
 % Update Handles for GUI data tracking
-guidata(hObject, handles);
-
-% Black out both image frames - and generate handles for image data
-numPixPerDim = handles.settingsStruct.constNumPixHeight/str2num(handles.srcObj.B2BinningVertical);
-blackLevel = 0;
-whiteLevel = 2^(handles.settingsStruct.constCameraBits) - 1;
-blankFrame = uint16(zeros(numPixPerDim));
-imshow(blankFrame, [blackLevel,whiteLevel], 'Parent', handles.LED1Ax)
-handles.imgHandLED1 = get(handles.LED1Ax,'Children');
-imshow(blankFrame, [blackLevel,whiteLevel], 'Parent', handles.LED2Ax)
-handles.imgHandLED2 = get(handles.LED2Ax,'Children');
 guidata(hObject, handles);
 % END TDW EDIT
 
@@ -260,7 +256,7 @@ function prevStartButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 if get(handles.prevStartButton,'Value') == 1
     disp('Starting Preview')
-    frame1 = getsnapshot(handles.vidObj);
+    frame1 = getsnapshot(handles.vidObj)
     set(handles.imgHandLED1 ,'CData',frame1);
 
 else

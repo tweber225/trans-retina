@@ -28,15 +28,15 @@ if(~exist('triggermode','var'))
 end
 
 if(~exist('binningh','var'))
-    binningh = '1';
+    binningh = '2';
 end
 
 if(~exist('binningv','var'))
-    binningv = '1';
+    binningv = '2';
 end
 
 if(~exist('convf','var'))
-    convf = 0;
+    convf = '1.00';
 end
 
 if(~exist('exptime','var'))
@@ -44,21 +44,21 @@ if(~exist('exptime','var'))
 end
 
 if(~exist('pixelclk','var'))
-    pixelclk = 0;
+    pixelclk = '12000000';
 end
 
 if(~exist('imcount','var'))
-    imcount = 10;
+    imcount = 4;
 end
 
 %Get information about installed adaptors
-imaqhwinfo
+%imaqhwinfo
 
 %Get information about the PCOCameraAdaptor
-imaqhwinfo('pcocameraadaptor')
+%imaqhwinfo('pcocameraadaptor')
 
 %Get information about the first device of the adaptor
-imaqhwinfo('pcocameraadaptor',0)
+%imaqhwinfo('pcocameraadaptor',0)
 
 %Create video input object
 vid = videoinput('pcocameraadaptor', 0);
@@ -68,10 +68,10 @@ src = getselectedsource(vid);
 
 %% Genaral properties
 %Get current settings
-get(vid)
+%get(vid)
 
 %Show properties set options
-set(vid)
+%set(vid)
 
 %Set logging to memory
 vid.LoggingMode = 'memory';
@@ -84,10 +84,10 @@ vid.FramesPerTrigger = imcount;
 
 %% Device properties
 %Get current settings
-get(src)
+%get(src)
 
 %Show properties set options
-set(src)
+%set(src)
 
 %Set horizontal binnig
 src.B1BinningHorizontal = binningh;
@@ -96,9 +96,7 @@ src.B1BinningHorizontal = binningh;
 src.B2BinningVertical = binningv;
 
 %Set conversion factor if specified
-if convf ~= 0
 src.CFConversionFactor_e_count = convf;
-end
 
 %Set Delay time unit
 src.D1DelayTime_unit = 'us';
@@ -110,14 +108,15 @@ src.E1ExposureTime_unit = 'us';
 src.E2ExposureTime = exptime;
 
 %Set Pixelclock if specified
-if pixelclk ~=0
 src.PCPixelclock_Hz = pixelclk;
-end
 
 %Set timestamp mode
 src.TMTimestampMode = 'BinaryAndAscii';
 
 %% Image acquisition
+get(src)
+get(vid)
+
 %Start preview
 %preview(vid);
 
@@ -127,18 +126,23 @@ src.TMTimestampMode = 'BinaryAndAscii';
 %Start acquisition
 start(vid);
 
-if strcmp(triggermode,'manual')
-%Force trigger command
-trigger(vid);
-end
+% if strcmp(triggermode,'manual')
+% %Force trigger command
+% trigger(vid);
+% end
+
+% Wait for acq to finish
+wait(vid);
+numAcquired = vid.FramesAcquired
 
 %% Extract data
 % Get single image
-simage = getsnapshot(vid);
-imshow(simage);
+%simage = getsnapshot(vid);
+%imshow(simage);
 
 %Read out all images and remove them from memory buffer
 images = getdata(vid);
 
 %% Reset adaptor
-imaqreset;
+delete(vid);
+imaqreset

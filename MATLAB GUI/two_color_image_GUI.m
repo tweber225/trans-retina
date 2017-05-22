@@ -58,6 +58,7 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
+% START TDW EDIT
 % Black out both image frames - and generate handles for image data
 blankFrame = zeros(520);
 imshow(blankFrame, 'Parent', handles.LED1Ax)
@@ -77,8 +78,11 @@ handles.vidObj.LoggingMode = 'memory';
 % FOR DEBUGGING/TESTING FRAME NUMBERS
 handles.srcObj.TMTimestampMode = 'BinaryAndAscii';
 
-guidata(hObject, handles);
+% Set default parameters
 
+% Update Handles for GUI data tracking
+guidata(hObject, handles);
+END TDW EDIT
 
 
 % --- Outputs from this function are returned to the command line.
@@ -460,4 +464,5 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 disp('Closing Camera')
 delete(handles.vidObj);
+clear handles.vidObj
 delete(hObject);

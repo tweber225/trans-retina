@@ -1,7 +1,11 @@
 /* 
-  Camera exposure and dual-LED output synchronizer v1.0
+  Camera exposure and dual-LED output synchronizer v1.1
+  Version 1.1: now using the digitalWriteFast library from: https://github.com/NicksonYap/digitalWriteFast
   Timothy D Weber, BU Biomicroscopy Lab, May 2017
  */
+
+// Include the fast digital read/write library
+#include <digitalWriteFast.h>
 
 // set up constant parameters
 const int exposurePin = 2;
@@ -19,25 +23,25 @@ boolean LED1State = true;
 
 void setup() {
   // initialize input/output pins:
-  pinMode(exposurePin, INPUT);
-  pinMode(acquisitionPin, INPUT);
-  pinMode(LED1Pin, OUTPUT);
-  pinMode(LED2Pin, OUTPUT);
-  pinMode(boardIndicatorPin, OUTPUT);
+  pinModeFast(exposurePin, INPUT);
+  pinModeFast(acquisitionPin, INPUT);
+  pinModeFast(LED1Pin, OUTPUT);
+  pinModeFast(LED2Pin, OUTPUT);
+  pinModeFast(boardIndicatorPin, OUTPUT);
 }
 
 void loop() {
   // poll state of the acquisition signal (HIGH means we are recording data)
-  currentAcquisition = digitalRead(acquisitionPin);
+  currentAcquisition = digitalReadFast(acquisitionPin);
 
   if (currentAcquisition == HIGH) {
     if (previousAcquisition == false) {
       // set the indicator light on
-      digitalWrite(boardIndicatorPin,HIGH);      
+      digitalWriteFast(boardIndicatorPin,HIGH);      
     }
 
     // poll state of camera exposure
-    currentExposure = digitalRead(exposurePin);
+    currentExposure = digitalReadFast(exposurePin);
 
     // Detect an up edge on the camera exposure signal
     if (currentExposure == HIGH) {
@@ -45,10 +49,10 @@ void loop() {
       if (previousExposure == LOW) {
         // Turn on the correct LED and switch to the next LED
         if (LED1State == true) {
-          digitalWrite(LED1Pin, HIGH);
+          digitalWriteFast(LED1Pin, HIGH);
         }
         else {
-          digitalWrite(LED2Pin, HIGH);
+          digitalWriteFast(LED2Pin, HIGH);
         }
       }
     }
@@ -57,11 +61,11 @@ void loop() {
       if (previousExposure == HIGH) {
         // Turn off the correct LED and switch to the next LED
         if (LED1State == true) {
-          digitalWrite(LED1Pin, LOW);
+          digitalWriteFast(LED1Pin, LOW);
           LED1State = false;
         }
         else {
-          digitalWrite(LED2Pin, LOW);
+          digitalWriteFast(LED2Pin, LOW);
           LED1State = true;
         }
       }  
@@ -76,14 +80,14 @@ void loop() {
       
       // Make sure that the LEDs are off
       if (LED1State == true) {
-        digitalWrite(LED1Pin, LOW);
+        digitalWriteFast(LED1Pin, LOW);
       }
       else {
-        digitalWrite(LED2Pin, LOW);
+        digitalWriteFast(LED2Pin, LOW);
       }
 
       LED1State = true; // reset the current LED variable
-      digitalWrite(boardIndicatorPin,LOW); // turn off indicator light
+      digitalWriteFast(boardIndicatorPin,LOW); // turn off indicator light
 
     }
     

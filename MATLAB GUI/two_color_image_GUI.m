@@ -79,9 +79,11 @@ handles.srcObj = set_all_camera_settings(handles.srcObj,handles.settingsStruct);
 guidata(hObject, handles);
 
 % Black out both image frames - and generate handles for image data
-numPixPerDim = handles.settingsStruct.constNumPixHeight/str2num(handles.srcObj.B2BinningVertical);
-blackLevel = 0;
-whiteLevel = 2^(handles.settingsStruct.constCameraBits) - 1;
+handles.settingsStruct.numPixPerDim = handles.settingsStruct.constNumPixHeight/str2double(handles.srcObj.B2BinningVertical);
+handles.settingsStruct.blackLevelLED1 = 0;
+handles.settingsStruct.whiteLevelLED1 = 2^(handles.settingsStruct.constCameraBits) - 1;
+handles.settingsStruct.blackLevelLED2 = handles.settingsStruct.blackLevelLED1;
+handles.settingsStruct.blackLevelLED2 = handles.settingsStruct.blackLevelLED1;
 blankFrame = uint16(zeros(numPixPerDim));
 imshow(blankFrame, [blackLevel,whiteLevel], 'Parent', handles.LED1Ax)
 handles.imgHandLED1 = get(handles.LED1Ax,'Children');

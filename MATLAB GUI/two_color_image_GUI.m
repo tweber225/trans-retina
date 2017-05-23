@@ -59,7 +59,6 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % START TDW EDIT
-
 % Open the camera adapters
 disp('Starting Camera')
 handles.vidObj = videoinput('pcocameraadaptor', 0); % vid input object
@@ -92,7 +91,7 @@ guidata(hObject, handles);
 % END TDW EDIT
 
 
-% --- Outputs from this function are returned to the command line.
+% UNNEEDED --- Outputs from this function are returned to the command line.
 function varargout = two_color_image_GUI_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
@@ -103,14 +102,13 @@ function varargout = two_color_image_GUI_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-
+% The following will change the Capture exposure time in settingsStruct
 function capExpTime_Callback(hObject, eventdata, handles)
-% hObject    handle to capExpTime (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of capExpTime as text
-%        str2double(get(hObject,'String')) returns contents of capExpTime as a double
+newExpTime = str2double(get(handles.capExpTime,'String'));
+% Update this in the settings structure
+handles.settingsStruct.capExpTime = newExpTime;
+guidata(hObject, handles);
+disp(['Capture exposure time set to ' num2str(newExpTime) ' ms']);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -128,12 +126,8 @@ end
 
 % --- Executes on selection change in capBinSize.
 function capBinSize_Callback(hObject, eventdata, handles)
-% hObject    handle to capBinSize (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns capBinSize contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from capBinSize
+handles.settingsStruct.capBinSize = get(handles.capBinSize,'Value');
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -151,13 +145,8 @@ end
 
 % --- Executes on selection change in capGain.
 function capGain_Callback(hObject, eventdata, handles)
-% hObject    handle to capGain (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns capGain contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from capGain
-
+handles.settingsStruct.capGain = get(handles.capGain,'Value');
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function capGain_CreateFcn(hObject, eventdata, handles)
@@ -172,21 +161,17 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
+% The following will change the Preview exposure time in settingsStruct
 function prevExpTime_Callback(hObject, eventdata, handles)
-% hObject    handle to prevExpTime (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of prevExpTime as text
-%        str2double(get(hObject,'String')) returns contents of prevExpTime as a double
-disp('Changing Exposure Time')
 newExpTime = str2double(get(handles.prevExpTime,'String'));
 % Update this in the settings structure
 handles.settingsStruct.prevExpTime = newExpTime;
-% Also update in camera source object
+% Also update camera source object with new exposure time. Do this because
+% it will automatically update the exposure time, so it can be changed
+% mid-preview.
 handles.srcObj.E2ExposureTime = newExpTime;
 guidata(hObject, handles);
+disp(['Preview exposure time set to ' num2str(newExpTime) ' ms']);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -204,13 +189,8 @@ end
 
 % --- Executes on selection change in prevBinSize.
 function prevBinSize_Callback(hObject, eventdata, handles)
-% hObject    handle to prevBinSize (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns prevBinSize contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from prevBinSize
-
+handles.settingsStruct.prevBinSize = get(handles.prevBinSize,'Value');
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function prevBinSize_CreateFcn(hObject, eventdata, handles)
@@ -227,13 +207,8 @@ end
 
 % --- Executes on selection change in prevGain.
 function prevGain_Callback(hObject, eventdata, handles)
-% hObject    handle to prevGain (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns prevGain contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from prevGain
-
+handles.settingsStruct.prevGain = get(handles.prevGain,'Value');
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function prevGain_CreateFcn(hObject, eventdata, handles)
@@ -247,7 +222,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
+% !!! Starts CAPTURE Button 
 % --- Executes on button press in capStartButton.
 function capStartButton_Callback(hObject, eventdata, handles)
 % hObject    handle to capStartButton (see GCBO)
@@ -278,7 +253,7 @@ if get(handles.capStartButton,'Value') == 1
             [currentFramePair,timeDataNow] = getdata(handles.vidObj,handles.vidObj.FramesAvailable);
             set(handles.imgHandLED1, 'CData', currentFramePair(:,:,1,1));
             set(handles.imgHandLED2, 'CData', currentFramePair(:,:,1,2));
-            set(handles.capFPSIndicator,'String',[num2str(1/(timeDataNow(1)-timeDataLastPair),4) ' fps']); % calculate FPS
+            set(handles.capFPSIndicator,'String',[num2str(1/(timeDataNow(1)-timeDataLastPair),4) ' fpps']); % calculate FPS
             drawnow; % Must drawnow to show new frame data
             timeDataLastPair = timeDataNow(1); % Record this pair's time for next FPS calculation
             pairIdx=pairIdx+2; % increment the pair counter
@@ -295,19 +270,18 @@ else
     set(handles.capStartButton,'String','Start Capture');
 end
 
-% !!! Starts Preview Button 
+
+% !!! Starts PREVIEW Button 
 % --- Executes on button press in prevStartButton.
 function prevStartButton_Callback(hObject, eventdata, handles)
-% hObject    handle to prevStartButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 if get(handles.prevStartButton,'Value') == 1
     % Output TTL HIGH to Arduino to signal the start of an acquisition
     % NIDAQHERE
     
     disp('Starting Preview')      
     
-    % Set up camera for preview with the latest settings
+    % Set up camera for preview with the latest settings &gray out settings
+    % that should not be changed
     handles = set_preview_or_capture_settings(handles,'preview');
     
     timeDataLastPair = 0; % (for FPS calculation)
@@ -324,7 +298,7 @@ if get(handles.prevStartButton,'Value') == 1
             [currentFramePair,timeDataNow] = getdata(handles.vidObj,handles.vidObj.FramesAvailable);
             set(handles.imgHandLED1, 'CData', currentFramePair(:,:,1,1));
             set(handles.imgHandLED2, 'CData', currentFramePair(:,:,1,2));
-            set(handles.prevFPSIndicator,'String',[num2str(1/(timeDataNow(1)-timeDataLastPair),4) ' fps']); % calculate FPS
+            set(handles.prevFPSIndicator,'String',[num2str(1/(timeDataNow(1)-timeDataLastPair),4) ' fpps']); % calculate FPS
             drawnow; % Must drawnow to show new frame data
             timeDataLastPair = timeDataNow(1); % Record this pair's time for next FPS calculation
         end
@@ -340,14 +314,9 @@ else
 end
 
 
-
 function capNumFrames_Callback(hObject, eventdata, handles)
-% hObject    handle to capNumFrames (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of capNumFrames as text
-%        str2double(get(hObject,'String')) returns contents of capNumFrames as a double
+handles.settingsStruct.capNumFrames = get(handles.capNumFrames,'Value');
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -363,14 +332,9 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function saveBaseName_Callback(hObject, eventdata, handles)
-% hObject    handle to saveBaseName (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of saveBaseName as text
-%        str2double(get(hObject,'String')) returns contents of saveBaseName as a double
+handles.settingsStruct.saveBaseName = get(handles.saveBaseName,'String');
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -434,48 +398,29 @@ end
 
 % --- Executes on button press in commIRMode.
 function commIRMode_Callback(hObject, eventdata, handles)
-% hObject    handle to commIRMode (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of commIRMode
+handles.settingsStruct.commIRMode = get(handles.commIRMode,'Value');
+guidata(hObject, handles);
 
 
 % --- Executes on button press in commAutoScale.
 function commAutoScale_Callback(hObject, eventdata, handles)
-% hObject    handle to commAutoScale (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of commAutoScale
-
+handles.settingsStruct.commAutoScale = get(handles.commAutoScale,'Value');
+guidata(hObject, handles);
 
 % --- Executes on button press in commRTStats.
 function commRTStats_Callback(hObject, eventdata, handles)
-% hObject    handle to commRTStats (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of commRTStats
-
+handles.settingsStruct.commRTStats = get(handles.commRTStats,'Value');
+guidata(hObject, handles);
 
 % --- Executes on button press in commRTHistogram.
 function commRTHistogram_Callback(hObject, eventdata, handles)
-% hObject    handle to commRTHistogram (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of commRTHistogram
-
+handles.settingsStruct.commRTHistogram = get(handles.commRTHistogram,'Value');
+guidata(hObject, handles);
 
 
 function commXShift_Callback(hObject, eventdata, handles)
-% hObject    handle to commXShift (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of commXShift as text
-%        str2double(get(hObject,'String')) returns contents of commXShift as a double
+handles.settingsStruct.commXShift = str2double(get(handles.commXShift,'String'));
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -493,22 +438,13 @@ end
 
 % --- Executes on button press in saveSettings.
 function saveSettings_Callback(hObject, eventdata, handles)
-% hObject    handle to saveSettings (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of saveSettings
-
+handles.settingsStruct.saveSettings = get(handles.saveSettings,'Value');
+guidata(hObject, handles);
 
 % --- Executes on selection change in capPixClock.
 function capPixClock_Callback(hObject, eventdata, handles)
-% hObject    handle to capPixClock (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns capPixClock contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from capPixClock
-
+handles.settingsStruct.capPixClock = get(handles.capPixClock,'Value');
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function capPixClock_CreateFcn(hObject, eventdata, handles)
@@ -525,12 +461,8 @@ end
 
 % --- Executes on selection change in prevPixClock.
 function prevPixClock_Callback(hObject, eventdata, handles)
-% hObject    handle to prevPixClock (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns prevPixClock contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from prevPixClock
+handles.settingsStruct.capPixClock = get(handles.capPixClock,'Value');
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.

@@ -14,10 +14,8 @@ imshow(blackFrame, [handles.settingsStruct.blackLevelLED2,handles.settingsStruct
 handles.imgHandLED2 = get(handles.LED2Ax,'Children');
 
 % Update the current number of pixels per dim to the value just set
-oldResolution = handles.settingsStruct.numPixPerDim;
 handles.settingsStruct.numPixPerDim = newResolution;
 
 % Update the XShift parameter to scale with new resolution
-newXShift = round(handles.settingsStruct.commXShift*newResolution/oldResolution);
-handles.settingsStruct.commXShift = newXShift;
+handles.settings
 set(handles.commXShift,'String',num2str(newXShift))

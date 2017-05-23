@@ -19,6 +19,7 @@ elseif strcmp(settingType,'capture')
     set(handles.capPixClock,'Enable','on');
     set(handles.capGain,'Enable','on');
     set(handles.commIRMode,'Enable','on');
+    set(handles.commXShift,'Enable','on');
     set(handles.capNumFrames,'Enable','on');
     set(handles.capStartButton,'Value',0);
     set(handles.capStartButton,'String','Start Capture');

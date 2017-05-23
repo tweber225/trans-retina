@@ -381,6 +381,7 @@ if get(handles.prevStartButton,'Value') == 1
     start(handles.vidObj);
     
     guidata(hObject,handles);
+    
     while get(handles.prevStartButton,'Value') == 1 % While the toggle button is DOWN
         % Get current GUI UI data (for update-able properties)
         handles = guidata(hObject);
@@ -392,6 +393,7 @@ if get(handles.prevStartButton,'Value') == 1
         
         if handles.vidObj.FramesAvailable > 1 % when 2 frames are available put them up on the GUI displays
             [currentFramePair,timeDataNow] = getdata(handles.vidObj,handles.vidObj.FramesAvailable);
+
             % Display current data (shifted in X)
             
             set(handles.imgHandLED1, 'CData', currentFramePair(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,1));

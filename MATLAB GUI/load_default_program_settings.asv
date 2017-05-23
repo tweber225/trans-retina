@@ -15,7 +15,7 @@ settingsStruct.capGain = 1; % Note: 1=1.00, 2=0.67ADU/e-
 settingsStruct.capNumFrames = 20; % actually it's the NUMBER of frame PAIRS
 
 % COMMON SETTINGS
-settingsStruct.commIRMode = 0;
+settingsStruct.commIRMode = 1;
 settingsStruct.commAutoScale = 0;
 settingsStruct.commXShift = 0;
 settingsStruct.commRTStats = 1;
@@ -37,8 +37,7 @@ settingsStruct.TMTimestampMode = 'BinaryAndAscii'; % also options: 'No Stamp', '
 settingsStruct.constCameraBits = 14;
 settingsStruct.constNumPixWidth = 1392;
 settingsStruct.constNumPixHeight = 1040;
-settingsStruct.constLED1CenterWavelength = '780 nm';
-settingsStruct.constLED2CenterWavelength = '850 nm';
+settings
 
 % DERIVED SETTINGS/PARAMETERS
 switch settingsStruct.capBinSize
@@ -57,9 +56,3 @@ switch settingsStruct.prevBinSize
     case 3
         settingsStruct.derivePrevNumPixPerDim = settingsStruct.constNumPixHeight/4;
 end
-settingsStruct.numPixPerDim = settingsStruct.derivePrevNumPixPerDim;
-
-% ANALYSIS SETTINGS
-settingsStruct.analysisSelectCenterRadPercent = 0.8;
-settingsStruct.analysisAutoScaleHighQuantile = 0.99;
-settingsStruct.analysisAutoScaleLowQuantile = 0.01;

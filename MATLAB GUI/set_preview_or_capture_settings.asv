@@ -25,10 +25,10 @@ if strcmp(settingType,'preview')
     elseif handles.settingsStruct.prevGain == 2
         handles.srcObj.CFConversionFactor_e_count = '1.50';
     end
-    if handles.settingsStruct.commIRMode == 0
-        handles.srcObj.IRMode = 'off';
-    elseif handles.settingsStruct.commIRMode == 1
-        handles.srcObj.IRMode = 'on';
+    if handles.settingsStruct.prevGain == 1
+        handles.srcObj.CFConversionFactor_e_count = '1.00';
+    elseif handles.settingsStruct.prevGain == 2
+        handles.srcObj.CFConversionFactor_e_count = '1.50';
     end
     
     % Don't limit number of frames for continuous imaging in preview mode
@@ -66,11 +66,6 @@ elseif strcmp(settingType,'capture')
     elseif handles.settingsStruct.capGain == 2
         handles.srcObj.CFConversionFactor_e_count = '1.50';
     end
-    if handles.settingsStruct.commIRMode == 0
-        handles.srcObj.IRMode = 'off';
-    elseif handles.settingsStruct.commIRMode == 1
-        handles.srcObj.IRMode = 'on';
-    end
     
     % Limit the capture acquistion's total number of frame (for two LED's
     % this is 2X the number of frames on the GUI)
@@ -82,7 +77,6 @@ elseif strcmp(settingType,'capture')
     set(handles.capPixClock,'Enable','off');
     set(handles.capGain,'Enable','off');
     set(handles.commIRMode,'Enable','off');
-    set(handles.commXShift,'Enable','off');
     set(handles.capNumFrames,'Enable','off');
 
     % Change the start button's string

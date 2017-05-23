@@ -180,6 +180,13 @@ function prevExpTime_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of prevExpTime as text
 %        str2double(get(hObject,'String')) returns contents of prevExpTime as a double
+disp('Changing Exposure Time')
+newExpTime = str2double(get(handles.prevExpTime,'String'));
+% Update this in the settings structure
+handles.settingsStruct.prevExpTime = newExpTime;
+% Also update in camera source object
+handles.srcObj.E2ExposureTime = newExpTime;
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -246,26 +253,90 @@ function capStartButton_Callback(hObject, eventdata, handles)
 % hObject    handle to capStartButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-set(handles.imgHandLED1 ,'CData',.5*ones(520));
-drawnow;
+if get(handles.capStartButton,'Value') == 1
+    % Output TTL HIGH to Arduino to signal the start of an acquisition
+    % NIDAQHERE
+    numFramesTotal = 2*handles.settingsStruct.capNumFrames;
+    disp('Starting Capture')      
+    
+    % Set up camera for preview with the latest settings
+    handles = set_preview_or_capture_settings(handles,'capture');
+    
+    timeDataLastPair = 0; % (for FPS calculation)
+    start(handles.vidObj);
+    
+    pairIdx = 0; % Counter to track number of frames and stop the loop when done
+    while (pairIdx < numFramesTotal) && (get(handles.capStartButton,'Value') == 1) % While we haven't acquire all the frames yet AND the toggle button is still DOWN
+        
+        if handles.vidObj.FramesAvailable > 2 % Try to make up for dropped frames
+            disp('!! DROPPED FRAME(S) !! Attempting to recover order')
+            droppedFrameData = getdata(handles.vidObj, 1); % try to recover, b/c if we lose a frame, we would be out of sync with the LEDs and GUI displays
+            pairIdx=pairIdx+1;
+        end
+        
+        if handles.vidObj.FramesAvailable > 1 % when 2 frames are available put them up on the GUI displays
+            [currentFramePair,timeDataNow] = getdata(handles.vidObj,handles.vidObj.FramesAvailable);
+            set(handles.imgHandLED1, 'CData', currentFramePair(:,:,1,1));
+            set(handles.imgHandLED2, 'CData', currentFramePair(:,:,1,2));
+            set(handles.capFPSIndicator,'String',[num2str(1/(timeDataNow(1)-timeDataLastPair),4) ' fps']); % calculate FPS
+            drawnow; % Must drawnow to show new frame data
+            timeDataLastPair = timeDataNow(1); % Record this pair's time for next FPS calculation
+            pairIdx=pairIdx+2; % increment the pair counter
+        end
+        
+    end
+    stop(handles.vidObj)
+    handles = re_enable_preview_or_capture_settings(handles,'capture');
+    % Send TTL LOW to Arduino to signal end of this acquisition event and
+    % reset it's LED # toggle count
+    % NIDAQ HERE
+else
+    disp('Aborting Capture')
+    set(handles.capStartButton,'String','Start Capture');
+end
 
-%get(handles.prevBinSize,'Value')
-%set(handles.prevBinSize,'Value',3)
-
-% !!! Start Preview Button
+% !!! Starts Preview Button 
 % --- Executes on button press in prevStartButton.
 function prevStartButton_Callback(hObject, eventdata, handles)
 % hObject    handle to prevStartButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if get(handles.prevStartButton,'Value') == 1
-    disp('Starting Preview')
-    frame1 = getsnapshot(handles.vidObj);
-    set(handles.imgHandLED1 ,'CData',frame1);
-
+    % Output TTL HIGH to Arduino to signal the start of an acquisition
+    % NIDAQHERE
+    
+    disp('Starting Preview')      
+    
+    % Set up camera for preview with the latest settings
+    handles = set_preview_or_capture_settings(handles,'preview');
+    
+    timeDataLastPair = 0; % (for FPS calculation)
+    start(handles.vidObj);
+    
+    while get(handles.prevStartButton,'Value') == 1 % While the toggle button is DOWN
+        
+        if handles.vidObj.FramesAvailable > 2 % Try to make up for dropped frames
+            disp('!! DROPPED FRAME(S) !! Attempting to recover order')
+            droppedFrameData = getdata(handles.vidObj, 1); % try to recover, b/c if we lose a frame, we would be out of sync with the LEDs and GUI displays
+        end
+        
+        if handles.vidObj.FramesAvailable > 1 % when 2 frames are available put them up on the GUI displays
+            [currentFramePair,timeDataNow] = getdata(handles.vidObj,handles.vidObj.FramesAvailable);
+            set(handles.imgHandLED1, 'CData', currentFramePair(:,:,1,1));
+            set(handles.imgHandLED2, 'CData', currentFramePair(:,:,1,2));
+            set(handles.prevFPSIndicator,'String',[num2str(1/(timeDataNow(1)-timeDataLastPair),4) ' fps']); % calculate FPS
+            drawnow; % Must drawnow to show new frame data
+            timeDataLastPair = timeDataNow(1); % Record this pair's time for next FPS calculation
+        end
+        
+    end
+    stop(handles.vidObj)
+    handles = re_enable_preview_or_capture_settings(handles,'preview');
+    % Send TTL LOW to Arduino to signal end of this acquisition event and
+    % reset it's LED # toggle count
+    % NIDAQ HERE
 else
     disp('Ending Preview')
-    
 end
 
 

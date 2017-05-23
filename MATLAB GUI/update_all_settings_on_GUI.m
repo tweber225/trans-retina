@@ -12,6 +12,7 @@ set(handles.capExpTime,'String',handles.settingsStruct.capExpTime);
 set(handles.capBinSize,'Value',handles.settingsStruct.capBinSize);
 set(handles.capPixClock,'Value',handles.settingsStruct.capPixClock);
 set(handles.capGain,'Value',handles.settingsStruct.capGain);
+set(handles.capNumFrames,'String',handles.settingsStruct.capNumFrames);
 
 % COMMON SETTINGS
 set(handles.commIRMode,'Value',handles.settingsStruct.commIRMode);

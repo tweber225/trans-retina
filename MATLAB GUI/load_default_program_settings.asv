@@ -3,8 +3,8 @@ function settingsStruct = load_default_program_settings()
 
 % PREVIEW SETTINGS
 settingsStruct.prevExpTime = 50; % in ms
-settingsStruct.prevBinSize = 1; % Note: 1=1x1, 2=2x2, 3=4x4pixels
-settingsStruct.prevPixClock = 1; % Note: 1=12, 2=24MS/s
+settingsStruct.prevBinSize = 2; % Note: 1=1x1, 2=2x2, 3=4x4pixels
+settingsStruct.prevPixClock = 2; % Note: 1=12, 2=24MS/s
 settingsStruct.prevGain = 2; % Note: 1=1.00, 2=0.67ADU/e-
 
 % CAPTURE SETTINGS
@@ -34,4 +34,6 @@ settingsStruct.RDIDoubleImageMode = 'off';
 settingsStruct.TMTimestampMode = 'BinaryAndAscii'; % also options: 'No Stamp', 'Binary'
 
 % CONSTANTS
-settings
+settingsStruct.constCameraBits = 14;
+settingsStruct.constNumPixWidth = 1392;
+settingsStruct.constNumPixHeight = 1040;

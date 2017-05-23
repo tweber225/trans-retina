@@ -1,0 +1,38 @@
+function handles = set_preview_or_capture_settings(handles,settingType)
+% Function sets all the relevant camera settings in the source object
+
+% PREVIEW SETTINGS
+if strcmp(settingType,'preview')
+
+    handles.srcObj.E2ExposureTime = handles.settingsStruct.prevExpTime;
+    if handles.settingsStruct.prevBinSize == 1
+        handles.srcObj.B1BinningHorizontal = '1';
+        handles.srcObj.B2BinningVertical = '1';
+    elseif handles.settingsStruct.prevBinSize == 2
+        handles.srcObj.B1BinningHorizontal = '2';
+        handles.srcObj.B2BinningVertical = '2';
+    elseif handles.settingsStruct.prevBinSize == 3
+        handles.srcObj.B1BinningHorizontal = '4';
+        handles.srcObj.B2BinningVertical = '4';
+    end
+    if handles.settingsStruct.prevPixClock == 1
+        handles.srcObj.PCPixelclock_Hz = '12000000';
+    elseif handles.settingsStruct.prevPixClock == 2
+        handles.srcObj.PCPixelclock_Hz = '24000000';
+    end
+    if handles.settingsStruct.prevGain == 1
+        handles.srcObj.CFConversionFactor_e_count = '1.00';
+    elseif handles.settingsStruct.prevGain == 2
+        handles.srcObj.CFConversionFactor_e_count = '1.50';
+    end
+    
+    % Don't limit number of frames for continuous imaging in preview mode
+    handles.vidObj.FramesPerTrigger = inf;
+    
+    % Disable settings that should not be changed during active preview
+    % (everything except exposure time)
+    set(handles.prevBinSize,'Enable'
+
+elseif strcmp(settingType,'capture')
+    
+end

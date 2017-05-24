@@ -22,7 +22,7 @@ function varargout = two_color_image_GUI(varargin)
 
 % Edit the above text to modify the response to help two_color_image_GUI
 
-% Last Modified by GUIDE v2.5 20-May-2017 21:59:28
+% Last Modified by GUIDE v2.5 23-May-2017 18:01:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -81,6 +81,8 @@ guidata(hObject, handles);
 % Black out both image frames - and generate handles for image data
 handles = reset_GUI_displays_update_resolution(handles,handles.settingsStruct.derivePrevNumPixPerDim);
 guidata(hObject, handles);
+
+
 % END TDW EDIT
 
 
@@ -302,8 +304,9 @@ if get(handles.capStartButton,'Value') == 1
     
     % Set total number of frames (2x the number of frame pairs)
     numFramesTotal = 2*handles.settingsStruct.capNumFrames;
-    
+
     disp('Starting Capture')      
+    handles.settingsStruct.saveCapStartTime = datetime('now');
     
     % Check whether the current image data displayed on GUI matches the
     % desired capture resolutionn (numPixPerDim is always the currently
@@ -312,6 +315,11 @@ if get(handles.capStartButton,'Value') == 1
     if handles.settingsStruct.numPixPerDim ~= handles.settingsStruct.deriveCapNumPixPerDim
         handles = reset_GUI_displays_update_resolution(handles,handles.settingsStruct.deriveCapNumPixPerDim);
     end
+    
+    % Set up space for the image files & frame times
+    LED1Frames = zeros([handles.settingsStruct.numPixPerDim, handles.settingsStruct.numPixPerDim, handles.settingsStruct.capNumFrames],'uint16');
+    LED2Frames = LED1Frames;
+    timesList = zeros([handles.settingsStruct.capNumFrames 2]);
     
     % Set up camera for preview with the latest settings
     handles = set_preview_or_capture_settings(handles,'capture');
@@ -323,6 +331,8 @@ if get(handles.capStartButton,'Value') == 1
     
     pairIdx = 0; % Counter to track number of frames and stop the loop when done
     while (pairIdx < numFramesTotal) && (get(handles.capStartButton,'Value') == 1) % While we haven't acquire all the frames yet AND the toggle button is still DOWN
+        % Don't get new GUI info here (as opposed to as is done in Preview)
+        % because Capture Mode isn't supposed to be changed on the fly
         
         if handles.vidObj.FramesAvailable > 2 % Try to make up for dropped frames
             disp('!! DROPPED FRAME(S) !! Attempting to recover order')
@@ -332,10 +342,14 @@ if get(handles.capStartButton,'Value') == 1
         
         if handles.vidObj.FramesAvailable > 1 % when 2 frames are available put them up on the GUI displays
             [currentFramePair,timeDataNow] = getdata(handles.vidObj,handles.vidObj.FramesAvailable);
+            LED1Frames(:,:,1+pairIdx/2) = currentFramePair(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,1);
+            LED2Frames(:,:,1+pairIdx/2) = currentFramePair(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,2);
+            timesList(1+pairIdx/2,1) = timeDataNow(1);
+            timesList(1+pairIdx/2,2) = timeDataNow(2);
             
             % Display the current data shifted in X
-            set(handles.imgHandLED1, 'CData', currentFramePair(:,:,1,1));
-            set(handles.imgHandLED2, 'CData', currentFramePair(:,:,1,2));
+            set(handles.imgHandLED1, 'CData', LED1Frames(:,:,1+pairIdx/2));
+            set(handles.imgHandLED2, 'CData', LED2Frames(:,:,1+pairIdx/2));
             
             set(handles.capFPSIndicator,'String',[num2str(1/(timeDataNow(1)-timeDataLastPair),4) ' fpps']); % calculate FPS
             drawnow; % Must drawnow to show new frame data
@@ -347,10 +361,50 @@ if get(handles.capStartButton,'Value') == 1
     stop(handles.vidObj)
     handles = re_enable_preview_or_capture_settings(handles,'capture');
     disp('Capture ended')
-    guidata(hObject, handles);
+
     % Send TTL LOW to Arduino to signal end of this acquisition event and
     % reset it's LED # toggle count
     % NIDAQ HERE
+    
+    % Save the files as tiffs
+    disp('Saving...')
+    
+    % First check whether a folder exists to save in
+    dateDir = ['data' filesep datestr(now,'yymmdd')];
+    if ~exist(dateDir,'dir')
+        mkdir(dateDir);
+    end
+    
+    fileName = [datestr(now,'yymmdd') '_' handles.settingsStruct.saveBaseName '_capture' sprintf('%.3d',handles.settingsStruct.saveCapNum)];
+    dateAndCapDir = [dateDir filesep fileName];
+    if exist(dateAndCapDir,'dir')
+        disp('WARNING: OVERWRITING DATA');
+    else
+        mkdir(dateAndCapDir);
+    end
+    
+    saveastiff(LED1Frames,[dateAndCapDir filesep fileName '_1.tiff']);
+    saveastiff(LED2Frames,[dateAndCapDir filesep fileName '_2.tiff']);
+    disp(['Finished Saving Data (' handles.settingsStruct.saveBaseName '_capture' num2str(handles.settingsStruct.saveCapNum) ')'])
+    
+    % If the save settings check box is active, then export the
+    % settingsStruct to a csv table
+    if handles.settingsStruct.saveSettings
+        tempTable = struct2table(handles.settingsStruct);
+        writetable(tempTable,[dateAndCapDir filesep fileName '_settings.csv']);
+    end
+    
+    % If the save frame times check box is active, then save the times in a
+    % csv file
+    if handles.settingsStruct.saveFrameTimes
+        tempTable = array2table(timesList);
+        writetable(tempTable,[dateAndCapDir filesep fileName '_frameTimes.csv']);
+    end
+    
+    % Update capture number
+    handles.settingsStruct.saveCapNum = handles.settingsStruct.saveCapNum + 1;
+    guidata(hObject, handles);
+
 else
     disp('Aborting Capture!')
     set(handles.capStartButton,'String','Start Capture');
@@ -392,12 +446,22 @@ if get(handles.prevStartButton,'Value') == 1
         
         if handles.vidObj.FramesAvailable > 1 % when 2 frames are available put them up on the GUI displays
             [currentFramePair,timeDataNow] = getdata(handles.vidObj,handles.vidObj.FramesAvailable);
+            
             % Display current data (shifted in X)
+            frame1 = currentFramePair(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,1);
+            frame2 = currentFramePair(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,2);
+            set(handles.imgHandLED1, 'CData', frame1);
+            set(handles.imgHandLED2, 'CData', frame2);
             
-            set(handles.imgHandLED1, 'CData', currentFramePair(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,1));
-            set(handles.imgHandLED2, 'CData', currentFramePair(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,2));
+            % If requested, recompute histogram
+            if handles.settingsStruct.commRTHistogram == 1
+                handles.histHandLED1.Data = frame1;
+                handles.histHandLED2.Data = frame2;
+            end
             
+            % Update Frame Pairs Per Second Indicator
             set(handles.prevFPSIndicator,'String',[num2str(1/(timeDataNow(1)-timeDataLastPair),4) ' fpps']); % calculate FPS
+            
             drawnow; % Must drawnow to show new frame data
             timeDataLastPair = timeDataNow(1); % Record this pair's time for next FPS calculation
         end
@@ -445,30 +509,6 @@ function saveBaseName_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-function popupmenu13_Callback(hObject, eventdata, handles)
-function popupmenu13_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu13 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-function popupmenu14_Callback(hObject, eventdata, handles)
-function popupmenu14_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu14 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
@@ -526,6 +566,18 @@ guidata(hObject, handles);
 % --- Executes on button press in commRTHistogram.
 function commRTHistogram_Callback(hObject, eventdata, handles)
 handles.settingsStruct.commRTHistogram = get(handles.commRTHistogram,'Value');
+if handles.settingsStruct.commRTHistogram == 1
+    if ~any(strcmp('histHandLED1',handles))
+        frame1Data = get(handles.imgHandLED1, 'CData');
+        handles.histHandLED1 = histogram(frame1Data,handles.histogramBinEdges,'Parent', handles.LED1Hist);
+        handles.LED1Hist.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
+        handles.LED1Hist.YScale = 'log';
+        frame2Data = get(handles.imgHandLED2, 'CData');
+        handles.histHandLED2 = histogram(frame2Data,handles.histogramBinEdges,'Parent', handles.LED2Hist);
+        handles.LED2Hist.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
+        handles.LED2Hist.YScale = 'log';
+    end
+end
 guidata(hObject, handles);
 
 
@@ -584,9 +636,9 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes when user attempts to close figure1.
-function figure1_CloseRequestFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
+% --- Executes when user attempts to close the GUI.
+function two_color_image_GUI_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to two_color_image_GUI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -596,3 +648,9 @@ delete(handles.vidObj);
 clear handles.vidObj
 imaqreset
 delete(hObject);
+
+
+% --- Executes on button press in saveFrameTimes.
+function saveFrameTimes_Callback(hObject, eventdata, handles)
+handles.settingsStruct.saveFrameTimes = get(handles.saveFrameTimes,'Value');
+guidata(hObject,handles);

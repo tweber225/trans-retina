@@ -23,7 +23,11 @@ settingsStruct.commRTHistogram = 0;
 
 % SAVE SETTINGS
 settingsStruct.saveBaseName = 'subject001';
-settingsStruct.saveSettings = 0; % Save a text file with current settings
+settingsStruct.saveSettings = 1; % Save a text file with current settings
+settingsStruct.saveFrameTimes = 1; % Save the time of the frames
+settingsStruct.saveCapNum = 1;
+settingsStruct.saveCapStartTime = -1;
+
 
 % NON-ADJUSTABLE CAMERA SETTINGS
 % (parameters that won't need to be adjusted in GUI)
@@ -61,5 +65,6 @@ settingsStruct.numPixPerDim = settingsStruct.derivePrevNumPixPerDim;
 
 % ANALYSIS SETTINGS
 settingsStruct.analysisSelectCenterRadPercent = 0.8;
-settingsStruct.analysisAutoScaleHighQuantile = 0.99;
-settingsStruct.analysisAutoScaleLowQuantile = 0.01;
+settingsStruct.analysisAutoScaleHighQuantile = 0.995;
+settingsStruct.analysisAutoScaleLowQuantile = 0.005;
+settingsStruct.analysisHistogramBins = 128;

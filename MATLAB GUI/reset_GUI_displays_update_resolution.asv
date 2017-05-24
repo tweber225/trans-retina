@@ -13,9 +13,19 @@ handles.imgHandLED1 = get(handles.LED1Ax,'Children');
 imshow(blackFrame, [handles.settingsStruct.blackLevelLED2,handles.settingsStruct.whiteLevelLED2], 'Parent', handles.LED2Ax)
 handles.imgHandLED2 = get(handles.LED2Ax,'Children');
 
+% if enabled, update the histograms too
+handles.histogramBinEdges = 0:(handles.settingsStruct.whiteLevelLED1/handles.settingsStruct.analysisHistogramBins):handles.settingsStruct.whiteLevelLED1;
+if handles.settingsStruct.commRTHistogram == 1
+    handles.histHandLED1 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LED1Hist);
+    handles.LED1Hist.XLim = [handles.histogramBinEdges
+    handles.histHandLED2 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LED2Hist);
+end
+
 % Update the current number of pixels per dim to the value just set
+oldResolution = handles.settingsStruct.numPixPerDim;
 handles.settingsStruct.numPixPerDim = newResolution;
 
 % Update the XShift parameter to scale with new resolution
-handles.settings
+newXShift = round(handles.settingsStruct.commXShift*newResolution/oldResolution);
+handles.settingsStruct.commXShift = newXShift;
 set(handles.commXShift,'String',num2str(newXShift))

@@ -24,3 +24,4 @@ set(handles.commRTHistogram,'Value',handles.settingsStruct.commRTHistogram);
 % SAVE SETTINGS
 set(handles.saveBaseName,'String',handles.settingsStruct.saveBaseName);
 set(handles.saveSettings,'Value',handles.settingsStruct.saveSettings);
+set(handles.saveFrameTimes,'Value',handles.settingsStruct.saveFrameTimes);

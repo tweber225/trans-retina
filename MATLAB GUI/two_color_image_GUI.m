@@ -46,19 +46,21 @@ end
 
 % --- Executes just before two_color_image_GUI is made visible.
 function two_color_image_GUI_OpeningFcn(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to two_color_image_GUI (see VARARGIN)
 
 % Choose default command line output for two_color_image_GUI
 handles.output = hObject;
 
-% Update handles structure
+% Update handles structure- not sure why this is needed here? won't hurt
 guidata(hObject, handles);
 
 % START TDW EDIT
+% Make digital channel to enable the Arduino LED-toggler
+disp('Starting DAQ System')
+handles.NIDaqSession = daq.createSession('ni');
+addDigitalChannel(handles.NIDaqSession,'dev1','Port0/Line0','OutputOnly');
+% Make sure the port is set to low so we can trigger the Aruindo later
+outputSingleScan(handles.NIDaqSession,0);
+
 % Open the camera adapters
 disp('Starting Camera')
 handles.vidObj = videoinput('pcocameraadaptor', 0); % vid input object
@@ -299,8 +301,9 @@ function capStartButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if get(handles.capStartButton,'Value') == 1
-    % Output TTL HIGH to Arduino to signal the start of an acquisition
-    % NIDAQHERE
+    % Output TTL HIGH to Arduino to signal the start of an acquisition and
+    % arm the arduino's toggling
+    outputSingleScan(handles.NIDaqSession,1);
     
     % Set total number of frames (2x the number of frame pairs)
     numFramesTotal = 2*handles.settingsStruct.capNumFrames;
@@ -403,8 +406,12 @@ if get(handles.capStartButton,'Value') == 1
     
     % Update capture number
     handles.settingsStruct.saveCapNum = handles.settingsStruct.saveCapNum + 1;
+    
+    % Send TTL low signal to Arduino to signal the acquisition has finished
+    % so it can reset its toggle
+    outputSingleScan(handles.NIDaqSession,0);
+    
     guidata(hObject, handles);
-
 else
     disp('Aborting Capture!')
     set(handles.capStartButton,'String','Start Capture');
@@ -416,7 +423,7 @@ end
 function prevStartButton_Callback(hObject, eventdata, handles)
 if get(handles.prevStartButton,'Value') == 1
     % Output TTL HIGH to Arduino to signal the start of an acquisition
-    % NIDAQHERE
+    outputSingleScan(handles.NIDaqSession,1);
     
     disp('Starting Preview')      
     % Check whether the current image data displayed on GUI matches the
@@ -486,10 +493,12 @@ if get(handles.prevStartButton,'Value') == 1
     end
     stop(handles.vidObj)
     handles = re_enable_preview_or_capture_settings(handles,'preview');
-    guidata(hObject, handles);
+    
     % Send TTL LOW to Arduino to signal end of this acquisition event and
-    % reset it's LED # toggle count
-    % NIDAQ HERE
+    % reset its LED toggle
+    outputSingleScan(handles.NIDaqSession,0);
+    
+    guidata(hObject, handles);
 else
     disp('Ending Preview')
 end
@@ -654,7 +663,14 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+% --- Executes on button press in saveFrameTimes.
+function saveFrameTimes_Callback(hObject, eventdata, handles)
+handles.settingsStruct.saveFrameTimes = get(handles.saveFrameTimes,'Value');
+guidata(hObject,handles);
 
+
+% CLOSING FUNCTION - CLEANS UP CONNECTIONS (very important to get this
+% right)
 % --- Executes when user attempts to close the GUI.
 function two_color_image_GUI_CloseRequestFcn(hObject, eventdata, handles)
 % hObject    handle to two_color_image_GUI (see GCBO)
@@ -666,10 +682,11 @@ disp('Closing Camera')
 delete(handles.vidObj);
 clear handles.vidObj
 imaqreset
+
+disp('Closing DAQ')
+delete(handles.NIDaqSession);
+daqreset
+
 delete(hObject);
 
-
-% --- Executes on button press in saveFrameTimes.
-function saveFrameTimes_Callback(hObject, eventdata, handles)
-handles.settingsStruct.saveFrameTimes = get(handles.saveFrameTimes,'Value');
-guidata(hObject,handles);
+% drop mic

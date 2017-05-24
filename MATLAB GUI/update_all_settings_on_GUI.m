@@ -25,3 +25,7 @@ set(handles.commRTHistogram,'Value',handles.settingsStruct.commRTHistogram);
 set(handles.saveBaseName,'String',handles.settingsStruct.saveBaseName);
 set(handles.saveSettings,'Value',handles.settingsStruct.saveSettings);
 set(handles.saveFrameTimes,'Value',handles.settingsStruct.saveFrameTimes);
+
+% INDICATORS
+set(handles.LED1ColorIndicator,'String',['LED 1: ' handles.settingsStruct.constLED1CenterWavelength]);
+set(handles.LED2ColorIndicator,'String',['LED 2: ' handles.settingsStruct.constLED2CenterWavelength]);

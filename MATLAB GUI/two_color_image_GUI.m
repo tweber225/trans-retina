@@ -459,6 +459,23 @@ if get(handles.prevStartButton,'Value') == 1
                 handles.histHandLED2.Data = frame2;
             end
             
+            % If requested, recompute statistics
+            if handles.settingsStruct.commRTStats == 1
+                set(handles.LED1MaxIndicator,'String',['Max: ' num2str(max(frame1(:)))]);
+                set(handles.LED1MinIndicator,'String',['Min: ' num2str(min(frame1(:)))]);
+                set(handles.LED1MeanIndicator,'String',['Mean: ' num2str(mean(frame1(:)),4)]);
+                set(handles.LED1MedianIndicator,'String',['Median: ' num2str(median(frame1(:)),4)]);
+                percentSat = 100*sum(frame1(:) == (2^handles.settingsStruct.constCameraBits-1))/numel(frame1(:));
+                set(handles.LED1PercentSaturatedIndicator,'String',['Max: ' num2str(percentSat,4) '%']);
+                
+                set(handles.LED2MaxIndicator,'String',['Max: ' num2str(max(frame2(:)))]);
+                set(handles.LED2MinIndicator,'String',['Min: ' num2str(min(frame2(:)))]);
+                set(handles.LED2MeanIndicator,'String',['Mean: ' num2str(mean(frame2(:)),4)]);
+                set(handles.LED2MedianIndicator,'String',['Median: ' num2str(median(frame2(:)),4)]);
+                percentSat = 100*sum(frame1(:) == (2^handles.settingsStruct.constCameraBits-1))/numel(frame2(:));
+                set(handles.LED2PercentSaturatedIndicator,'String',['Max: ' num2str(percentSat,4) '%']);
+            end
+            
             % Update Frame Pairs Per Second Indicator
             set(handles.prevFPSIndicator,'String',[num2str(1/(timeDataNow(1)-timeDataLastPair),4) ' fpps']); % calculate FPS
             
@@ -527,7 +544,6 @@ end
 guidata(hObject, handles);
 disp(['IR-sensitive mode turned ' dispIRMode]);
 
-
 % --- Executes on button press in commAutoScale.
 function commAutoScale_Callback(hObject, eventdata, handles)
 % Make correctly-sized image mask to select just the center circle
@@ -577,6 +593,9 @@ if handles.settingsStruct.commRTHistogram == 1
         handles.LED2Hist.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
         handles.LED2Hist.YScale = 'log';
     end
+else
+    handles.LED1Hist.Visible = 'off';
+    handles.LED2Hist.Visible = 'off';
 end
 guidata(hObject, handles);
 

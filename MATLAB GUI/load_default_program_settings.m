@@ -35,7 +35,7 @@ settingsStruct.D1DelayTime_unit = 'us';
 settingsStruct.D2DelayTime = 0;
 settingsStruct.E1ExposureTime_unit = 'ms';
 settingsStruct.RDIDoubleImageMode = 'off';
-settingsStruct.TMTimestampMode = 'BinaryAndAscii'; % also options: 'No Stamp', 'Binary'
+settingsStruct.TMTimestampMode = 'BinaryAndAscii'; %  options: 'No Stamp', 'Binary', 'BinaryAndAscii'
 
 % CONSTANTS
 settingsStruct.constCameraBits = 14;
@@ -64,7 +64,7 @@ end
 settingsStruct.numPixPerDim = settingsStruct.derivePrevNumPixPerDim;
 
 % ANALYSIS SETTINGS
-settingsStruct.analysisSelectCenterRadPercent = 0.8;
+settingsStruct.analysisSelectCenterRadPercent = 0.9;
 settingsStruct.analysisAutoScaleHighQuantile = 0.995;
 settingsStruct.analysisAutoScaleLowQuantile = 0.005;
 settingsStruct.analysisHistogramBins = 128;

@@ -581,6 +581,12 @@ handles.imgHandLED1 = get(handles.LED1Ax,'Children');
 imshow(LED2Data, [handles.settingsStruct.blackLevelLED2,handles.settingsStruct.whiteLevelLED2], 'Parent', handles.LED2Ax)
 handles.imgHandLED2 = get(handles.LED2Ax,'Children');
 
+% Set the indicators of black vs white values correctly
+set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
+set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
+set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
+
 guidata(hObject, handles);
 
 % --- Executes on button press in commRTStats.

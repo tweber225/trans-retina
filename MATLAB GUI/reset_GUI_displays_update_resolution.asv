@@ -15,9 +15,8 @@ handles.imgHandLED2 = get(handles.LED2Ax,'Children');
 
 % Set the indicators of black vs white values correctly
 set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED1)]);
-set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLED1)]);
-set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED2)]);
-set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLED2)]);
+set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED1)]);
+set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED1)]);
 
 % if enabled, update the histograms too
 handles.histogramBinEdges = 0:(handles.settingsStruct.whiteLevelLED1/handles.settingsStruct.analysisHistogramBins):handles.settingsStruct.whiteLevelLED1;

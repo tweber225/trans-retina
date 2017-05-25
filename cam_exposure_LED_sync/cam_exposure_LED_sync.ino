@@ -1,6 +1,8 @@
 /* 
-  Camera exposure and dual-LED output synchronizer v1.1
+  Camera exposure and dual-LED output synchronizer v1.2
   Version 1.1: now using the digitalWriteFast library from: https://github.com/NicksonYap/digitalWriteFast
+  Version 1.2: disabled pin13's "acquisition-on" indicator to increase speed (removes 1 if statement and 1 
+  digital write, about 3-4 clock cycles, making average lag after the start of an exposure ~2.38us)
   Timothy D Weber, BU Biomicroscopy Lab, May 2017
  */
 
@@ -12,7 +14,7 @@ const int exposurePin = 2;
 const int acquisitionPin = 12;
 const int LED1Pin = 7;
 const int LED2Pin = 8;
-const int boardIndicatorPin = 13;
+//const int boardIndicatorPin = 13;
 
 // set up some digital state variables
 boolean currentExposure = false;
@@ -27,7 +29,7 @@ void setup() {
   pinModeFast(acquisitionPin, INPUT);
   pinModeFast(LED1Pin, OUTPUT);
   pinModeFast(LED2Pin, OUTPUT);
-  pinModeFast(boardIndicatorPin, OUTPUT);
+  //pinModeFast(boardIndicatorPin, OUTPUT);
 }
 
 void loop() {
@@ -35,15 +37,17 @@ void loop() {
   currentAcquisition = digitalReadFast(acquisitionPin);
 
   if (currentAcquisition == HIGH) {
-    if (previousAcquisition == false) {
-      // set the indicator light on
-      digitalWriteFast(boardIndicatorPin,HIGH);      
-    }
+    
+// UNCOMMMENT IF DEBUGGING
+//    if (previousAcquisition == false) {
+//      // set the indicator light on
+//      digitalWriteFast(boardIndicatorPin,HIGH);      
+//    }
 
     // poll state of camera exposure
     currentExposure = digitalReadFast(exposurePin);
 
-    // Detect an up edge on the camera exposure signal
+    // Detect an UP edge on the camera exposure signal
     if (currentExposure == HIGH) {
   
       if (previousExposure == LOW) {
@@ -56,7 +60,8 @@ void loop() {
         }
       }
     }
-    // Else--detect a down edge
+    
+    // Else--detect a DOWN edge
     else {
       if (previousExposure == HIGH) {
         // Turn off the correct LED and switch to the next LED
@@ -87,7 +92,11 @@ void loop() {
       }
 
       LED1State = true; // reset the current LED variable
-      digitalWriteFast(boardIndicatorPin,LOW); // turn off indicator light
+      previousExposure = false; // if transitioning into non-active acquistion, ... 
+      // exposure status should also be reset to FALSE, this might end up being redundant
+      
+      // UNCOMMENT IF DEBUGGING
+      // digitalWriteFast(boardIndicatorPin,LOW); // turn off indicator light
 
     }
     

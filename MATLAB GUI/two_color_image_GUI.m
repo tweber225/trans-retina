@@ -22,7 +22,7 @@ function varargout = two_color_image_GUI(varargin)
 
 % Edit the above text to modify the response to help two_color_image_GUI
 
-% Last Modified by GUIDE v2.5 23-May-2017 18:01:34
+% Last Modified by GUIDE v2.5 24-May-2017 21:47:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -82,6 +82,7 @@ guidata(hObject, handles);
 
 % Black out both image frames - and generate handles for image data
 handles = reset_GUI_displays_update_resolution(handles,handles.settingsStruct.derivePrevNumPixPerDim);
+
 guidata(hObject, handles);
 
 
@@ -338,9 +339,9 @@ if get(handles.capStartButton,'Value') == 1
         % because Capture Mode isn't supposed to be changed on the fly
         
         if handles.vidObj.FramesAvailable > 2 % Try to make up for dropped frames
-            disp('!! DROPPED FRAME(S) !! Attempting to recover order')
-            droppedFrameData = getdata(handles.vidObj, 1); % try to recover, b/c if we lose a frame, we would be out of sync with the LEDs and GUI displays
-            pairIdx=pairIdx+1;
+            disp('Warning! Program is struggling to keep up')
+            %droppedFrameData = getdata(handles.vidObj, 1); % try to recover, b/c if we lose a frame, we would be out of sync with the LEDs and GUI displays
+            %pairIdx=pairIdx+1;
         end
         
         if handles.vidObj.FramesAvailable > 1 % when 2 frames are available put them up on the GUI displays
@@ -358,17 +359,16 @@ if get(handles.capStartButton,'Value') == 1
             drawnow; % Must drawnow to show new frame data
             timeDataLastPair = timeDataNow(1); % Record this pair's time for next FPS calculation
             pairIdx=pairIdx+2; % increment the pair counter
+            
+            % update the button with progress
+            set(handles.capStartButton,'String',['Abort ' num2str(pairIdx/2) '/' num2str(numFramesTotal/2)]);
         end
         
     end
     stop(handles.vidObj)
     handles = re_enable_preview_or_capture_settings(handles,'capture');
     disp('Capture ended')
-
-    % Send TTL LOW to Arduino to signal end of this acquisition event and
-    % reset it's LED # toggle count
-    % NIDAQ HERE
-    
+   
     % Save the files as tiffs
     disp('Saving...')
     
@@ -446,9 +446,9 @@ if get(handles.prevStartButton,'Value') == 1
         % Get current GUI UI data (for update-able properties)
         handles = guidata(hObject);
         
-        if handles.vidObj.FramesAvailable > 2 % Try to make up for dropped frames
+        if handles.vidObj.FramesAvailable > 2 % If we have more than 2 frames in buffer, read 2 frames and discard them
             disp('!! DROPPED FRAME(S) !! Attempting to recover order')
-            droppedFrameData = getdata(handles.vidObj, 1); % try to recover, b/c if we lose a frame, we would be out of sync with the LEDs and GUI displays
+            droppedFrameData = getdata(handles.vidObj, 2); % don't do anything with this data, this might pick up streaming slack
         end
         
         if handles.vidObj.FramesAvailable > 1 % when 2 frames are available put them up on the GUI displays
@@ -459,6 +459,12 @@ if get(handles.prevStartButton,'Value') == 1
             frame2 = currentFramePair(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,2);
             set(handles.imgHandLED1, 'CData', frame1);
             set(handles.imgHandLED2, 'CData', frame2);
+            
+            % Do computations on the masked images only
+            frame1 = frame1.*handles.imageMask;
+            frame2 = frame2.*handles.imageMask;
+            frame1 = frame1(frame1>0);
+            frame2 = frame2(frame2>0);
             
             % If requested, recompute histogram
             if handles.settingsStruct.commRTHistogram == 1
@@ -473,14 +479,14 @@ if get(handles.prevStartButton,'Value') == 1
                 set(handles.LED1MeanIndicator,'String',['Mean: ' num2str(mean(frame1(:)),4)]);
                 set(handles.LED1MedianIndicator,'String',['Median: ' num2str(median(frame1(:)),4)]);
                 percentSat = 100*sum(frame1(:) == (2^handles.settingsStruct.constCameraBits-1))/numel(frame1(:));
-                set(handles.LED1PercentSaturatedIndicator,'String',['Max: ' num2str(percentSat,4) '%']);
+                set(handles.LED1PercentSaturatedIndicator,'String',['% Saturated: ' num2str(percentSat,3) '%']);
                 
                 set(handles.LED2MaxIndicator,'String',['Max: ' num2str(max(frame2(:)))]);
                 set(handles.LED2MinIndicator,'String',['Min: ' num2str(min(frame2(:)))]);
                 set(handles.LED2MeanIndicator,'String',['Mean: ' num2str(mean(frame2(:)),4)]);
                 set(handles.LED2MedianIndicator,'String',['Median: ' num2str(median(frame2(:)),4)]);
                 percentSat = 100*sum(frame1(:) == (2^handles.settingsStruct.constCameraBits-1))/numel(frame2(:));
-                set(handles.LED2PercentSaturatedIndicator,'String',['Max: ' num2str(percentSat,4) '%']);
+                set(handles.LED2PercentSaturatedIndicator,'String',['% Saturated: ' num2str(percentSat,3) '%']);
             end
             
             % Update Frame Pairs Per Second Indicator
@@ -555,17 +561,11 @@ disp(['IR-sensitive mode turned ' dispIRMode]);
 
 % --- Executes on button press in commAutoScale.
 function commAutoScale_Callback(hObject, eventdata, handles)
-% Make correctly-sized image mask to select just the center circle
-pixDim = handles.settingsStruct.numPixPerDim;
-selectRad = 0.5*pixDim*handles.settingsStruct.analysisSelectCenterRadPercent;
-[x, y] = meshgrid(1:pixDim, 1:pixDim);
-circularMask = uint16((x-.5*pixDim-1).^2+(y-.5*pixDim-1).^2 <= selectRad^2);
-
 % Get the two current frame's data
 LED1Data = get(handles.imgHandLED1, 'CData');
 LED2Data = get(handles.imgHandLED2, 'CData');
-maskedLED1Data = LED1Data.*circularMask;
-maskedLED2Data = LED2Data.*circularMask;
+maskedLED1Data = LED1Data.*handles.imageMask;
+maskedLED2Data = LED2Data.*handles.imageMask;
 
 % find min and max for each within central circular region
 led1Vals = quantile(double(maskedLED1Data(maskedLED1Data>0)),[handles.settingsStruct.analysisAutoScaleLowQuantile,handles.settingsStruct.analysisAutoScaleHighQuantile]);
@@ -592,7 +592,21 @@ guidata(hObject, handles);
 % --- Executes on button press in commRTStats.
 function commRTStats_Callback(hObject, eventdata, handles)
 handles.settingsStruct.commRTStats = get(handles.commRTStats,'Value');
+if handles.settingsStruct.commRTStats == 0
+    set(handles.LED1MaxIndicator,'String','Max: ');
+    set(handles.LED1MinIndicator,'String','Min: ');
+    set(handles.LED1MeanIndicator,'String','Mean: ');
+    set(handles.LED1MedianIndicator,'String','Median: ');
+    set(handles.LED1PercentSaturatedIndicator,'String','% Saturated: ');
+
+    set(handles.LED2MaxIndicator,'String','Max: ');
+    set(handles.LED2MinIndicator,'String','Min: ');
+    set(handles.LED2MeanIndicator,'String','Mean: ');
+    set(handles.LED2MedianIndicator,'String','Median: ');
+    set(handles.LED2PercentSaturatedIndicator,'String','% Saturated: ');
+end
 guidata(hObject, handles);
+
 
 % --- Executes on button press in commRTHistogram.
 function commRTHistogram_Callback(hObject, eventdata, handles)
@@ -611,6 +625,8 @@ if handles.settingsStruct.commRTHistogram == 1
 else
     handles.LED1Hist.Visible = 'off';
     handles.LED2Hist.Visible = 'off';
+    delete(handles.histHandLED1);
+    delete(handles.histHandLED2);
 end
 guidata(hObject, handles);
 
@@ -674,6 +690,20 @@ function saveFrameTimes_Callback(hObject, eventdata, handles)
 handles.settingsStruct.saveFrameTimes = get(handles.saveFrameTimes,'Value');
 guidata(hObject,handles);
 
+% --- Executes on button press in commStatHistInCenter.
+function commStatHistInCenter_Callback(hObject, eventdata, handles)
+handles.settingsStruct.commStatHistInCenter = get(handles.commStatHistInCenter,'Value');
+% Update image mask
+if handles.settingsStruct.commStatHistInCenter == 1
+    pixDim = handles.settingsStruct.numPixPerDim;
+    selectRad = 0.5*pixDim*handles.settingsStruct.analysisSelectCenterRadPercent;
+    [x, y] = meshgrid(1:pixDim, 1:pixDim);
+    handles.imageMask = uint16((x-.5*pixDim-1).^2+(y-.5*pixDim-1).^2 <= selectRad^2);
+else
+    handles.imageMask = ones(handles.settingsStruct.numPixPerDim,'uint16');
+end
+
+guidata(hObject,handles);
 
 % CLOSING FUNCTION - CLEANS UP CONNECTIONS (very important to get this
 % right)
@@ -696,3 +726,4 @@ daqreset
 delete(hObject);
 
 % drop mic
+

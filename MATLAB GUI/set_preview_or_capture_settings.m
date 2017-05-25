@@ -81,9 +81,17 @@ elseif strcmp(settingType,'capture')
     set(handles.capBinSize,'Enable','off');
     set(handles.capPixClock,'Enable','off');
     set(handles.capGain,'Enable','off');
-    set(handles.commIRMode,'Enable','off');
-    set(handles.commXShift,'Enable','off');
     set(handles.capNumFrames,'Enable','off');
+    set(handles.commIRMode,'Enable','off');
+    set(handles.commAutoScale,'Enable','off');
+    set(handles.commXShift,'Enable','off');
+    set(handles.commRTStats,'Enable','off');
+    set(handles.commRTHistogram,'Enable','off');
+    set(handles.commStatHistInCenter,'Enable','off');
+    set(handles.saveBaseName,'Enable','off');
+    set(handles.saveSettings,'Enable','off');
+    set(handles.saveFrameTimes,'Enable','off');
+
 
     % Change the start button's string
     set(handles.capStartButton,'String','Abort');

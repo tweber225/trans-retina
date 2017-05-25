@@ -18,9 +18,17 @@ elseif strcmp(settingType,'capture')
     set(handles.capBinSize,'Enable','on');
     set(handles.capPixClock,'Enable','on');
     set(handles.capGain,'Enable','on');
-    set(handles.commIRMode,'Enable','on');
-    set(handles.commXShift,'Enable','on');
     set(handles.capNumFrames,'Enable','on');
+    set(handles.commIRMode,'Enable','on');
+    set(handles.commAutoScale,'Enable','on');
+    set(handles.commXShift,'Enable','on');
+    set(handles.commRTStats,'Enable','on');
+    set(handles.commRTHistogram,'Enable','on');
+    set(handles.commStatHistInCenter,'Enable','on');
+    set(handles.saveBaseName,'Enable','on');
+    set(handles.saveSettings,'Enable','on');
+    set(handles.saveFrameTimes,'Enable','on');
+    
     set(handles.capStartButton,'Value',0);
     set(handles.capStartButton,'String','Start Capture');
     

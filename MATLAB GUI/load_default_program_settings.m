@@ -20,6 +20,7 @@ settingsStruct.commAutoScale = 0;
 settingsStruct.commXShift = 0;
 settingsStruct.commRTStats = 1;
 settingsStruct.commRTHistogram = 0;
+settingsStruct.commStatHistInCenter = 1;
 
 % SAVE SETTINGS
 settingsStruct.saveBaseName = 'subject001';

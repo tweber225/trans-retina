@@ -35,13 +35,18 @@ oldResolution = handles.settingsStruct.numPixPerDim;
 handles.settingsStruct.numPixPerDim = newResolution;
 
 % Update image mask
+pixDim = handles.settingsStruct.numPixPerDim;
+if handles.settingsStruct.analysisReduceNumPixels == 1
+    imageMaskMask = mod(bsxfun(@plus,uint16(1:pixDim),uint16((1:pixDim)')),2);
+else
+    imageMaskMask = ones(pixDim,'uint16');
+end
 if handles.settingsStruct.commStatHistInCenter == 1
-    pixDim = handles.settingsStruct.numPixPerDim;
     selectRad = 0.5*pixDim*handles.settingsStruct.analysisSelectCenterRadPercent;
     [x, y] = meshgrid(1:pixDim, 1:pixDim);
-    handles.imageMask = uint16((x-.5*pixDim-1).^2+(y-.5*pixDim-1).^2 <= selectRad^2);
+    handles.imageMask = uint16((x-.5*pixDim-1).^2+(y-.5*pixDim-1).^2 <= selectRad^2).*imageMaskMask;
 else
-    handles.imageMask = ones(handles.settingsStruct.numPixPerDim,'uint16');
+    handles.imageMask = ones(pixDim,'uint16').*imageMaskMask;
 end
 
 % Update the XShift parameter to scale with new resolution

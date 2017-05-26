@@ -68,4 +68,5 @@ settingsStruct.numPixPerDim = settingsStruct.derivePrevNumPixPerDim;
 settingsStruct.analysisSelectCenterRadPercent = 0.9;
 settingsStruct.analysisAutoScaleHighQuantile = 0.995;
 settingsStruct.analysisAutoScaleLowQuantile = 0.005;
-settingsStruct.analysisHistogramBins = 128;
+settingsStruct.analysisHistogramBins = 64;
+settingsStruct.analysisReduceNumPixels = 1;

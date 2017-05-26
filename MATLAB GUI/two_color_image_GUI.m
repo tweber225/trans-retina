@@ -719,7 +719,6 @@ function two_color_image_GUI_CloseRequestFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: delete(hObject) closes the figure
 disp('Closing Camera')
 delete(handles.vidObj);
 clear handles.vidObj

@@ -57,7 +57,7 @@ guidata(hObject, handles);
 % Make digital channel to enable the Arduino LED-toggler
 disp('Starting DAQ System')
 handles.NIDaqSession = daq.createSession('ni');
-addDigitalChannel(handles.NIDaqSession,'dev1','Port0/Line0','OutputOnly');
+addDigitalChannel(handles.NIDaqSession,'dev1','Port0/Line1','OutputOnly');
 % Make sure the port is set to low so we can trigger the Aruindo later
 outputSingleScan(handles.NIDaqSession,0);
 

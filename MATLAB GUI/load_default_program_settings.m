@@ -28,6 +28,7 @@ settingsStruct.selectLEDsEnable2 = 1;
 settingsStruct.selectLEDsEnable3 = 1;
 settingsStruct.selectLEDsEnable4 = 1;
 settingsStruct.selectLEDsShow = 1; % LED channel to show on big image axis, only important if >2 LEDs are selected
+settingsStruct.selectLEDsQuadViewOn = 1; % whether we're in the quad-view mode (when >2 LEDs are enabled)
 
 % SAVE SETTINGS
 settingsStruct.saveBaseName = 'subject001';

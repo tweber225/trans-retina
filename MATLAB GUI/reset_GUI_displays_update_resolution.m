@@ -24,7 +24,7 @@ handles.imgHandLED1 = get(handles.LED1Ax,'Children');
 
 % The way the rest of the images are displayed is different depending on
 % the number of LED channels enabled
-if handles.quadViewOn == 1
+if handles.settingsStruct.selectLEDsQuadViewOn == 1
     imshow(blackFrame, [handles.settingsStruct.blackLevelLED2,handles.settingsStruct.whiteLevelLED2], 'Parent', handles.LED2Ax)
     handles.imgHandLED2 = get(handles.LED2Ax,'Children');
 else

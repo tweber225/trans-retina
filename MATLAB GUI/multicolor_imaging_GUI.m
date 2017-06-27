@@ -83,7 +83,6 @@ handles.srcObj = set_all_camera_settings(handles.srcObj,handles.settingsStruct);
 guidata(hObject, handles);
 
 % Black out all image frames - and generate handles for image data
-handles.quadViewOn = 1;
 handles = reset_GUI_displays_update_resolution(handles,handles.settingsStruct.derivePrevNumPixPerDim);
 
 guidata(hObject, handles);

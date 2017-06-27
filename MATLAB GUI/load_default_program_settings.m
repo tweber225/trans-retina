@@ -12,7 +12,7 @@ settingsStruct.capExpTime = 10; % in ms
 settingsStruct.capBinSize = 1; % Note: 1=1x1, 2=2x2, 3=4x4pixels
 settingsStruct.capPixClock = 2; % Note: 1=12, 2=24MS/s
 settingsStruct.capGain = 1; % Note: 1=1.00, 2=0.67ADU/e-
-settingsStruct.capNumFrames = 20; % actually it's the NUMBER of frame PAIRS
+settingsStruct.capNumFrames = 20; % actually it's the NUMBER of frame SETS (pairs, trios, etc.)
 
 % COMMON SETTINGS
 settingsStruct.commIRMode = 0;
@@ -21,6 +21,13 @@ settingsStruct.commXShift = 0;
 settingsStruct.commRTStats = 1;
 settingsStruct.commRTHistogram = 0;
 settingsStruct.commStatHistInCenter = 1;
+
+% SELECT LEDS SETTINGS
+settingsStruct.selectLEDsEnable1 = 1;
+settingsStruct.selectLEDsEnable2 = 1;
+settingsStruct.selectLEDsEnable3 = 1;
+settingsStruct.selectLEDsEnable4 = 1;
+settingsStruct.selectLEDsShow = 1; % LED channel to show on big image axis, only important if >2 LEDs are selected
 
 % SAVE SETTINGS
 settingsStruct.saveBaseName = 'subject001';
@@ -42,8 +49,10 @@ settingsStruct.TMTimestampMode = 'BinaryAndAscii'; %  options: 'No Stamp', 'Bina
 settingsStruct.constCameraBits = 14;
 settingsStruct.constNumPixWidth = 1392;
 settingsStruct.constNumPixHeight = 1040;
-settingsStruct.constLED1CenterWavelength = '780 nm';
-settingsStruct.constLED2CenterWavelength = '850 nm';
+settingsStruct.constLED1CenterWavelength = '660 nm';
+settingsStruct.constLED2CenterWavelength = '730 nm';
+settingsStruct.constLED3CenterWavelength = '780 nm';
+settingsStruct.constLED4CenterWavelength = '850 nm';
 
 % DERIVED SETTINGS/PARAMETERS
 switch settingsStruct.capBinSize
@@ -68,5 +77,6 @@ settingsStruct.numPixPerDim = settingsStruct.derivePrevNumPixPerDim;
 settingsStruct.analysisSelectCenterRadPercent = 0.9;
 settingsStruct.analysisAutoScaleHighQuantile = 0.995;
 settingsStruct.analysisAutoScaleLowQuantile = 0.005;
-settingsStruct.analysisHistogramBins = 64;
-settingsStruct.analysisReduceNumPixels = 1;
+settingsStruct.analysisHistogramBins = 128;
+settingsStruct.analysisReduceNumPixels = 0;
+

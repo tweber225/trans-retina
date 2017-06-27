@@ -56,12 +56,12 @@ guidata(hObject, handles);
 % START TDW EDIT
 % Make digital channels to send enable signal to Arduino with correct
 % configuration of LEDs
-handles.LEDsToEnable = [1;1;1;1]; % all of them to start
+handles.LEDsToEnable = [1 1 1 1]; % all of them to start
 disp('Starting DAQ System')
 handles.NIDaqSession = daq.createSession('ni');
 addDigitalChannel(handles.NIDaqSession,'dev1','Port0/Line0:4','OutputOnly');
 % Make sure the port is set to low so we can trigger the Aruindo later
-outputSingleScan(handles.NIDaqSession,[0;handles.LEDsToEnable]);
+outputSingleScan(handles.NIDaqSession,[0 handles.LEDsToEnable]);
 
 % Open the camera adapters
 disp('Starting Camera')

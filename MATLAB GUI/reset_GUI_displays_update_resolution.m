@@ -17,8 +17,13 @@ handles.settingsStruct.whiteLevelLED4 = handles.settingsStruct.whiteLevelLED1;
 blackFrame = uint16(zeros(newResolution));
 
 % Display black images, and then save all the handles
+% Image 1 is always displayed: it's either the first image if acquiring <2
+% images, or an enlarged image of one of the 4 images
 imshow(blackFrame, [handles.settingsStruct.blackLevelLED1,handles.settingsStruct.whiteLevelLED1], 'Parent', handles.LED1Ax)
 handles.imgHandLED1 = get(handles.LED1Ax,'Children');
+
+% The way the rest of the images are displayed is different depending on
+% the number of LED channels enabled
 if handles.quadViewOn == 1
     imshow(blackFrame, [handles.settingsStruct.blackLevelLED2,handles.settingsStruct.whiteLevelLED2], 'Parent', handles.LED2Ax)
     handles.imgHandLED2 = get(handles.LED2Ax,'Children');
@@ -31,7 +36,6 @@ else
     handles.imgHandLEDQuad3 = get(handles.LEDQuad3Ax,'Children');
     imshow(blackFrame, [handles.settingsStruct.blackLevelLED4,handles.settingsStruct.whiteLevelLED4], 'Parent', handles.LEDQuad4Ax)
     handles.imgHandLEDQuad4 = get(handles.LEDQuad4Ax,'Children');
-
 end
 
 % Set the indicators of black vs white values correctly

@@ -764,6 +764,7 @@ else % now we are not in quad mode
         end
     end
 end
+guidata(hObject,handles);
 
 
 % --- Executes on button press in selectLEDsEnable2.
@@ -815,6 +816,7 @@ else % now we are not in quad mode
         end
     end
 end
+guidata(hObject,handles);
 
 
 % --- Executes on button press in selectLEDsEnable3.
@@ -866,6 +868,7 @@ else % now we are not in quad mode
         end
     end
 end
+guidata(hObject,handles);
 
 
 % --- Executes on button press in selectLEDsEnable4.
@@ -884,7 +887,8 @@ if sum(handles.LEDsToEnable,2) > 2
         % enable the quad-channel view
         handles.LED2Ax.Visible = 'off';
         if handles.LEDsToEnable(1) == 1
-            handles.LEDQuad1Ax.Visible = 'on'; 
+            handles.LEDQuad1Ax.Visible = 'on';
+        end
         if handles.LEDsToEnable(2) == 1
             handles.LEDQuad2Ax.Visible = 'on';
         end
@@ -916,6 +920,7 @@ else % now we are not in quad mode
         end
     end
 end
+guidata(hObject,handles);
 
 
 % --- Executes on selection change in selectLEDsShow.

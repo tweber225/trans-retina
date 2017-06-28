@@ -35,16 +35,16 @@ handles.imgHandLEDQuad4 = get(handles.LEDQuad4Ax,'Children');
 % we're in (i.e. quad-channel view enabled, or not)
 if handles.settingsStruct.selectLEDsQuadViewOn == 1
     handles.imgHandLED2.Visible = 'off';
-    if handles.settingStruct.selectLEDsEnable1 == 0
+    if handles.settingsStruct.selectLEDsEnable1 == 0
         handles.imgHandLEDQuad1.Visible = 'off';
     end
-    if handles.settingStruct.selectLEDsEnable2 == 0
+    if handles.settingsStruct.selectLEDsEnable2 == 0
         handles.imgHandLEDQuad2.Visible = 'off';
     end
-    if handles.settingStruct.selectLEDsEnable3 == 0
+    if handles.settingsStruct.selectLEDsEnable3 == 0
         handles.imgHandLEDQuad3.Visible = 'off';
     end
-    if handles.settingStruct.selectLEDsEnable4 == 0
+    if handles.settingsStruct.selectLEDsEnable4 == 0
         handles.imgHandLEDQuad4.Visible = 'off';
     end
 else

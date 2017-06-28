@@ -427,8 +427,7 @@ end
 function prevStartButton_Callback(hObject, eventdata, handles)
 if get(handles.prevStartButton,'Value') == 1
     % Output TTL HIGH to Arduino to signal the start of an acquisition
-    digOutput = [1 handles.LEDsToEnable];
-    outputSingleScan(handles.NIDaqSession,digOutput);
+    outputSingleScan(handles.NIDaqSession,[1 handles.LEDsToEnable]);
     
     disp('Starting Preview')      
     % Check whether the current image data displayed on GUI matches the
@@ -443,55 +442,83 @@ if get(handles.prevStartButton,'Value') == 1
     % that should not be changed
     handles = set_preview_or_capture_settings(handles,'preview');
     
-    timeDataLastPair = 0; % (for FPS calculation)
+    timeDataLastPair = 0; % for frame sets per second (FSPS) calculation
     start(handles.vidObj);
     
     guidata(hObject,handles);
     while get(handles.prevStartButton,'Value') == 1 % While the toggle button is DOWN
         % Get current GUI UI data (for update-able properties)
         handles = guidata(hObject);
+        numLEDsEnabled = sum(handles.LEDsToEnable,2);
         
-        if handles.vidObj.FramesAvailable > 2 % If we have more than 2 frames in buffer, read 2 frames and discard them
-            disp('!! DROPPED FRAME(S) !! Attempting to recover order')
-            droppedFrameData = getdata(handles.vidObj, 2); % don't do anything with this data, this might pick up streaming slack
+        if handles.vidObj.FramesAvailable > numLEDsEnabled % If we have more than 2 frames in buffer, read 2 frames and discard them
+            disp('!! DROPPED FRAME(S) !! Attempting to recover order.')
+            droppedFrameData = getdata(handles.vidObj, numLEDsEnabled); % don't do anything with this data, this might help pick up slack
         end
         
-        if handles.vidObj.FramesAvailable > 1 % when 2 frames are available put them up on the GUI displays
-            [currentFramePair,timeDataNow] = getdata(handles.vidObj,handles.vidObj.FramesAvailable);
+        if handles.vidObj.FramesAvailable > (numLEDsEnabled-1) % when 2 frames are available put them up on the GUI displays
+            [currentFrameSet,timeDataNow] = getdata(handles.vidObj,handles.vidObj.FramesAvailable);
             
-            % Display current data (shifted in X)
-            frame1 = currentFramePair(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,1);
-            frame2 = currentFramePair(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,2);
-            set(handles.imgHandLED1, 'CData', frame1);
-            set(handles.imgHandLED2, 'CData', frame2);
+            % Gather data and crop to square (shifted in x)
+            croppedFrames = squeeze(currentFrameSet(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,:));
             
-            % Do computations on the masked images only
-            frame1 = frame1.*handles.imageMask;
-            frame2 = frame2.*handles.imageMask;
-            frame1 = frame1(frame1>0);
-            frame2 = frame2(frame2>0);
-            
-            % If requested, recompute histogram
-            if handles.settingsStruct.commRTHistogram == 1
-                handles.histHandLED1.Data = frame1;
-                handles.histHandLED2.Data = frame2;
+            % Display data
+            if handles.settingsStruct.selectLEDsQuadViewOn == 1
+                frameIdx = 1;
+                if handles.settingsStruct.selectLEDsEnable1 == 1
+                    set(handles.imgHandLEDQuad1, 'CData', croppedFrames(:,:,frameIdx));
+                    frameIdx = frameIdx+1;
+                end
+                if handles.settingsStruct.selectLEDsEnable2 == 1
+                    set(handles.imgHandLEDQuad2, 'CData', croppedFrames(:,:,frameIdx));
+                    frameIdx = frameIdx+1;
+                end
+                if handles.settingsStruct.selectLEDsEnable3 == 1
+                    set(handles.imgHandLEDQuad3, 'CData', croppedFrames(:,:,frameIdx));
+                    frameIdx = frameIdx+1;
+                end
+                if handles.settingsStruct.selectLEDsEnable4 == 1
+                    set(handles.imgHandLEDQuad4, 'CData', croppedFrames(:,:,frameIdx));
+                end
+                
+            else % if not in quad mode, we can just put the frames into each standard axis
+                if numLEDsEnabled == 1
+                    set(handles.imgHandLED1, 'CData', croppedFrames);
+                else
+                    set(handles.imgHandLED1, 'CData', croppedFrames(:,:,1));
+                    set(handles.imgHandLED2, 'CData', croppedFrames(:,:,2));
+                end
             end
             
-            % If requested, recompute statistics
+            
+            % Do computations on the masked images only
+            maskedCroppedFrames = zeros(sum(handles.imageMask(:)),numLEDsEnabled);
+            for frameIdx = 1:numLEDsEnabled
+                maskedImage = croppedFrames(:,:,frameIdx).*handles.imageMask;
+                maskedCroppedFrames(:,frameIdx) = maskedImage(maskedImage>0);
+            end
+            
+            % If requested, compute histogram
+            if handles.settingsStruct.commRTHistogram == 1
+%                 handles.histHandLED1.Data = frame1;
+%                 handles.histHandLED2.Data = frame2;
+            end
+            
+            % If requested, compute statistics
             if handles.settingsStruct.commRTStats == 1
-                set(handles.LED1MaxIndicator,'String',['Max: ' num2str(max(frame1(:)))]);
-                set(handles.LED1MinIndicator,'String',['Min: ' num2str(min(frame1(:)))]);
-                set(handles.LED1MeanIndicator,'String',['Mean: ' num2str(mean(frame1(:)),4)]);
-                set(handles.LED1MedianIndicator,'String',['Median: ' num2str(median(frame1(:)),4)]);
-                percentSat = 100*sum(frame1(:) == (2^handles.settingsStruct.constCameraBits-1))/numel(frame1(:));
-                set(handles.LED1PercentSaturatedIndicator,'String',['% Saturated: ' num2str(percentSat,3) '%']);
-                
-                set(handles.LED2MaxIndicator,'String',['Max: ' num2str(max(frame2(:)))]);
-                set(handles.LED2MinIndicator,'String',['Min: ' num2str(min(frame2(:)))]);
-                set(handles.LED2MeanIndicator,'String',['Mean: ' num2str(mean(frame2(:)),4)]);
-                set(handles.LED2MedianIndicator,'String',['Median: ' num2str(median(frame2(:)),4)]);
-                percentSat = 100*sum(frame1(:) == (2^handles.settingsStruct.constCameraBits-1))/numel(frame2(:));
-                set(handles.LED2PercentSaturatedIndicator,'String',['% Saturated: ' num2str(percentSat,3) '%']);
+%                 set(handles.LED1MaxIndicator,'String',['Max: ' num2str(max(frame1(:)))]);
+%                 set(handles.LED1MinIndicator,'String',['Min: ' num2str(min(frame1(:)))]);
+%                 set(handles.LED1MeanIndicator,'String',['Mean: ' num2str(mean(frame1(:)),4)]);
+%                 set(handles.LED1MedianIndicator,'String',['Median: ' num2str(median(frame1(:)),4)]);
+%                 percentSat = 100*sum(frame1(:) == (2^handles.settingsStruct.constCameraBits-1))/numel(frame1(:));
+%                 set(handles.LED1PercentSaturatedIndicator,'String',['% Saturated: ' num2str(percentSat,3) '%']);
+%                 
+%                 set(handles.LED2MaxIndicator,'String',['Max: ' num2str(max(frame2(:)))]);
+%                 set(handles.LED2MinIndicator,'String',['Min: ' num2str(min(frame2(:)))]);
+%                 set(handles.LED2MeanIndicator,'String',['Mean: ' num2str(mean(frame2(:)),4)]);
+%                 set(handles.LED2MedianIndicator,'String',['Median: ' num2str(median(frame2(:)),4)]);
+%                 percentSat = 100*sum(frame1(:) == (2^handles.settingsStruct.constCameraBits-1))/numel(frame2(:));
+%                 set(handles.LED2PercentSaturatedIndicator,'String',['% Saturated: ' num2str(percentSat,3) '%']);
             end
             
             % Update Frame Pairs Per Second Indicator
@@ -507,7 +534,7 @@ if get(handles.prevStartButton,'Value') == 1
     
     % Send TTL LOW to Arduino to signal end of this acquisition event and
     % reset its LED toggle
-    outputSingleScan(handles.NIDaqSession,0);
+    outputSingleScan(handles.NIDaqSession,[0 handles.LEDsToEnable]);
     
     guidata(hObject, handles);
 else

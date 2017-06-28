@@ -27,7 +27,7 @@ set(handles.selectLEDsEnable1,'Value',handles.settingsStruct.selectLEDsEnable1);
 set(handles.selectLEDsEnable2,'Value',handles.settingsStruct.selectLEDsEnable2);
 set(handles.selectLEDsEnable3,'Value',handles.settingsStruct.selectLEDsEnable3);
 set(handles.selectLEDsEnable4,'Value',handles.settingsStruct.selectLEDsEnable4);
-showLEDString = ['1: ' handles.settingsStruct.constLED1CenterWavelength '\n' '2: ' handles.settingsStruct.constLED2CenterWavelength '\n' '3: ' handles.settingsStruct.constLED3CenterWavelength '\n' '4: ' handles.settingsStruct.constLED4CenterWavelength];
+showLEDString = {['1: ' handles.settingsStruct.constLED1CenterWavelength]; ['2: ' handles.settingsStruct.constLED2CenterWavelength]; ['3: ' handles.settingsStruct.constLED3CenterWavelength]; ['4: ' handles.settingsStruct.constLED4CenterWavelength]};
 set(handles.selectLEDsShow,'String',showLEDString);
 set(handles.selectLEDsShow,'Value',handles.settingsStruct.selectLEDsShow);
 

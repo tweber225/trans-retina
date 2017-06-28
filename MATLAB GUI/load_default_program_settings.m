@@ -24,11 +24,10 @@ settingsStruct.commStatHistInCenter = 1;
 
 % SELECT LEDS SETTINGS
 settingsStruct.selectLEDsEnable1 = 1;
-settingsStruct.selectLEDsEnable2 = 1;
-settingsStruct.selectLEDsEnable3 = 1;
+settingsStruct.selectLEDsEnable2 = 0;
+settingsStruct.selectLEDsEnable3 = 0;
 settingsStruct.selectLEDsEnable4 = 1;
 settingsStruct.selectLEDsShow = 1; % LED channel to show on big image axis, only important if >2 LEDs are selected
-settingsStruct.selectLEDsQuadViewOn = 1; % whether we're in the quad-view mode (when >2 LEDs are enabled)
 
 % SAVE SETTINGS
 settingsStruct.saveBaseName = 'subject001';
@@ -73,6 +72,12 @@ switch settingsStruct.prevBinSize
         settingsStruct.derivePrevNumPixPerDim = settingsStruct.constNumPixHeight/4;
 end
 settingsStruct.numPixPerDim = settingsStruct.derivePrevNumPixPerDim;
+if sum([settingsStruct.selectLEDsEnable1,settingsStruct.selectLEDsEnable2,settingsStruct.selectLEDsEnable3,settingsStruct.selectLEDsEnable4]) > 2
+    settingsStruct.selectLEDsQuadViewOn = 1; % whether we're in the quad-view mode (when >2 LEDs are enabled)
+else
+    settingsStruct.selectLEDsQuadViewOn = 0;
+end
+
 
 % ANALYSIS SETTINGS
 settingsStruct.analysisSelectCenterRadPercent = 0.9;

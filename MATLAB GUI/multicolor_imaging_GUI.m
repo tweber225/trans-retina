@@ -713,63 +713,72 @@ end
 
 guidata(hObject,handles);
 
-% CLOSING FUNCTION - CLEANS UP CONNECTIONS (very important to get this
-% right)
-% --- Executes when user attempts to close the GUI.
-function two_color_image_GUI_CloseRequestFcn(hObject, eventdata, handles)
-% hObject    handle to multicolor_imaging_GUI (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-disp('Closing Camera')
-delete(handles.vidObj);
-clear handles.vidObj
-imaqreset
-
-disp('Closing DAQ')
-delete(handles.NIDaqSession);
-daqreset
-
-delete(hObject);
-
-% drop mic
-
 
 
 % --- Executes on button press in selectLEDsEnable1.
 function selectLEDsEnable1_Callback(hObject, eventdata, handles)
-% hObject    handle to selectLEDsEnable1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of selectLEDsEnable1
+% Determine if quad view was enabled before changing LEDs
+prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
+% Save the new setting for this LED
+handles.settingsStruct.selectLEDsEnable1 = get(handles.selectLEDsEnable1,'value');
+handles.LEDsToEnable(1) = handles.settingsStruct.selectLEDsEnable1;
+% Determine which image axes to show/hide
+if sum(handles.LEDsToEnable,2) > 2
+    if prevQuad == 0
+        % Change the quad view enable mode
+        handles.settingsStruct.selectLEDsQuadViewOn = 1;
+        % We have crossed the threshold and need to switch some axes to
+        % enable the quad-channel view
+        handles.LED2Ax.Visible = 'off';
+        handles.LEDQuad1Ax.Visible = 'on'; %If we have transitions from quad off to on, then we must have enabled this channel
+        if handles.LEDsToEnable(2) == 1
+            handles.LEDQuad2Ax.Visible = 'on';
+        end
+        if handles.LEDsToEnable(3) == 1
+            handles.LEDQuad3Ax.Visible = 'on';
+        end
+        if handles.LEDsToEnable(4) == 1
+            handles.LEDQuad4Ax.Visible = 'on';
+        end
+    else
+        % If we were in quad mode and we still are, then there are two possibilities
+        if handles.settingsStruct.selectLEDsEnable1 == 1
+            handles.LEDQuad1Ax.Visible = 'on';
+        else
+            handles.LEDQuad1Ax.Visible = 'off';
+        end
+    end
+else % now we are not in quad mode
+    if prevQuad == 1 % but if we just were in quad mode, then make sure to hide all those axis
+        handles.settingsStruct.selectLEDsQuadViewOn = 0;
+        handles.LED2Ax.Visible = 'on';
+        handles.LEDQuad1Ax.Visible = 'off';
+        handles.LEDQuad2Ax.Visible = 'off';
+        handles.LEDQuad3Ax.Visible = 'off';
+        handles.LEDQuad4Ax.Visible = 'off';    
+    else % if we were not in quad mode and are still not in quad mode
+        if handles.settingsStruct.selectLEDsEnable1 == 1
+            handles.LED2Ax.Visible = 'on';
+        else
+            handles.LED2Ax.Visible = 'off';
+        end
+    end
+end
 
 
 % --- Executes on button press in selectLEDsEnable2.
 function selectLEDsEnable2_Callback(hObject, eventdata, handles)
-% hObject    handle to selectLEDsEnable2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of selectLEDsEnable2
 
 
 % --- Executes on button press in selectLEDsEnable3.
 function selectLEDsEnable3_Callback(hObject, eventdata, handles)
-% hObject    handle to selectLEDsEnable3 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of selectLEDsEnable3
 
 
 % --- Executes on button press in selectLEDsEnable4.
 function selectLEDsEnable4_Callback(hObject, eventdata, handles)
-% hObject    handle to selectLEDsEnable4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of selectLEDsEnable4
 
 
 % --- Executes on selection change in selectLEDsShow.
@@ -793,3 +802,24 @@ function selectLEDsShow_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+
+% CLOSING FUNCTION - CLEANS UP CONNECTIONS (very important to get this
+% right)
+% --- Executes when user attempts to close the GUI.
+function two_color_image_GUI_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to multicolor_imaging_GUI (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+disp('Closing Camera')
+delete(handles.vidObj);
+clear handles.vidObj
+imaqreset
+
+disp('Closing DAQ')
+delete(handles.NIDaqSession);
+daqreset
+
+delete(hObject);

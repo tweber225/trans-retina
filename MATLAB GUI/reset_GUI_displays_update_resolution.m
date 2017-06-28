@@ -17,25 +17,29 @@ handles.settingsStruct.whiteLevelLED4 = handles.settingsStruct.whiteLevelLED1;
 blackFrame = uint16(zeros(newResolution));
 
 % Display black images, and then save all the handles
-% Image 1 is always displayed: it's either the first image if acquiring <2
-% images, or an enlarged image of one of the 4 images
+% Make handles to all the images
 imshow(blackFrame, [handles.settingsStruct.blackLevelLED1,handles.settingsStruct.whiteLevelLED1], 'Parent', handles.LED1Ax)
 handles.imgHandLED1 = get(handles.LED1Ax,'Children');
+imshow(blackFrame, [handles.settingsStruct.blackLevelLED2,handles.settingsStruct.whiteLevelLED2], 'Parent', handles.LED2Ax)
+handles.imgHandLED2 = get(handles.LED2Ax,'Children');
+imshow(blackFrame, [handles.settingsStruct.blackLevelLED1,handles.settingsStruct.whiteLevelLED1], 'Parent', handles.LEDQuad1Ax)
+handles.imgHandLEDQuad1 = get(handles.LEDQuad1Ax,'Children');
+imshow(blackFrame, [handles.settingsStruct.blackLevelLED2,handles.settingsStruct.whiteLevelLED2], 'Parent', handles.LEDQuad2Ax)
+handles.imgHandLEDQuad2 = get(handles.LEDQuad2Ax,'Children');
+imshow(blackFrame, [handles.settingsStruct.blackLevelLED3,handles.settingsStruct.whiteLevelLED3], 'Parent', handles.LEDQuad3Ax)
+handles.imgHandLEDQuad3 = get(handles.LEDQuad3Ax,'Children');
+imshow(blackFrame, [handles.settingsStruct.blackLevelLED4,handles.settingsStruct.whiteLevelLED4], 'Parent', handles.LEDQuad4Ax)
+handles.imgHandLEDQuad4 = get(handles.LEDQuad4Ax,'Children');
 
-% The way the rest of the images are displayed is different depending on
-% the number of LED channels enabled
-if handles.settingsStruct.selectLEDsQuadViewOn ~= 1
-    imshow(blackFrame, [handles.settingsStruct.blackLevelLED2,handles.settingsStruct.whiteLevelLED2], 'Parent', handles.LED2Ax)
-    handles.imgHandLED2 = get(handles.LED2Ax,'Children');
+% Hide the images that will not be used depending on what viewing mode
+% we're in (i.e. quad-channel view enabled, or not)
+if handles.settingsStruct.selectLEDsQuadViewOn == 1
+    handles.LED2Ax.Visible = 'off';
 else
-    imshow(blackFrame, [handles.settingsStruct.blackLevelLED1,handles.settingsStruct.whiteLevelLED1], 'Parent', handles.LEDQuad1Ax)
-    handles.imgHandLEDQuad1 = get(handles.LEDQuad1Ax,'Children');
-    imshow(blackFrame, [handles.settingsStruct.blackLevelLED2,handles.settingsStruct.whiteLevelLED2], 'Parent', handles.LEDQuad2Ax)
-    handles.imgHandLEDQuad2 = get(handles.LEDQuad2Ax,'Children');
-    imshow(blackFrame, [handles.settingsStruct.blackLevelLED3,handles.settingsStruct.whiteLevelLED3], 'Parent', handles.LEDQuad3Ax)
-    handles.imgHandLEDQuad3 = get(handles.LEDQuad3Ax,'Children');
-    imshow(blackFrame, [handles.settingsStruct.blackLevelLED4,handles.settingsStruct.whiteLevelLED4], 'Parent', handles.LEDQuad4Ax)
-    handles.imgHandLEDQuad4 = get(handles.LEDQuad4Ax,'Children');
+    handles.LEDQuad1Ax.Visible = 'off';
+    handles.LEDQuad2Ax.Visible = 'off';
+    handles.LEDQuad3Ax.Visible = 'off';
+    handles.LEDQuad4Ax.Visible = 'off';
 end
 
 % Set the indicators of black vs white values correctly

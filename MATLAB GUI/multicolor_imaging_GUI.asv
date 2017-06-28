@@ -884,20 +884,22 @@ if sum(handles.LEDsToEnable,2) > 2
         % enable the quad-channel view
         handles.LED2Ax.Visible = 'off';
         if handles.LEDsToEnable(1) == 1
-            handles.LEDQuad1Ax.Visible = 'on'; 
+            handles.LEDQuad1Ax.Visible = 'on'; %If we have transitions from quad off to on, then we must have enabled this channel
         if handles.LEDsToEnable(2) == 1
             handles.LEDQuad2Ax.Visible = 'on';
         end
         if handles.LEDsToEnable(3) == 1
             handles.LEDQuad3Ax.Visible = 'on';
         end
-        handles.LEDQuad4Ax.Visible = 'on';
+        if handles.LEDsToEnable(4) == 1
+            handles.LEDQuad4Ax.Visible = 'on';
+        end
     else
         % If we were in quad mode and we still are, then there are two possibilities
-        if handles.settingsStruct.selectLEDsEnable4 == 1
-            handles.LEDQuad4Ax.Visible = 'on';
+        if handles.settingsStruct.selectLEDsEnable1 == 1
+            handles.LEDQuad1Ax.Visible = 'on';
         else
-            handles.LEDQuad4Ax.Visible = 'off';
+            handles.LEDQuad1Ax.Visible = 'off';
         end
     end
 else % now we are not in quad mode

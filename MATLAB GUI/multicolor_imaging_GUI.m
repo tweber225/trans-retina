@@ -54,9 +54,12 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % START TDW EDIT
+% Load the default program settings
+handles.settingsStruct = load_default_program_settings;
+
 % Make digital channels to send enable signal to Arduino with correct
 % configuration of LEDs
-handles.LEDsToEnable = [1 1 1 1]; % all of them to start
+handles.LEDsToEnable = [handles.settingsStruct.selectLEDsEnable1 handles.settingsStruct.selectLEDsEnable2 handles.settingsStruct.selectLEDsEnable3 handles.settingsStruct.selectLEDsEnable4];
 disp('Starting DAQ System')
 handles.NIDaqSession = daq.createSession('ni');
 addDigitalChannel(handles.NIDaqSession,'dev1','Port0/Line0:4','OutputOnly');
@@ -74,8 +77,7 @@ handles.vidObj.LoggingMode = 'memory';
 % FOR DEBUGGING/TESTING FRAME NUMBERS
 handles.srcObj.TMTimestampMode = 'BinaryAndAscii';
 
-% Load and set default parameters
-handles.settingsStruct = load_default_program_settings;
+% Update GUI settings, set up default camera parameters
 handles = update_all_settings_on_GUI(handles);
 handles.srcObj = set_all_camera_settings(handles.srcObj,handles.settingsStruct);
 
@@ -425,7 +427,8 @@ end
 function prevStartButton_Callback(hObject, eventdata, handles)
 if get(handles.prevStartButton,'Value') == 1
     % Output TTL HIGH to Arduino to signal the start of an acquisition
-    outputSingleScan(handles.NIDaqSession,1);
+    digOutput = [1 handles.LEDsToEnable];
+    outputSingleScan(handles.NIDaqSession,digOutput);
     
     disp('Starting Preview')      
     % Check whether the current image data displayed on GUI matches the

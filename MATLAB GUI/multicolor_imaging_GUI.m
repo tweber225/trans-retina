@@ -729,38 +729,38 @@ if sum(handles.LEDsToEnable,2) > 2
         handles.settingsStruct.selectLEDsQuadViewOn = 1;
         % We have crossed the threshold and need to switch some axes to
         % enable the quad-channel view
-        handles.LED2Ax.Visible = 'off';
-        handles.LEDQuad1Ax.Visible = 'on'; %If we have transitions from quad off to on, then we must have enabled this channel
+        handles.imgHandLED2.Visible = 'off';
+        handles.imgHandLEDQuad1.Visible = 'on'; %If we have transitions from quad off to on, then we must have enabled this channel
         if handles.LEDsToEnable(2) == 1
-            handles.LEDQuad2Ax.Visible = 'on';
+            handles.imgHandLEDQuad2.Visible = 'on';
         end
         if handles.LEDsToEnable(3) == 1
-            handles.LEDQuad3Ax.Visible = 'on';
+            handles.imgHandLEDQuad3.Visible = 'on';
         end
         if handles.LEDsToEnable(4) == 1
-            handles.LEDQuad4Ax.Visible = 'on';
+            handles.imgHandLEDQuad4.Visible = 'on';
         end
     else
         % If we were in quad mode and we still are, then there are two possibilities
         if handles.settingsStruct.selectLEDsEnable1 == 1
-            handles.LEDQuad1Ax.Visible = 'on';
+            handles.imgHandLEDQuad1.Visible = 'on';
         else
-            handles.LEDQuad1Ax.Visible = 'off';
+            handles.imgHandLEDQuad1.Visible = 'off';
         end
     end
 else % now we are not in quad mode
     if prevQuad == 1 % but if we just were in quad mode, then make sure to hide all those axis
         handles.settingsStruct.selectLEDsQuadViewOn = 0;
-        handles.LED2Ax.Visible = 'on';
-        handles.LEDQuad1Ax.Visible = 'off';
-        handles.LEDQuad2Ax.Visible = 'off';
-        handles.LEDQuad3Ax.Visible = 'off';
-        handles.LEDQuad4Ax.Visible = 'off';    
+        handles.imgHandLED2.Visible = 'on';
+        handles.imgHandLEDQuad1.Visible = 'off';
+        handles.imgHandLEDQuad2.Visible = 'off';
+        handles.imgHandLEDQuad3.Visible = 'off';
+        handles.imgHandLEDQuad4.Visible = 'off';    
     else % if we were not in quad mode and are still not in quad mode
         if handles.settingsStruct.selectLEDsEnable1 == 1
-            handles.LED2Ax.Visible = 'on';
+            handles.imgHandLED2.Visible = 'on';
         else
-            handles.LED2Ax.Visible = 'off';
+            handles.imgHandLED2.Visible = 'off';
         end
     end
 end
@@ -781,38 +781,38 @@ if sum(handles.LEDsToEnable,2) > 2
         handles.settingsStruct.selectLEDsQuadViewOn = 1;
         % We have crossed the threshold and need to switch some axes to
         % enable the quad-channel view
-        handles.LED2Ax.Visible = 'off';
+        handles.imgHandLED2.Visible = 'off';
         if handles.LEDsToEnable(1) == 1
-            handles.LEDQuad1Ax.Visible = 'on';
+            handles.imgHandLEDQuad1.Visible = 'on';
         end
-        handles.LEDQuad2Ax.Visible = 'on';
+        handles.imgHandLEDQuad2.Visible = 'on';
         if handles.LEDsToEnable(3) == 1
-            handles.LEDQuad3Ax.Visible = 'on';
+            handles.imgHandLEDQuad3.Visible = 'on';
         end
         if handles.LEDsToEnable(4) == 1
-            handles.LEDQuad4Ax.Visible = 'on';
+            handles.imgHandLEDQuad4.Visible = 'on';
         end
     else
         % If we were in quad mode and we still are, then there are two possibilities
         if handles.settingsStruct.selectLEDsEnable2 == 1
-            handles.LEDQuad2Ax.Visible = 'on';
+            handles.imgHandLEDQuad2.Visible = 'on';
         else
-            handles.LEDQuad2Ax.Visible = 'off';
+            handles.imgHandLEDQuad2.Visible = 'off';
         end
     end
 else % now we are not in quad mode
     if prevQuad == 1 % but if we just were in quad mode, then make sure to hide all those axis
         handles.settingsStruct.selectLEDsQuadViewOn = 0;
-        handles.LED2Ax.Visible = 'on';
-        handles.LEDQuad1Ax.Visible = 'off';
-        handles.LEDQuad2Ax.Visible = 'off';
-        handles.LEDQuad3Ax.Visible = 'off';
-        handles.LEDQuad4Ax.Visible = 'off';    
+        handles.imgHandLED2.Visible = 'on';
+        handles.imgHandLEDQuad1.Visible = 'off';
+        handles.imgHandLEDQuad2.Visible = 'off';
+        handles.imgHandLEDQuad3.Visible = 'off';
+        handles.imgHandLEDQuad4.Visible = 'off';    
     else % if we were not in quad mode and are still not in quad mode
         if handles.settingsStruct.selectLEDsEnable1 == 1
-            handles.LED2Ax.Visible = 'on';
+            handles.imgHandLED2.Visible = 'on';
         else
-            handles.LED2Ax.Visible = 'off';
+            handles.imgHandLED2.Visible = 'off';
         end
     end
 end
@@ -833,38 +833,38 @@ if sum(handles.LEDsToEnable,2) > 2
         handles.settingsStruct.selectLEDsQuadViewOn = 1;
         % We have crossed the threshold and need to switch some axes to
         % enable the quad-channel view
-        handles.LED2Ax.Visible = 'off';
+        handles.imgHandLED2.Visible = 'off';
         if handles.LEDsToEnable(1) == 1
-            handles.LEDQuad1Ax.Visible = 'on';
+            handles.imgHandLEDQuad1.Visible = 'on';
         end
         if handles.LEDsToEnable(2) == 1
-            handles.LEDQuad2Ax.Visible = 'on';
+            handles.imgHandLEDQuad2.Visible = 'on';
         end
-        handles.LEDQuad3Ax.Visible = 'on';
+        handles.imgHandLEDQuad3.Visible = 'on';
         if handles.LEDsToEnable(4) == 1
-            handles.LEDQuad4Ax.Visible = 'on';
+            handles.imgHandLEDQuad4.Visible = 'on';
         end
     else
         % If we were in quad mode and we still are, then there are two possibilities
         if handles.settingsStruct.selectLEDsEnable3 == 1
-            handles.LEDQuad3Ax.Visible = 'on';
+            handles.imgHandLEDQuad3.Visible = 'on';
         else
-            handles.LEDQuad3Ax.Visible = 'off';
+            handles.imgHandLEDQuad3.Visible = 'off';
         end
     end
 else % now we are not in quad mode
     if prevQuad == 1 % but if we just were in quad mode, then make sure to hide all those axis
         handles.settingsStruct.selectLEDsQuadViewOn = 0;
-        handles.LED2Ax.Visible = 'on';
-        handles.LEDQuad1Ax.Visible = 'off';
-        handles.LEDQuad2Ax.Visible = 'off';
-        handles.LEDQuad3Ax.Visible = 'off';
-        handles.LEDQuad4Ax.Visible = 'off';    
+        handles.imgHandLED2.Visible = 'on';
+        handles.imgHandLEDQuad1.Visible = 'off';
+        handles.imgHandLEDQuad2.Visible = 'off';
+        handles.imgHandLEDQuad3.Visible = 'off';
+        handles.imgHandLEDQuad4.Visible = 'off';    
     else % if we were not in quad mode and are still not in quad mode
         if handles.settingsStruct.selectLEDsEnable1 == 1
-            handles.LED2Ax.Visible = 'on';
+            handles.imgHandLED2.Visible = 'on';
         else
-            handles.LED2Ax.Visible = 'off';
+            handles.imgHandLED2.Visible = 'off';
         end
     end
 end
@@ -885,38 +885,38 @@ if sum(handles.LEDsToEnable,2) > 2
         handles.settingsStruct.selectLEDsQuadViewOn = 1;
         % We have crossed the threshold and need to switch some axes to
         % enable the quad-channel view
-        handles.LED2Ax.Visible = 'off';
+        handles.imgHandLED2.Visible = 'off';
         if handles.LEDsToEnable(1) == 1
-            handles.LEDQuad1Ax.Visible = 'on';
+            handles.imgHandLEDQuad1.Visible = 'on';
         end
         if handles.LEDsToEnable(2) == 1
-            handles.LEDQuad2Ax.Visible = 'on';
+            handles.imgHandLEDQuad2.Visible = 'on';
         end
         if handles.LEDsToEnable(3) == 1
-            handles.LEDQuad3Ax.Visible = 'on';
+            handles.imgHandLEDQuad3.Visible = 'on';
         end
-        handles.LEDQuad4Ax.Visible = 'on';
+        handles.imgHandLEDQuad4.Visible = 'on';
     else
         % If we were in quad mode and we still are, then there are two possibilities
         if handles.settingsStruct.selectLEDsEnable4 == 1
-            handles.LEDQuad4Ax.Visible = 'on';
+            handles.imgHandLEDQuad4.Visible = 'on';
         else
-            handles.LEDQuad4Ax.Visible = 'off';
+            handles.imgHandLEDQuad4.Visible = 'off';
         end
     end
 else % now we are not in quad mode
     if prevQuad == 1 % but if we just were in quad mode, then make sure to hide all those axis
         handles.settingsStruct.selectLEDsQuadViewOn = 0;
-        handles.LED2Ax.Visible = 'on';
-        handles.LEDQuad1Ax.Visible = 'off';
-        handles.LEDQuad2Ax.Visible = 'off';
-        handles.LEDQuad3Ax.Visible = 'off';
-        handles.LEDQuad4Ax.Visible = 'off';    
+        handles.imgHandLED2.Visible = 'on';
+        handles.imgHandLEDQuad1.Visible = 'off';
+        handles.imgHandLEDQuad2.Visible = 'off';
+        handles.imgHandLEDQuad3.Visible = 'off';
+        handles.imgHandLEDQuad4.Visible = 'off';    
     else % if we were not in quad mode and are still not in quad mode
         if handles.settingsStruct.selectLEDsEnable1 == 1
-            handles.LED2Ax.Visible = 'on';
+            handles.imgHandLED2.Visible = 'on';
         else
-            handles.LED2Ax.Visible = 'off';
+            handles.imgHandLED2.Visible = 'off';
         end
     end
 end

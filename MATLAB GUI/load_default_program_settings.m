@@ -49,10 +49,10 @@ settingsStruct.TMTimestampMode = 'BinaryAndAscii'; %  options: 'No Stamp', 'Bina
 settingsStruct.constCameraBits = 14;
 settingsStruct.constNumPixWidth = 1392;
 settingsStruct.constNumPixHeight = 1040;
-settingsStruct.constLED1CenterWavelength = '660 nm';
-settingsStruct.constLED2CenterWavelength = '730 nm';
-settingsStruct.constLED3CenterWavelength = '780 nm';
-settingsStruct.constLED4CenterWavelength = '850 nm';
+settingsStruct.constLED1CenterWavelength = '660nm';
+settingsStruct.constLED2CenterWavelength = '730nm';
+settingsStruct.constLED3CenterWavelength = '780nm';
+settingsStruct.constLED4CenterWavelength = '850nm';
 
 % DERIVED SETTINGS/PARAMETERS
 switch settingsStruct.capBinSize

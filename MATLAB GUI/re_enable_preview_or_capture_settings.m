@@ -10,6 +10,10 @@ if strcmp(settingType,'preview')
     set(handles.prevGain,'Enable','on');
     set(handles.commIRMode,'Enable','on');
     set(handles.prevStartButton,'String','Start Preview');
+    set(handles.selectLEDsEnable1,'Enable','on');
+    set(handles.selectLEDsEnable2,'Enable','on');
+    set(handles.selectLEDsEnable3,'Enable','on');
+    set(handles.selectLEDsEnable4,'Enable','on');
     
 elseif strcmp(settingType,'capture')
     

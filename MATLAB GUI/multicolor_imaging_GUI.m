@@ -462,8 +462,10 @@ if get(handles.prevStartButton,'Value') == 1
             % Gather data and crop to square (shifted in x)
             croppedFrames = squeeze(currentFrameSet(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,:));
             
-            % Display data
+            % Display data - dependent on whether "quad-channel view"
+            % (quadview) is on
             if handles.settingsStruct.selectLEDsQuadViewOn == 1
+                % Show all the individual images in smaller "thumbnails"
                 frameIdx = 1;
                 if handles.settingsStruct.selectLEDsEnable1 == 1
                     set(handles.imgHandLEDQuad1, 'CData', croppedFrames(:,:,frameIdx));
@@ -480,6 +482,10 @@ if get(handles.prevStartButton,'Value') == 1
                 if handles.settingsStruct.selectLEDsEnable4 == 1
                     set(handles.imgHandLEDQuad4, 'CData', croppedFrames(:,:,frameIdx));
                 end
+                
+                % Show one of these (specified in select LEDs panel) in
+                % large LED1Ax frame
+                set(handles.imgHandLED1, 'CData', croppedFrames(:,:,handles.settingsStruct.selectLEDsShow));
                 
             else % if not in quad mode, we can just put the frames into each standard axis
                 if numLEDsEnabled == 1
@@ -752,9 +758,12 @@ prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 % Save the new setting for this LED
 handles.settingsStruct.selectLEDsEnable1 = get(handles.selectLEDsEnable1,'value');
 handles.LEDsToEnable(1) = handles.settingsStruct.selectLEDsEnable1;
+% Confirm (on command line) the LED change made
+
 % Determine which image axes to show/hide
 if sum(handles.LEDsToEnable,2) > 2
     if prevQuad == 0
+        disp('Turning quad-channel view mode on')
         % Change the quad view enable mode
         handles.settingsStruct.selectLEDsQuadViewOn = 1;
         % We have crossed the threshold and need to switch some axes to
@@ -780,6 +789,7 @@ if sum(handles.LEDsToEnable,2) > 2
     end
 else % now we are not in quad mode
     if prevQuad == 1 % but if we just were in quad mode, then make sure to hide all those axis
+        disp('Turning quad-channel view mode off')
         handles.settingsStruct.selectLEDsQuadViewOn = 0;
         handles.imgHandLED2.Visible = 'on';
         handles.imgHandLEDQuad1.Visible = 'off';
@@ -807,6 +817,7 @@ handles.LEDsToEnable(2) = handles.settingsStruct.selectLEDsEnable2;
 % Determine which image axes to show/hide
 if sum(handles.LEDsToEnable,2) > 2
     if prevQuad == 0
+        disp('Turning quad-channel view mode on')
         % Change the quad view enable mode
         handles.settingsStruct.selectLEDsQuadViewOn = 1;
         % We have crossed the threshold and need to switch some axes to
@@ -832,6 +843,7 @@ if sum(handles.LEDsToEnable,2) > 2
     end
 else % now we are not in quad mode
     if prevQuad == 1 % but if we just were in quad mode, then make sure to hide all those axis
+        disp('Turning quad-channel view mode off')
         handles.settingsStruct.selectLEDsQuadViewOn = 0;
         handles.imgHandLED2.Visible = 'on';
         handles.imgHandLEDQuad1.Visible = 'off';
@@ -859,6 +871,7 @@ handles.LEDsToEnable(3) = handles.settingsStruct.selectLEDsEnable3;
 % Determine which image axes to show/hide
 if sum(handles.LEDsToEnable,2) > 2
     if prevQuad == 0
+        disp('Turning quad-channel view mode on')
         % Change the quad view enable mode
         handles.settingsStruct.selectLEDsQuadViewOn = 1;
         % We have crossed the threshold and need to switch some axes to
@@ -884,6 +897,7 @@ if sum(handles.LEDsToEnable,2) > 2
     end
 else % now we are not in quad mode
     if prevQuad == 1 % but if we just were in quad mode, then make sure to hide all those axis
+        disp('Turning quad-channel view mode off')
         handles.settingsStruct.selectLEDsQuadViewOn = 0;
         handles.imgHandLED2.Visible = 'on';
         handles.imgHandLEDQuad1.Visible = 'off';
@@ -911,6 +925,7 @@ handles.LEDsToEnable(4) = handles.settingsStruct.selectLEDsEnable4;
 % Determine which image axes to show/hide
 if sum(handles.LEDsToEnable,2) > 2
     if prevQuad == 0
+        disp('Turning quad-channel view mode on')
         % Change the quad view enable mode
         handles.settingsStruct.selectLEDsQuadViewOn = 1;
         % We have crossed the threshold and need to switch some axes to
@@ -936,6 +951,7 @@ if sum(handles.LEDsToEnable,2) > 2
     end
 else % now we are not in quad mode
     if prevQuad == 1 % but if we just were in quad mode, then make sure to hide all those axis
+        disp('Turning quad-channel view mode off')
         handles.settingsStruct.selectLEDsQuadViewOn = 0;
         handles.imgHandLED2.Visible = 'on';
         handles.imgHandLEDQuad1.Visible = 'off';

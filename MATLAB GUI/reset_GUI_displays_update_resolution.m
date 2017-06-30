@@ -66,12 +66,39 @@ set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(handles.settings
 % if enabled, update the histograms too
 handles.histogramBinEdges = 0:(handles.settingsStruct.whiteLevelLED1/handles.settingsStruct.analysisHistogramBins):handles.settingsStruct.whiteLevelLED1;
 if handles.settingsStruct.commRTHistogram == 1
-    handles.histHandLED1 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LED1Hist);
-    handles.LED1Hist.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
-    handles.LED1Hist.YScale = 'log';
-    handles.histHandLED2 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LED2Hist);
-    handles.LED2Hist.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
-    handles.LED2Hist.YScale = 'log';
+    if handles.settingsStruct.selectLEDsQuadViewOn == 0
+        handles.histHandLED1 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LED1Hist);
+        handles.LED1Hist.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
+        handles.LED1Hist.YScale = 'log';
+        if sum(handles.LEDsToEnable,2) > 1
+            handles.histHandLED2 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LED2Hist);
+            handles.LED2Hist.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
+            handles.LED2Hist.YScale = 'log';
+        end
+    else % quadview therefore is on
+        if handles.settingsStruct.selectLEDsEnable1 == 1
+            handles.histHandLEDQuad1 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LEDQuad1Hist);
+            handles.histHandLEDQuad1.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
+            handles.histHandLEDQuad1.YScale = 'log';
+        end
+        if handles.settingsStruct.selectLEDsEnable2 == 1
+            handles.histHandLEDQuad2 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LEDQuad2Hist);
+            handles.histHandLEDQuad2.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
+            handles.histHandLEDQuad2.YScale = 'log';
+        end
+        if handles.settingsStruct.selectLEDsEnable3 == 1
+            handles.histHandLEDQuad3 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LEDQuad3Hist);
+            handles.histHandLEDQuad3.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
+            handles.histHandLEDQuad3.YScale = 'log';
+        end
+        if handles.settingsStruct.selectLEDsEnable4 == 1
+            handles.histHandLEDQuad4 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LEDQuad4Hist);
+            handles.histHandLEDQuad4.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
+            handles.histHandLEDQuad4.YScale = 'log';
+        end
+        
+            
+    end
 end
 
 % Update the current number of pixels per dim to the value just set

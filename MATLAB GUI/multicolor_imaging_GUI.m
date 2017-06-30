@@ -22,7 +22,7 @@ function varargout = multicolor_imaging_GUI(varargin)
 
 % Edit the above text to modify the response to help multicolor_imaging_GUI
 
-% Last Modified by GUIDE v2.5 27-Jun-2017 12:25:00
+% Last Modified by GUIDE v2.5 30-Jun-2017 18:00:45
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -467,29 +467,43 @@ if get(handles.prevStartButton,'Value') == 1
             if handles.settingsStruct.selectLEDsQuadViewOn == 1
                 % Show all the individual images in smaller "thumbnails"
                 frameIdx = 1;
+                bigFrameToShow = -1;
+                bigFrameRequest = get(handles.selectLEDsShow,'Value');
                 if handles.settingsStruct.selectLEDsEnable1 == 1
                     set(handles.imgHandLEDQuad1, 'CData', croppedFrames(:,:,frameIdx));
+                    if bigFrameRequest == 1;
+                        bigFrameToShow = frameIdx;
+                    end
                     frameIdx = frameIdx+1;
                 end
                 if handles.settingsStruct.selectLEDsEnable2 == 1
                     set(handles.imgHandLEDQuad2, 'CData', croppedFrames(:,:,frameIdx));
+                    if bigFrameRequest == 2;
+                        bigFrameToShow = frameIdx;
+                    end
                     frameIdx = frameIdx+1;
                 end
                 if handles.settingsStruct.selectLEDsEnable3 == 1
                     set(handles.imgHandLEDQuad3, 'CData', croppedFrames(:,:,frameIdx));
+                    if bigFrameRequest == 3;
+                        bigFrameToShow = frameIdx;
+                    end
                     frameIdx = frameIdx+1;
                 end
                 if handles.settingsStruct.selectLEDsEnable4 == 1
                     set(handles.imgHandLEDQuad4, 'CData', croppedFrames(:,:,frameIdx));
+                    if bigFrameRequest == 4;
+                        bigFrameToShow = frameIdx;
+                    end
                 end
                 
                 % Show one of these (specified in select LEDs panel) in
                 % large LED1Ax frame
-                set(handles.imgHandLED1, 'CData', croppedFrames(:,:,handles.settingsStruct.selectLEDsShow));
+                set(handles.imgHandLED1, 'CData', croppedFrames(:,:,bigFrameToShow));
                 
             else % if not in quad mode, we can just put the frames into each standard axis
                 if numLEDsEnabled == 1
-                    set(handles.imgHandLED1, 'CData', croppedFrames);
+                    set(handles.imgHandLED1, 'CData', croppedFrames(:,:,1));
                 else
                     set(handles.imgHandLED1, 'CData', croppedFrames(:,:,1));
                     set(handles.imgHandLED2, 'CData', croppedFrames(:,:,2));
@@ -506,8 +520,29 @@ if get(handles.prevStartButton,'Value') == 1
             
             % If requested, compute histogram
             if handles.settingsStruct.commRTHistogram == 1
-%                 handles.histHandLED1.Data = frame1;
-%                 handles.histHandLED2.Data = frame2;
+                if handles.settingsStruct.selectLEDsQuadViewOn == 0
+                    handles.histHandLED1.Data = maskedCroppedFrames(:,1);
+                    if numLEDsEnabled>1
+                        handles.histHandLED2.Data = maskedCroppedFrames(:,2);
+                    end
+                else % different handling, if IN quad mode:
+                    quadIdx = 1;
+                    if handles.settingsStruct.selectLEDsEnable1 == 1
+                        handles.LEDQuad1Hist.Data = maskedCroppedFrames(:,quadIdx);
+                        quadIdx = quadIdx + 1;
+                    end
+                    if handles.settingsStruct.selectLEDsEnable2 == 1
+                        handles.LEDQuad2Hist.Data = maskedCroppedFrames(:,quadIdx);
+                        quadIdx = quadIdx + 1;
+                    end
+                    if handles.settingsStruct.selectLEDsEnable3 == 1
+                        handles.LEDQuad3Hist.Data = maskedCroppedFrames(:,quadIdx);
+                        quadIdx = quadIdx + 1;
+                    end
+                    if handles.settingsStruct.selectLEDsEnable4 == 1
+                        handles.LEDQuad4Hist.Data = maskedCroppedFrames(:,quadIdx);
+                    end
+                end
             end
             
             % If requested, compute statistics
@@ -759,6 +794,11 @@ prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 handles.settingsStruct.selectLEDsEnable1 = get(handles.selectLEDsEnable1,'value');
 handles.LEDsToEnable(1) = handles.settingsStruct.selectLEDsEnable1;
 % Confirm (on command line) the LED change made
+if handles.settingsStruct.selectLEDsEnable1 == 1
+    disp([handles.settingsStruct.constLED1CenterWavelength ' LED turned ON.']);
+else
+    disp([handles.settingsStruct.constLED1CenterWavelength ' LED turned OFF.']);
+end
 
 % Determine which image axes to show/hide
 if sum(handles.LEDsToEnable,2) > 2
@@ -814,6 +854,12 @@ prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 % Save the new setting for this LED
 handles.settingsStruct.selectLEDsEnable2 = get(handles.selectLEDsEnable2,'value');
 handles.LEDsToEnable(2) = handles.settingsStruct.selectLEDsEnable2;
+% Confirm (on command line) the LED change made
+if handles.settingsStruct.selectLEDsEnable2== 1
+    disp([handles.settingsStruct.constLED2CenterWavelength ' LED turned ON.']);
+else
+    disp([handles.settingsStruct.constLED2CenterWavelength ' LED turned OFF.']);
+end
 % Determine which image axes to show/hide
 if sum(handles.LEDsToEnable,2) > 2
     if prevQuad == 0
@@ -868,6 +914,12 @@ prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 % Save the new setting for this LED
 handles.settingsStruct.selectLEDsEnable3 = get(handles.selectLEDsEnable3,'value');
 handles.LEDsToEnable(3) = handles.settingsStruct.selectLEDsEnable3;
+% Confirm (on command line) the LED change made
+if handles.settingsStruct.selectLEDsEnable3 == 1
+    disp([handles.settingsStruct.constLED3CenterWavelength ' LED turned ON.']);
+else
+    disp([handles.settingsStruct.constLED3CenterWavelength ' LED turned OFF.']);
+end
 % Determine which image axes to show/hide
 if sum(handles.LEDsToEnable,2) > 2
     if prevQuad == 0
@@ -922,6 +974,12 @@ prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 % Save the new setting for this LED
 handles.settingsStruct.selectLEDsEnable4 = get(handles.selectLEDsEnable4,'value');
 handles.LEDsToEnable(4) = handles.settingsStruct.selectLEDsEnable4;
+% Confirm (on command line) the LED change made
+if handles.settingsStruct.selectLEDsEnable4 == 1
+    disp([handles.settingsStruct.constLED4CenterWavelength ' LED turned ON.']);
+else
+    disp([handles.settingsStruct.constLED4CenterWavelength ' LED turned OFF.']);
+end
 % Determine which image axes to show/hide
 if sum(handles.LEDsToEnable,2) > 2
     if prevQuad == 0
@@ -971,12 +1029,23 @@ guidata(hObject,handles);
 
 % --- Executes on selection change in selectLEDsShow.
 function selectLEDsShow_Callback(hObject, eventdata, handles)
-% hObject    handle to selectLEDsShow (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns selectLEDsShow contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from selectLEDsShow
+requestedBigFrame = get(handles.selectLEDsShow,'Value');
+if handles.LEDsToEnable(requestedBigFrame) == 1
+    handles.settingsStruct.selectLEDsShow = requestedBigFrame;
+elseif handles.LEDsToEnable(1) == 1 % these are for cases where the requested LED is not active, so it corrects
+    handles.settingsStruct.selectLEDsShow = 1;
+    set(handles.selectLEDsShow,'Value',1);
+elseif handles.LEDsToEnable(1) == 2
+    handles.settingsStruct.selectLEDsShow = 2;
+    set(handles.selectLEDsShow,'Value',2);
+elseif handles.LEDsToEnable(1) == 3
+    handles.settingsStruct.selectLEDsShow = 3;
+    set(handles.selectLEDsShow,'Value',3);
+else
+    handles.settingsStruct.selectLEDsShow = 4;
+    set(handles.selectLEDsShow,'Value',4);
+end
+guidata(hObject,handles);
 
 
 % --- Executes during object creation, after setting all properties.

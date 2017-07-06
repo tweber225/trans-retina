@@ -562,8 +562,8 @@ if get(handles.prevStartButton,'Value') == 1
 %                 set(handles.LED2PercentSaturatedIndicator,'String',['% Saturated: ' num2str(percentSat,3) '%']);
             end
             
-            % Update Frame Pairs Per Second Indicator
-            set(handles.prevFPSIndicator,'String',[num2str(1/(timeDataNow(1)-timeDataLastPair),4) ' fpps']); % calculate FPS
+            % Update Frame Sets Per Second Indicator
+            set(handles.prevFPSIndicator,'String',[num2str(1/(timeDataNow(1)-timeDataLastPair),4) ' fsps']); % calculate FPS
             
             drawnow; % Must drawnow to show new frame data
             timeDataLastPair = timeDataNow(1); % Record this pair's time for next FPS calculation
@@ -788,6 +788,11 @@ guidata(hObject,handles);
 
 % --- Executes on button press in selectLEDsEnable1.
 function selectLEDsEnable1_Callback(hObject, eventdata, handles)
+if (sum(handles.LEDsToEnable,2) == 1) && (get(handles.selectLEDsEnable1,'value') == 0)
+    disp('Error: you cannot disable all LEDs.')
+    set(handles.selectLEDsEnable1,'value',1);
+    return
+end
 % Determine if quad view was enabled before changing LEDs
 prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 % Save the new setting for this LED
@@ -881,8 +886,7 @@ else % now we are NOT in quad mode
     else % if we were not in quad mode and are still not in quad mode
         if handles.settingsStruct.selectLEDsEnable1 == 1
             handles.imgHandLED2.Visible = 'on';
-            handles.LED
-            2DisplayedValues.Visible = 'on';
+            handles.LED2DisplayedValues.Visible = 'on';
             handles.LED2BlackValueIndicator.Visible = 'on';
             handles.LED2WhiteValueIndicator.Visible = 'on';
         else
@@ -898,6 +902,11 @@ guidata(hObject,handles);
 
 % --- Executes on button press in selectLEDsEnable2.
 function selectLEDsEnable2_Callback(hObject, eventdata, handles)
+if (sum(handles.LEDsToEnable,2) == 1) && (get(handles.selectLEDsEnable2,'value') == 0)
+    disp('Error: you cannot disable all LEDs.')
+    set(handles.selectLEDsEnable2,'value',1);
+    return
+end
 % Determine if quad view was enabled before changing LEDs
 prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 % Save the new setting for this LED
@@ -1001,6 +1010,11 @@ guidata(hObject,handles);
 
 % --- Executes on button press in selectLEDsEnable3.
 function selectLEDsEnable3_Callback(hObject, eventdata, handles)
+if (sum(handles.LEDsToEnable,2) == 1) && (get(handles.selectLEDsEnable3,'value') == 0)
+    disp('Error: you cannot disable all LEDs.')
+    set(handles.selectLEDsEnable3,'value',1);
+    return
+end
 % Determine if quad view was enabled before changing LEDs
 prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 % Save the new setting for this LED
@@ -1109,6 +1123,12 @@ guidata(hObject,handles);
 
 % --- Executes on button press in selectLEDsEnable4.
 function selectLEDsEnable4_Callback(hObject, eventdata, handles)
+% Determine whether <1 LED is trying to be set
+if (sum(handles.LEDsToEnable,2) == 1) && (get(handles.selectLEDsEnable4,'value') == 0)
+    disp('Error: you cannot disable all LEDs.')
+    set(handles.selectLEDsEnable4,'value',1);
+    return
+end
 % Determine if quad view was enabled before changing LEDs
 prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 % Save the new setting for this LED
@@ -1223,10 +1243,10 @@ if handles.LEDsToEnable(requestedBigFrame) == 1
 elseif handles.LEDsToEnable(1) == 1 % these are for cases where the requested LED is not active, so it corrects
     handles.settingsStruct.selectLEDsShow = 1;
     set(handles.selectLEDsShow,'Value',1);
-elseif handles.LEDsToEnable(1) == 2
+elseif handles.LEDsToEnable(2) == 1
     handles.settingsStruct.selectLEDsShow = 2;
     set(handles.selectLEDsShow,'Value',2);
-elseif handles.LEDsToEnable(1) == 3
+elseif handles.LEDsToEnable(3) == 1
     handles.settingsStruct.selectLEDsShow = 3;
     set(handles.selectLEDsShow,'Value',3);
 else

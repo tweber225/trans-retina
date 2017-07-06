@@ -23,7 +23,7 @@ settingsStruct.commRTHistogram = 0;
 settingsStruct.commStatHistInCenter = 1;
 
 % SELECT LEDS SETTINGS
-settingsStruct.selectLEDsEnable1 = 1;
+settingsStruct.selectLEDsEnable1 = 0; % MAKE SURE THAT AT LEAST ONE LED IS ENABLED BEFORE STARTING
 settingsStruct.selectLEDsEnable2 = 1;
 settingsStruct.selectLEDsEnable3 = 0;
 settingsStruct.selectLEDsEnable4 = 1;
@@ -54,7 +54,8 @@ settingsStruct.constLED2CenterWavelength = '730nm';
 settingsStruct.constLED3CenterWavelength = '780nm';
 settingsStruct.constLED4CenterWavelength = '850nm';
 
-% DERIVED SETTINGS/PARAMETERS
+% DERIVED SETTINGS/PARAMETERS (some useful settings that are dependent on
+% settings above)
 switch settingsStruct.capBinSize
     case 1
         settingsStruct.deriveCapNumPixPerDim = settingsStruct.constNumPixHeight;

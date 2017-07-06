@@ -13,10 +13,10 @@ handles.settingsStruct.whiteLevelLED3 = handles.settingsStruct.whiteLevelLED1;
 handles.settingsStruct.blackLevelLED4 = handles.settingsStruct.blackLevelLED1;
 handles.settingsStruct.whiteLevelLED4 = handles.settingsStruct.whiteLevelLED1;
 
-% Make a black image of the correct size
+% Make a square black image of the correct size
 blackFrame = uint16(zeros(newResolution));
 
-% Display black images, and then save all the handles
+% Display black images, and then store all the imagehandles
 % Make handles to all the images
 imshow(blackFrame, [handles.settingsStruct.blackLevelLED1,handles.settingsStruct.whiteLevelLED1], 'Parent', handles.LED1Ax)
 handles.imgHandLED1 = get(handles.LED1Ax,'Children');
@@ -79,19 +79,37 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 0 % Not in quad-channel mode
 else % in quad-channel view
     if handles.settingsStruct.selectLEDsEnable1 == 1
         set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED1)]);
-        set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.blackLevelLED1)]);
+        set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLED1)]);
     else
         handles.LEDQuad1BlackValueIndicator.Visible = 'off';
         handles.LEDQuad1WhiteValueIndicator.Visible = 'off';
-        handles.LEDQuad1BlackValueIndicator.Visible = 'off';
+        handles.LEDQuad1DisplayedValues.Visible = 'off';
     end
-    set(handles.LEDQuad2BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED2)]);
-    set(handles.LEDQuad2WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.blackLevelLED2)]);
-    set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED3)]);
-    set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.blackLevelLED3)]);
-    set(handles.LEDQuad4BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED4)]);
-    set(handles.LEDQuad4WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.blackLevelLED4)]);
-    
+    if handles.settingsStruct.selectLEDsEnable2 == 1
+        set(handles.LEDQuad2BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED2)]);
+        set(handles.LEDQuad2WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLED2)]);
+    else
+        handles.LEDQuad2BlackValueIndicator.Visible = 'off';
+        handles.LEDQuad2WhiteValueIndicator.Visible = 'off';
+        handles.LEDQuad2DisplayedValues.Visible = 'off';
+    end
+    if handles.settingsStruct.selectLEDsEnable3 == 1
+        set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED3)]);
+        set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLED3)]);
+    else
+        handles.LEDQuad3BlackValueIndicator.Visible = 'off';
+        handles.LEDQuad3WhiteValueIndicator.Visible = 'off';
+        handles.LEDQuad3DisplayedValues.Visible = 'off';
+    end
+    if handles.settingsStruct.selectLEDsEnable4 == 1
+        set(handles.LEDQuad4BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED4)]);
+        set(handles.LEDQuad4WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLED4)]);
+    else
+        handles.LEDQuad4BlackValueIndicator.Visible = 'off';
+        handles.LEDQuad4WhiteValueIndicator.Visible = 'off';
+        handles.LEDQuad4DisplayedValues.Visible = 'off';
+    end
+  
     handles.LED1BlackValueIndicator.Visible = 'off';
     handles.LED1WhiteValueIndicator.Visible = 'off';
     handles.LED1DisplayedValues.Visible = 'off';
@@ -100,42 +118,113 @@ else % in quad-channel view
     handles.LED2DisplayedValues.Visible = 'off';
 end
 
-% if enabled, update the histograms too
+% HISTOGRAMS
 handles.histogramBinEdges = 0:(handles.settingsStruct.whiteLevelLED1/handles.settingsStruct.analysisHistogramBins):handles.settingsStruct.whiteLevelLED1;
-if handles.settingsStruct.commRTHistogram == 1
-    if handles.settingsStruct.selectLEDsQuadViewOn == 0
-        handles.histHandLED1 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LED1Hist);
-        handles.LED1Hist.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
-        handles.LED1Hist.YScale = 'log';
-        if sum(handles.LEDsToEnable,2) > 1
-            handles.histHandLED2 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LED2Hist);
-            handles.LED2Hist.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
-            handles.LED2Hist.YScale = 'log';
-        end
-    else % quadview therefore is on
-        if handles.settingsStruct.selectLEDsEnable1 == 1
-            handles.histHandLEDQuad1 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LEDQuad1Hist);
-            handles.histHandLEDQuad1.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
-            handles.histHandLEDQuad1.YScale = 'log';
-        end
-        if handles.settingsStruct.selectLEDsEnable2 == 1
-            handles.histHandLEDQuad2 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LEDQuad2Hist);
-            handles.histHandLEDQuad2.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
-            handles.histHandLEDQuad2.YScale = 'log';
-        end
-        if handles.settingsStruct.selectLEDsEnable3 == 1
-            handles.histHandLEDQuad3 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LEDQuad3Hist);
-            handles.histHandLEDQuad3.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
-            handles.histHandLEDQuad3.YScale = 'log';
-        end
-        if handles.settingsStruct.selectLEDsEnable4 == 1
-            handles.histHandLEDQuad4 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LEDQuad4Hist);
-            handles.histHandLEDQuad4.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
-            handles.histHandLEDQuad4.YScale = 'log';
-        end
-        
-            
+% Display ALL histograms
+% - 2 Images Histograms
+handles.histHandLED1 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LED1Hist);
+handles.LED1Hist.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
+handles.LED1Hist.YScale = 'log';
+handles.histHandLED2 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LED2Hist);
+handles.LED2Hist.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
+handles.LED2Hist.YScale = 'log';
+% - Quad-view Histograms
+handles.histHandLEDQuad1 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LEDQuad1Hist);
+handles.LEDQuad1Hist.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
+handles.LEDQuad1Hist.YScale = 'log';
+handles.histHandLEDQuad2 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LEDQuad2Hist);
+handles.LEDQuad2Hist.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
+handles.LEDQuad2Hist.YScale = 'log';
+handles.histHandLEDQuad3 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LEDQuad3Hist);
+handles.LEDQuad3Hist.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
+handles.LEDQuad3Hist.YScale = 'log';
+handles.histHandLEDQuad4 = histogram(blackFrame,handles.histogramBinEdges,'Parent', handles.LEDQuad4Hist);
+handles.LEDQuad4Hist.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
+handles.LEDQuad4Hist.YScale = 'log';
+% Hide all histograms if they are not requested
+if handles.settingsStruct.commRTHistogram == 0
+    handles.LED1Hist.Visible = 'off';
+    handles.histHandLED1.Visible = 'off';
+    handles.LED2Hist.Visible = 'off';
+    handles.histHandLED2.Visible = 'off';
+    handles.LEDQuad1Hist.Visible = 'off';    
+    handles.histHandLEDQuad1.Visible = 'off';
+    handles.LEDQuad2Hist.Visible = 'off';
+    handles.histHandLEDQuad2.Visible = 'off';
+    handles.LEDQuad3Hist.Visible = 'off';
+    handles.histHandLEDQuad3.Visible = 'off';
+    handles.LEDQuad4Hist.Visible = 'off';
+    handles.histHandLEDQuad4.Visible = 'off';
+elseif handles.settingsStruct.selectLEDsQuadViewOn == 0
+    handles.LEDQuad1Hist.Visible = 'off';
+    handles.histHandLEDQuad1.Visible = 'off';
+    handles.LEDQuad2Hist.Visible = 'off';
+    handles.histHandLEDQuad2.Visible = 'off';
+    handles.LEDQuad3Hist.Visible = 'off';
+    handles.histHandLEDQuad3.Visible = 'off';
+    handles.LEDQuad4Hist.Visible = 'off';
+    handles.histHandLEDQuad4.Visible = 'off';
+    if sum(handles.LEDsToEnable,2) == 1
+        handles.LED2Hist.Visible = 'off';
+        handles.histHandLED2.Visible = 'off';
     end
+else
+    handles.LED1Hist.Visible = 'off';
+    handles.histHandLED1.Visible = 'off';
+    handles.LED2Hist.Visible = 'off';
+    handles.histHandLED2.Visible = 'off';
+    if handles.LEDsToEnable(1) == 0
+        handles.LEDQuad1Hist.Visible = 'off';
+        handles.histHandLEDQuad1.Visible = 'off';
+    end
+    if handles.LEDsToEnable(2) == 0
+        handles.LEDQuad2Hist.Visible = 'off';
+        handles.histHandLEDQuad2.Visible = 'off';
+    end
+    if handles.LEDsToEnable(3) == 0
+        handles.LEDQuad3Hist.Visible = 'off';
+        handles.histHandLEDQuad3.Visible = 'off';
+    end
+    if handles.LEDsToEnable(4) == 0
+        handles.LEDQuad4Hist.Visible = 'off';
+        handles.histHandLEDQuad4.Visible = 'off';
+    end
+end
+
+% IMAGE STATS
+% Depending on the viewing mode, hide image stat labels
+if handles.settingsStruct.commRTStats == 0
+    handles.LEDQuad1StatsIndicator.Visible = 'off';
+    handles.LEDQuad2StatsIndicator.Visible = 'off';
+    handles.LEDQuad3StatsIndicator.Visible = 'off';
+    handles.LEDQuad4StatsIndicator.Visible = 'off';
+    handles.LED1ColorIndicator.Visible = 'off';
+    handles.LED1MinIndicator.Visible = 'off';
+    handles.LED1MaxIndicator.Visible = 'off';
+    handles.LED1MeanIndicator.Visible = 'off';
+    handles.LED1MedianIndicator.Visible = 'off';
+    handles.LED2PercentSaturatedIndicator.Visible = 'off';
+    handles.LED2ColorIndicator.Visible = 'off';
+    handles.LED2MinIndicator.Visible = 'off';
+    handles.LED2MaxIndicator.Visible = 'off';
+    handles.LED2MeanIndicator.Visible = 'off';
+    handles.LED2MedianIndicator.Visible = 'off';
+    handles.LED2PercentSaturatedIndicator.Visible = 'off';
+elseif handles.settingsStruct.selectLEDsQuadViewOn == 0
+    handles.LEDQuad1StatsIndicator.Visible = 'off';
+    handles.LEDQuad2StatsIndicator.Visible = 'off';
+    handles.LEDQuad3StatsIndicator.Visible = 'off';
+    handles.LEDQuad4StatsIndicator.Visible = 'off';
+    if sum(handles.LEDsToEnable,2) == 1
+        handles.LED2ColorIndicator.Visible = 'off';
+        handles.LED2MinIndicator.Visible = 'off';
+        handles.LED2MaxIndicator.Visible = 'off';
+        handles.LED2MeanIndicator.Visible = 'off';
+        handles.LED2MedianIndicator.Visible = 'off';
+        handles.LED2PercentSaturatedIndicator.Visible = 'off';
+    end
+else
+    
 end
 
 % Update the current number of pixels per dim to the value just set

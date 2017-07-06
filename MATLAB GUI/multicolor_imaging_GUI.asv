@@ -881,8 +881,7 @@ else % now we are NOT in quad mode
     else % if we were not in quad mode and are still not in quad mode
         if handles.settingsStruct.selectLEDsEnable1 == 1
             handles.imgHandLED2.Visible = 'on';
-            handles.LED
-            2DisplayedValues.Visible = 'on';
+            handles.LED2DisplayedValues.Visible = 'on';
             handles.LED2BlackValueIndicator.Visible = 'on';
             handles.LED2WhiteValueIndicator.Visible = 'on';
         else
@@ -1161,14 +1160,14 @@ if sum(handles.LEDsToEnable,2) > 2
         % If we were in quad mode and we still are, then there are two possibilities
         if handles.settingsStruct.selectLEDsEnable4 == 1
             handles.imgHandLEDQuad4.Visible = 'on';
-            handles.LEDQuad4DisplayedValues.Visible = 'on';
-            handles.LEDQuad4BlackValueIndicator.Visible = 'on';
-            handles.LEDQuad4WhiteValueIndicator.Visible = 'on';
+            handles.LEDQuad1DisplayedValues.Visible = 'on';
+            handles.LEDQuad1BlackValueIndicator.Visible = 'on';
+            handles.LEDQuad1WhiteValueIndicator.Visible = 'on';
         else
-            handles.imgHandLEDQuad4.Visible = 'off';
-            handles.LEDQuad4DisplayedValues.Visible = 'off';
-            handles.LEDQuad4BlackValueIndicator.Visible = 'off';
-            handles.LEDQuad4WhiteValueIndicator.Visible = 'off';
+            handles.imgHandLEDQuad1.Visible = 'off';
+            handles.LEDQuad1DisplayedValues.Visible = 'off';
+            handles.LEDQuad1BlackValueIndicator.Visible = 'off';
+            handles.LEDQuad1WhiteValueIndicator.Visible = 'off';
         end
     end
 else % now we are not in quad mode
@@ -1176,39 +1175,15 @@ else % now we are not in quad mode
         disp('Turning quad-channel view mode off')
         handles.settingsStruct.selectLEDsQuadViewOn = 0;
         handles.imgHandLED2.Visible = 'on';
-        handles.LED1DisplayedValues.Visible = 'on';
-        handles.LED1BlackValueIndicator.Visible = 'on';
-        handles.LED1WhiteValueIndicator.Visible = 'on';
-        handles.LED2DisplayedValues.Visible = 'on';
-        handles.LED2BlackValueIndicator.Visible = 'on';
-        handles.LED2WhiteValueIndicator.Visible = 'on';
         handles.imgHandLEDQuad1.Visible = 'off';
         handles.imgHandLEDQuad2.Visible = 'off';
         handles.imgHandLEDQuad3.Visible = 'off';
-        handles.imgHandLEDQuad4.Visible = 'off';
-        handles.LEDQuad1DisplayedValues.Visible = 'off';
-        handles.LEDQuad1BlackValueIndicator.Visible = 'off';
-        handles.LEDQuad1WhiteValueIndicator.Visible = 'off';
-        handles.LEDQuad2DisplayedValues.Visible = 'off';
-        handles.LEDQuad2BlackValueIndicator.Visible = 'off';
-        handles.LEDQuad2WhiteValueIndicator.Visible = 'off';
-        handles.LEDQuad3DisplayedValues.Visible = 'off';
-        handles.LEDQuad3BlackValueIndicator.Visible = 'off';
-        handles.LEDQuad3WhiteValueIndicator.Visible = 'off';
-        handles.LEDQuad4DisplayedValues.Visible = 'off';
-        handles.LEDQuad4BlackValueIndicator.Visible = 'off';
-        handles.LEDQuad4WhiteValueIndicator.Visible = 'off';    
+        handles.imgHandLEDQuad4.Visible = 'off';    
     else % if we were not in quad mode and are still not in quad mode
         if handles.settingsStruct.selectLEDsEnable4 == 1
             handles.imgHandLED2.Visible = 'on';
-            handles.LED2DisplayedValues.Visible = 'on';
-            handles.LED2BlackValueIndicator.Visible = 'on';
-            handles.LED2WhiteValueIndicator.Visible = 'on';
         else
             handles.imgHandLED2.Visible = 'off';
-            handles.LED2DisplayedValues.Visible = 'off';
-            handles.LED2BlackValueIndicator.Visible = 'off';
-            handles.LED2WhiteValueIndicator.Visible = 'off';
         end
     end
 end

@@ -8,13 +8,18 @@ handles.settingsStruct.blackLevelLED1 = 0;
 handles.settingsStruct.whiteLevelLED1 = 2^(handles.settingsStruct.constCameraBits) - 1;
 handles.settingsStruct.blackLevelLED2 = handles.settingsStruct.blackLevelLED1;
 handles.settingsStruct.whiteLevelLED2 = handles.settingsStruct.whiteLevelLED1;
-handles.settingsStruct.blackLevelLED3 = handles.settingsStruct.blackLevelLED1;
-handles.settingsStruct.whiteLevelLED3 = handles.settingsStruct.whiteLevelLED1;
-handles.settingsStruct.blackLevelLED4 = handles.settingsStruct.blackLevelLED1;
-handles.settingsStruct.whiteLevelLED4 = handles.settingsStruct.whiteLevelLED1;
+
+handles.settingsStruct.blackLevelLEDQuad1 = handles.settingsStruct.blackLevelLED1;
+handles.settingsStruct.whiteLevelLEDQuad1 = handles.settingsStruct.whiteLevelLED1;
+handles.settingsStruct.blackLevelLEDQuad2 = handles.settingsStruct.blackLevelLED1;
+handles.settingsStruct.whiteLevelLEDQuad2 = handles.settingsStruct.whiteLevelLED1;
+handles.settingsStruct.blackLevelLEDQuad3 = handles.settingsStruct.blackLevelLED1;
+handles.settingsStruct.whiteLevelLEDQuad3 = handles.settingsStruct.whiteLevelLED1;
+handles.settingsStruct.blackLevelLEDQuad4 = handles.settingsStruct.blackLevelLED1;
+handles.settingsStruct.whiteLevelLEDQuad4 = handles.settingsStruct.whiteLevelLED1;
 
 % Make a square black image of the correct size
-blackFrame = uint16(zeros(newResolution));
+blackFrame = uint16(ones(newResolution));
 
 % Display black images, and then store all the imagehandles
 % Make handles to all the images
@@ -22,13 +27,14 @@ imshow(blackFrame, [handles.settingsStruct.blackLevelLED1,handles.settingsStruct
 handles.imgHandLED1 = get(handles.LED1Ax,'Children');
 imshow(blackFrame, [handles.settingsStruct.blackLevelLED2,handles.settingsStruct.whiteLevelLED2], 'Parent', handles.LED2Ax)
 handles.imgHandLED2 = get(handles.LED2Ax,'Children');
-imshow(blackFrame, [handles.settingsStruct.blackLevelLED1,handles.settingsStruct.whiteLevelLED1], 'Parent', handles.LEDQuad1Ax)
+
+imshow(blackFrame, [handles.settingsStruct.blackLevelLEDQuad1,handles.settingsStruct.whiteLevelLEDQuad1], 'Parent', handles.LEDQuad1Ax)
 handles.imgHandLEDQuad1 = get(handles.LEDQuad1Ax,'Children');
-imshow(blackFrame, [handles.settingsStruct.blackLevelLED2,handles.settingsStruct.whiteLevelLED2], 'Parent', handles.LEDQuad2Ax)
+imshow(blackFrame, [handles.settingsStruct.blackLevelLEDQuad2,handles.settingsStruct.whiteLevelLEDQuad2], 'Parent', handles.LEDQuad2Ax)
 handles.imgHandLEDQuad2 = get(handles.LEDQuad2Ax,'Children');
-imshow(blackFrame, [handles.settingsStruct.blackLevelLED3,handles.settingsStruct.whiteLevelLED3], 'Parent', handles.LEDQuad3Ax)
+imshow(blackFrame, [handles.settingsStruct.blackLevelLEDQuad3,handles.settingsStruct.whiteLevelLEDQuad3], 'Parent', handles.LEDQuad3Ax)
 handles.imgHandLEDQuad3 = get(handles.LEDQuad3Ax,'Children');
-imshow(blackFrame, [handles.settingsStruct.blackLevelLED4,handles.settingsStruct.whiteLevelLED4], 'Parent', handles.LEDQuad4Ax)
+imshow(blackFrame, [handles.settingsStruct.blackLevelLEDQuad4,handles.settingsStruct.whiteLevelLEDQuad4], 'Parent', handles.LEDQuad4Ax)
 handles.imgHandLEDQuad4 = get(handles.LEDQuad4Ax,'Children');
 
 % Hide the images that will not be used depending on what viewing mode

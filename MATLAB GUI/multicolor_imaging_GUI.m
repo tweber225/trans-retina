@@ -465,7 +465,9 @@ if get(handles.prevStartButton,'Value') == 1
             % LED1DisplayedValues data - dependent on whether "quad-channel view"
             % (quadview) is on
             if handles.settingsStruct.selectLEDsQuadViewOn == 1
-                % Show all the individual images in smaller "thumbnails"
+                % Show all the individual images in smaller "thumbnails",
+                % and determine which frame in buffer belongs in each image
+                % spot on GUI
                 frameIdx = 1;
                 bigFrameToShow = -1;
                 bigFrameRequest = get(handles.selectLEDsShow,'Value');
@@ -509,8 +511,7 @@ if get(handles.prevStartButton,'Value') == 1
                     set(handles.imgHandLED2, 'CData', croppedFrames(:,:,2));
                 end
             end
-            
-            
+                        
             % Do computations on the masked images only
             maskedCroppedFrames = zeros(sum(handles.imageMask(:)),numLEDsEnabled);
             for frameIdx = 1:numLEDsEnabled
@@ -520,7 +521,7 @@ if get(handles.prevStartButton,'Value') == 1
             
             % If requested, compute histogram
             if handles.settingsStruct.commRTHistogram == 1
-                if handles.settingsStruct.selectLEDsQuadViewOn == 0
+                if handles.settingsStruct.selectLEDsQuadViewOn == 0 % for regular (non-quad) view
                     handles.histHandLED1.Data = maskedCroppedFrames(:,1);
                     if numLEDsEnabled>1
                         handles.histHandLED2.Data = maskedCroppedFrames(:,2);
@@ -547,19 +548,47 @@ if get(handles.prevStartButton,'Value') == 1
             
             % If requested, compute statistics
             if handles.settingsStruct.commRTStats == 1
-%                 set(handles.LED1MaxIndicator,'String',['Max: ' num2str(max(frame1(:)))]);
-%                 set(handles.LED1MinIndicator,'String',['Min: ' num2str(min(frame1(:)))]);
-%                 set(handles.LED1MeanIndicator,'String',['Mean: ' num2str(mean(frame1(:)),4)]);
-%                 set(handles.LED1MedianIndicator,'String',['Median: ' num2str(median(frame1(:)),4)]);
-%                 percentSat = 100*sum(frame1(:) == (2^handles.settingsStruct.constCameraBits-1))/numel(frame1(:));
-%                 set(handles.LED1PercentSaturatedIndicator,'String',['% Saturated: ' num2str(percentSat,3) '%']);
-%                 
-%                 set(handles.LED2MaxIndicator,'String',['Max: ' num2str(max(frame2(:)))]);
-%                 set(handles.LED2MinIndicator,'String',['Min: ' num2str(min(frame2(:)))]);
-%                 set(handles.LED2MeanIndicator,'String',['Mean: ' num2str(mean(frame2(:)),4)]);
-%                 set(handles.LED2MedianIndicator,'String',['Median: ' num2str(median(frame2(:)),4)]);
-%                 percentSat = 100*sum(frame1(:) == (2^handles.settingsStruct.constCameraBits-1))/numel(frame2(:));
-%                 set(handles.LED2PercentSaturatedIndicator,'String',['% Saturated: ' num2str(percentSat,3) '%']);
+                if handles.settingsStruct.selectLEDsQuadViewOn == 0 % if quad-view not enabled...
+                    set(handles.LED1MaxIndicator,'String',['Max: ' num2str(max(maskedCroppedFrames(:,1)))]);
+                    set(handles.LED1MinIndicator,'String',['Min: ' num2str(min(maskedCroppedFrames(:,1)))]);
+                    set(handles.LED1MeanIndicator,'String',['Mean: ' num2str(mean(maskedCroppedFrames(:,1)),4)]);
+                    set(handles.LED1MedianIndicator,'String',['Median: ' num2str(median(maskedCroppedFrames(:,1)),4)]);
+                    percentSat = 100*sum(maskedCroppedFrames(:,1) == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedFrames(:,1));
+                    set(handles.LED1PercentSaturatedIndicator,'String',['% Saturated: ' num2str(percentSat,3) '%']);
+                    if numLEDsEnabled > 1
+                        set(handles.LED2MaxIndicator,'String',['Max: ' num2str(max(maskedCroppedFrames(:,2)))]);
+                        set(handles.LED2MinIndicator,'String',['Min: ' num2str(min(maskedCroppedFrames(:,2)))]);
+                        set(handles.LED2MeanIndicator,'String',['Mean: ' num2str(mean(maskedCroppedFrames(:,2)),4)]);
+                        set(handles.LED2MedianIndicator,'String',['Median: ' num2str(median(maskedCroppedFrames(:,2)),4)]);
+                        percentSat = 100*sum(maskedCroppedFrames(:,2) == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedFrames(:,2));
+                        set(handles.LED2PercentSaturatedIndicator,'String',['% Saturated: ' num2str(percentSat,3) '%']);
+                    end
+                else % otherwise we are in quad view, and there's slightly different information to show
+                    quadIdx = 1;
+                    if handles.settingsStruct.selectLEDsEnable1 == 1
+                        percentSat = 100*sum(maskedCroppedFrames(:,quadIdx) == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedFrames(:,quadIdx));
+                        dispStr = [handles.settingsStruct.constLED1CenterWavelength ': Min: ' num2str(min(maskedCroppedFrames(:,quadIdx))) ', Max: ' num2str(max(maskedCroppedFrames(:,quadIdx))) ', Mean: ' num2str(mean(maskedCroppedFrames(:,quadIdx)),5) ', Sat: ' num2str(percentSat,3) '%'];
+                        set(handles.LEDQuad1StatsIndicator,'String',dispStr);
+                        quadIdx = quadIdx + 1;
+                    end
+                    if handles.settingsStruct.selectLEDsEnable2 == 1
+                        percentSat = 100*sum(maskedCroppedFrames(:,quadIdx) == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedFrames(:,quadIdx));
+                        dispStr = [handles.settingsStruct.constLED2CenterWavelength ': Min: ' num2str(min(maskedCroppedFrames(:,quadIdx))) ', Max: ' num2str(max(maskedCroppedFrames(:,quadIdx))) ', Mean: ' num2str(mean(maskedCroppedFrames(:,quadIdx)),5) ', Sat: ' num2str(percentSat,3) '%'];
+                        set(handles.LEDQuad2StatsIndicator,'String',dispStr);
+                        quadIdx = quadIdx + 1;
+                    end
+                    if handles.settingsStruct.selectLEDsEnable3 == 1
+                        percentSat = 100*sum(maskedCroppedFrames(:,quadIdx) == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedFrames(:,quadIdx));
+                        dispStr = [handles.settingsStruct.constLED3CenterWavelength ': Min: ' num2str(min(maskedCroppedFrames(:,quadIdx))) ', Max: ' num2str(max(maskedCroppedFrames(:,quadIdx))) ', Mean: ' num2str(mean(maskedCroppedFrames(:,quadIdx)),5) ', Sat: ' num2str(percentSat,3) '%'];
+                        set(handles.LEDQuad3StatsIndicator,'String',dispStr);
+                        quadIdx = quadIdx + 1;
+                    end
+                    if handles.settingsStruct.selectLEDsEnable4 == 1
+                        percentSat = 100*sum(maskedCroppedFrames(:,quadIdx) == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedFrames(:,quadIdx));
+                        dispStr = [handles.settingsStruct.constLED4CenterWavelength ': Min: ' num2str(min(maskedCroppedFrames(:,quadIdx))) ', Max: ' num2str(max(maskedCroppedFrames(:,quadIdx))) ', Mean: ' num2str(mean(maskedCroppedFrames(:,quadIdx)),5) ', Sat: ' num2str(percentSat,3) '%'];
+                        set(handles.LEDQuad4StatsIndicator,'String',dispStr);
+                    end
+                end
             end
             
             % Update Frame Sets Per Second Indicator
@@ -634,31 +663,84 @@ disp(['IR-sensitive mode turned ' dispIRMode]);
 
 % --- Executes on button press in commAutoScale.
 function commAutoScale_Callback(hObject, eventdata, handles)
-% Get the two current frame's data
+% Time is not really of the essence here, so we will just auto-scale every
+% image axis, regardless of whether it's actively used
+
+% Get image data from all frames
 LED1Data = get(handles.imgHandLED1, 'CData');
 LED2Data = get(handles.imgHandLED2, 'CData');
+LEDQuad1Data = get(handles.imgHandLEDQuad1,'CData');
+LEDQuad2Data = get(handles.imgHandLEDQuad2,'CData');
+LEDQuad3Data = get(handles.imgHandLEDQuad3,'CData');
+LEDQuad4Data = get(handles.imgHandLEDQuad4,'CData');
+
+% Apply image mask to raw image data--to select the central region
 maskedLED1Data = LED1Data.*handles.imageMask;
 maskedLED2Data = LED2Data.*handles.imageMask;
+maskedLEDQuad1Data = LEDQuad1Data.*handles.imageMask;
+maskedLEDQuad2Data = LEDQuad2Data.*handles.imageMask;
+maskedLEDQuad3Data = LEDQuad3Data.*handles.imageMask;
+maskedLEDQuad4Data = LEDQuad4Data.*handles.imageMask;
 
 % find min and max for each within central circular region
-led1Vals = quantile(double(maskedLED1Data(maskedLED1Data>0)),[handles.settingsStruct.analysisAutoScaleLowQuantile,handles.settingsStruct.analysisAutoScaleHighQuantile]);
-handles.settingsStruct.blackLevelLED1 = led1Vals(1);
-handles.settingsStruct.whiteLevelLED1 = led1Vals(2);
-led2Vals = quantile(double(maskedLED2Data(maskedLED2Data>0)),[handles.settingsStruct.analysisAutoScaleLowQuantile,handles.settingsStruct.analysisAutoScaleHighQuantile]);
-handles.settingsStruct.blackLevelLED2 = led2Vals(1);
-handles.settingsStruct.whiteLevelLED2 = led2Vals(2);
+QVals = quantile(double(maskedLED1Data(maskedLED1Data>0)),[handles.settingsStruct.analysisAutoScaleLowQuantile,handles.settingsStruct.analysisAutoScaleHighQuantile]);
+if QVals(1) == QVals(2)
+    QVals(2) = QVals(2)+1;
+end
+handles.settingsStruct.blackLevelLED1 = QVals(1);
+handles.settingsStruct.whiteLevelLED1 = QVals(2);
+QVals = quantile(double(maskedLED2Data(maskedLED2Data>0)),[handles.settingsStruct.analysisAutoScaleLowQuantile,handles.settingsStruct.analysisAutoScaleHighQuantile]);
+if QVals(1) == QVals(2)
+    QVals(2) = QVals(2)+1;
+end
+handles.settingsStruct.blackLevelLED2 = QVals(1);
+handles.settingsStruct.whiteLevelLED2 = QVals(2);
+QVals = quantile(double(maskedLEDQuad1Data(maskedLEDQuad1Data>0)),[handles.settingsStruct.analysisAutoScaleLowQuantile,handles.settingsStruct.analysisAutoScaleHighQuantile]);
+if QVals(1) == QVals(2)
+    QVals(2) = QVals(2)+1;
+end
+handles.settingsStruct.blackLevelLEDQuad1 = QVals(1);
+handles.settingsStruct.whiteLevelLEDQuad1 = QVals(2);
+QVals = quantile(double(maskedLEDQuad2Data(maskedLEDQuad2Data>0)),[handles.settingsStruct.analysisAutoScaleLowQuantile,handles.settingsStruct.analysisAutoScaleHighQuantile]);
+if QVals(1) == QVals(2)
+    QVals(2) = QVals(2)+1;
+end
+handles.settingsStruct.blackLevelLEDQuad2 = QVals(1);
+handles.settingsStruct.whiteLevelLEDQuad2 = QVals(2);
+QVals = quantile(double(maskedLEDQuad3Data(maskedLEDQuad3Data>0)),[handles.settingsStruct.analysisAutoScaleLowQuantile,handles.settingsStruct.analysisAutoScaleHighQuantile]);
+if QVals(1) == QVals(2)
+    QVals(2) = QVals(2)+1;
+end
+handles.settingsStruct.blackLevelLEDQuad3 = QVals(1);
+handles.settingsStruct.whiteLevelLEDQuad3 = QVals(2);
+QVals = quantile(double(maskedLEDQuad4Data(maskedLEDQuad4Data>0)),[handles.settingsStruct.analysisAutoScaleLowQuantile,handles.settingsStruct.analysisAutoScaleHighQuantile]);
+if QVals(1) == QVals(2)
+    QVals(2) = QVals(2)+1;
+end
+handles.settingsStruct.blackLevelLEDQuad4 = QVals(1);
+handles.settingsStruct.whiteLevelLEDQuad4 = QVals(2);
 
-% replace GUI frames with new scaled versions
-imshow(LED1Data, [handles.settingsStruct.blackLevelLED1,handles.settingsStruct.whiteLevelLED1], 'Parent', handles.LED1Ax)
-handles.imgHandLED1 = get(handles.LED1Ax,'Children');
-imshow(LED2Data, [handles.settingsStruct.blackLevelLED2,handles.settingsStruct.whiteLevelLED2], 'Parent', handles.LED2Ax)
-handles.imgHandLED2 = get(handles.LED2Ax,'Children');
+% scale image "CLim"s
+set(handles.LED1Ax,'CLim',[handles.settingsStruct.blackLevelLED1,handles.settingsStruct.whiteLevelLED1]);
+set(handles.LED2Ax,'CLim',[handles.settingsStruct.blackLevelLED2,handles.settingsStruct.whiteLevelLED2]);
+set(handles.LEDQuad1Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad1,handles.settingsStruct.whiteLevelLEDQuad1]);
+set(handles.LEDQuad2Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad2,handles.settingsStruct.whiteLevelLEDQuad2]);
+set(handles.LEDQuad3Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad3,handles.settingsStruct.whiteLevelLEDQuad3]);
+set(handles.LEDQuad4Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad4,handles.settingsStruct.whiteLevelLEDQuad4]);
 
 % Set the indicators of black vs white values correctly
 set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
 set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
 set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
 set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
+set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
+set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
+set(handles.LEDQuad2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
+set(handles.LEDQuad2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
+set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
+set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
+set(handles.LEDQuad4BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
+set(handles.LEDQuad4WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
 
 guidata(hObject, handles);
 

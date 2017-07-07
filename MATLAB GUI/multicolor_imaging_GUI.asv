@@ -452,13 +452,14 @@ if get(handles.prevStartButton,'Value') == 1
         handles = guidata(hObject);
         numLEDsEnabled = sum(handles.LEDsToEnable,2);
         
+        if handles.vidObj.FramesAvailable > numLEDsEnabled % If we have more than requested number of frames (channels enabled) in buffer
+            disp('!! DROPPED FRAME(S) !! Attempting to recover order.')
+            droppedFrameData = getdata(handles.vidObj, numLEDsEnabled); % don't do anything with this data, this might help pick up slack
+        end
+        
         if handles.vidObj.FramesAvailable > (numLEDsEnabled-1) % when >= number of frames requested are available, gather data and show them
             [currentFrameSet,timeDataNow] = getdata(handles.vidObj,handles.vidObj.FramesAvailable);
-            if length(timeDataNow) > numLEDsEnabled
-                currentFrameSet = currentFrameSet(:,:,:,(end-numLEDsEnabled+1):end);
-                timeDataNow = timeDataNow((end-numLEDsEnabled+1):end);
-                disp('WARNING: DETECTED DROPPED FRAMES')
-            end
+            if length(timeDataNow) > 
             % Gather data and crop to square (shifted in x)
             croppedFrames = squeeze(currentFrameSet(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,:));
             

@@ -456,6 +456,7 @@ if get(handles.prevStartButton,'Value') == 1
         if numFramesAvailNow > numLEDsEnabled
             getdata(handles.vidObj,handles.vidObj.FramesAvailable);
             disp('WARNING: DETECTED DROPPED FRAMES')
+            set(handles.prevStartButton,'String','Dropped Fr.');
         end
         
         if numFramesAvailNow == numLEDsEnabled % when the number of frames requested are available, gather data and show them
@@ -756,27 +757,56 @@ guidata(hObject, handles);
 function commRTStats_Callback(hObject, eventdata, handles)
 % Get the new state of RT (=real time) Statistics button
 handles.settingsStruct.commRTStats = get(handles.commRTStats,'Value');
+prevModeOn = get(handles.prevStartButton,'Value');
 % if the button is now checked, we need to enable several stat indicators
 if handles.settingsStruct.commRTStats == 1
     % check which viewing mode
-    if handles.settingsStruct.selectLEDsQuadViewOn == 1
+    if handles.settingsStruct.selectLEDsQuadViewOn == 1 % ... if we are in quad-view mode
         if handles.LEDsToEnable(1) == 1
             handles.LEDQuad1StatsIndicator.Visible = 'on';
+            if prevModeOn == 0 % if the preview mode is not on, we can compute stats based on current image data
+                frameData = get(handles.imgHandLEDQuad1,'CData').*handles.imageMask;
+                maskedCroppedData = frameData(frameData>0);
+                percentSat = 100*sum(maskedCroppedData == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedData);
+                dispStr = [handles.settingsStruct.constLED1CenterWavelength ': Min: ' num2str(min(maskedCroppedData)) ', Max: ' num2str(max(maskedCroppedData)) ', Mean: ' num2str(mean(maskedCroppedData),5) ', Sat: ' num2str(percentSat,3) '%'];
+                set(handles.LEDQuad1StatsIndicator,'String',dispStr);
+            end
         else
             handles.LEDQuad1StatsIndicator.Visible = 'off';
         end
         if handles.LEDsToEnable(2) == 1
             handles.LEDQuad2StatsIndicator.Visible = 'on';
+            if prevModeOn == 0 % if the preview mode is not on, we can compute stats based on current image data
+                frameData = get(handles.imgHandLEDQuad2,'CData').*handles.imageMask;
+                maskedCroppedData = frameData(frameData>0);
+                percentSat = 100*sum(maskedCroppedData == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedData);
+                dispStr = [handles.settingsStruct.constLED2CenterWavelength ': Min: ' num2str(min(maskedCroppedData)) ', Max: ' num2str(max(maskedCroppedData)) ', Mean: ' num2str(mean(maskedCroppedData),5) ', Sat: ' num2str(percentSat,3) '%'];
+                set(handles.LEDQuad2StatsIndicator,'String',dispStr);
+            end
         else
             handles.LEDQuad2StatsIndicator.Visible = 'off';
         end
         if handles.LEDsToEnable(3) == 1
             handles.LEDQuad3StatsIndicator.Visible = 'on';
+            if prevModeOn == 0 % if the preview mode is not on, we can compute stats based on current image data
+                frameData = get(handles.imgHandLEDQuad3,'CData').*handles.imageMask;
+                maskedCroppedData = frameData(frameData>0);
+                percentSat = 100*sum(maskedCroppedData == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedData);
+                dispStr = [handles.settingsStruct.constLED3CenterWavelength ': Min: ' num2str(min(maskedCroppedData)) ', Max: ' num2str(max(maskedCroppedData)) ', Mean: ' num2str(mean(maskedCroppedData),5) ', Sat: ' num2str(percentSat,3) '%'];
+                set(handles.LEDQuad3StatsIndicator,'String',dispStr);
+            end
         else
             handles.LEDQuad3StatsIndicator.Visible = 'off';
         end
         if handles.LEDsToEnable(4) == 1
             handles.LEDQuad4StatsIndicator.Visible = 'on';
+            if prevModeOn == 0 % if the preview mode is not on, we can compute stats based on current image data
+                frameData = get(handles.imgHandLEDQuad4,'CData').*handles.imageMask;
+                maskedCroppedData = frameData(frameData>0);
+                percentSat = 100*sum(maskedCroppedData == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedData);
+                dispStr = [handles.settingsStruct.constLED4CenterWavelength ': Min: ' num2str(min(maskedCroppedData)) ', Max: ' num2str(max(maskedCroppedData)) ', Mean: ' num2str(mean(maskedCroppedData),5) ', Sat: ' num2str(percentSat,3) '%'];
+                set(handles.LEDQuad4StatsIndicator,'String',dispStr);
+            end
         else
             handles.LEDQuad4StatsIndicator.Visible = 'off';
         end
@@ -800,13 +830,23 @@ if handles.settingsStruct.commRTStats == 1
         if sum(handles.LEDsToEnable,2) == 2
             set(handles.LED2ColorIndicator,'String',['LED 2: ' requestedLEDChoices{2}]);
         end
-        % Show/hide indicator fields
+        % Show/hide indicator fields and update if not in live mode already
         handles.LED1ColorIndicator.Visible = 'on';
         handles.LED1MinIndicator.Visible = 'on';
         handles.LED1MaxIndicator.Visible = 'on';
         handles.LED1MeanIndicator.Visible = 'on';
         handles.LED1MedianIndicator.Visible = 'on';
         handles.LED1PercentSaturatedIndicator.Visible = 'on';
+        if prevModeOn == 0
+            frameData = get(handles.imgHandLED1,'CData').*handles.imageMask;
+            maskedCroppedData = frameData(frameData>0);
+            set(handles.LED1MaxIndicator,'String',['Max: ' num2str(max(maskedCroppedData))]);
+            set(handles.LED1MinIndicator,'String',['Min: ' num2str(min(maskedCroppedData))]);
+            set(handles.LED1MeanIndicator,'String',['Mean: ' num2str(mean(maskedCroppedData),4)]);
+            set(handles.LED1MedianIndicator,'String',['Median: ' num2str(median(maskedCroppedData),4)]);
+            percentSat = 100*sum(maskedCroppedData == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedData);
+            set(handles.LED1PercentSaturatedIndicator,'String',['% Saturated: ' num2str(percentSat,3) '%']);
+        end
         if sum(handles.LEDsToEnable,2) == 2
             handles.LED2ColorIndicator.Visible = 'on';
             handles.LED2MinIndicator.Visible = 'on';
@@ -814,6 +854,16 @@ if handles.settingsStruct.commRTStats == 1
             handles.LED2MeanIndicator.Visible = 'on';
             handles.LED2MedianIndicator.Visible = 'on';
             handles.LED2PercentSaturatedIndicator.Visible = 'on';
+            if prevModeOn == 0
+                frameData = get(handles.imgHandLED2,'CData').*handles.imageMask;
+                maskedCroppedData = frameData(frameData>0);
+                set(handles.LED2MaxIndicator,'String',['Max: ' num2str(max(maskedCroppedData))]);
+                set(handles.LED2MinIndicator,'String',['Min: ' num2str(min(maskedCroppedData))]);
+                set(handles.LED2MeanIndicator,'String',['Mean: ' num2str(mean(maskedCroppedData),4)]);
+                set(handles.LED2MedianIndicator,'String',['Median: ' num2str(median(maskedCroppedData),4)]);
+                percentSat = 100*sum(maskedCroppedData == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedData);
+                set(handles.LED2PercentSaturatedIndicator,'String',['% Saturated: ' num2str(percentSat,3) '%']);
+            end
         else
             handles.LED2ColorIndicator.Visible = 'off';
             handles.LED2MinIndicator.Visible = 'off';
@@ -854,6 +904,7 @@ guidata(hObject, handles);
 function commRTHistogram_Callback(hObject, eventdata, handles)
 % Get the new state of RT (=Real-time) Histogram setting
 handles.settingsStruct.commRTHistogram = get(handles.commRTHistogram,'Value');
+prevModeOn = get(handles.prevStartButton,'Value');
 if handles.settingsStruct.commRTHistogram == 1 % If it is now on, check whether...
     %... we are in quad mode
     if handles.settingsStruct.selectLEDsQuadViewOn == 1
@@ -862,6 +913,10 @@ if handles.settingsStruct.commRTHistogram == 1 % If it is now on, check whether.
         if handles.LEDsToEnable(1) == 1
             handles.histHandLEDQuad1.Visible = 'on';
             handles.LEDQuad1Hist.Visible = 'on';
+            if prevModeOn == 0
+                intermediateData = get(handles.imgHandLEDQuad1,'CData').*handles.imageMask;
+                handles.histHandLEDQuad1.Data = intermediateData(intermediateData>0);
+            end
         else
             handles.histHandLEDQuad1.Visible = 'off';
             handles.LEDQuad1Hist.Visible = 'off';
@@ -869,6 +924,10 @@ if handles.settingsStruct.commRTHistogram == 1 % If it is now on, check whether.
         if handles.LEDsToEnable(2) == 1
             handles.histHandLEDQuad2.Visible = 'on';
             handles.LEDQuad2Hist.Visible = 'on';
+            if prevModeOn == 0
+                intermediateData = get(handles.imgHandLEDQuad2,'CData').*handles.imageMask;
+                handles.histHandLEDQuad2.Data = intermediateData(intermediateData>0);
+            end
         else
             handles.histHandLEDQuad2.Visible = 'off';
             handles.LEDQuad2Hist.Visible = 'off';
@@ -876,6 +935,10 @@ if handles.settingsStruct.commRTHistogram == 1 % If it is now on, check whether.
         if handles.LEDsToEnable(3) == 1
             handles.histHandLEDQuad3.Visible = 'on';
             handles.LEDQuad3Hist.Visible = 'on';
+            if prevModeOn == 0
+                intermediateData = get(handles.imgHandLEDQuad3,'CData').*handles.imageMask;
+                handles.histHandLEDQuad3.Data = intermediateData(intermediateData>0);
+            end
         else
             handles.histHandLEDQuad3.Visible = 'off';
             handles.LEDQuad3Hist.Visible = 'off';
@@ -883,6 +946,10 @@ if handles.settingsStruct.commRTHistogram == 1 % If it is now on, check whether.
         if handles.LEDsToEnable(4) == 1
             handles.histHandLEDQuad4.Visible = 'on';
             handles.LEDQuad4Hist.Visible = 'on';
+            if prevModeOn == 0
+                intermediateData = get(handles.imgHandLEDQuad4,'CData').*handles.imageMask;
+                handles.histHandLEDQuad4.Data = intermediateData(intermediateData>0);
+            end
         else
             handles.histHandLEDQuad4.Visible = 'off';
             handles.LEDQuad4Hist.Visible = 'off';
@@ -894,9 +961,17 @@ if handles.settingsStruct.commRTHistogram == 1 % If it is now on, check whether.
     else %otherwise we're not in quad view
         handles.histHandLED1.Visible = 'on';
         handles.LED1Hist.Visible = 'on';
+        if prevModeOn == 0
+            intermediateData = get(handles.imgHandLED1,'CData').*handles.imageMask;
+            handles.histHandLED1.Data = intermediateData(intermediateData>0);
+        end
         if sum(handles.LEDsToEnable,2) == 2
             handles.histHandLED2.Visible = 'on';
             handles.LED2Hist.Visible = 'on';
+            if prevModeOn == 0
+                intermediateData = get(handles.imgHandLED2,'CData').*handles.imageMask;
+                handles.histHandLED2.Data = intermediateData(intermediateData>0);
+            end
         else
             handles.histHandLED2.Visible = 'off';
             handles.LED2Hist.Visible = 'off';
@@ -1015,6 +1090,40 @@ if (sum(handles.LEDsToEnable,2) == 1) && (get(handles.selectLEDsEnable1,'value')
     disp('Error: you cannot disable all LEDs.')
     set(handles.selectLEDsEnable1,'value',1);
     return
+end
+if (get(handles.selectLEDsEnable1,'Value') == 0) && (handles.settingsStruct.selectLEDsShow == 1)
+    % if we de-selected this LED, but the show LED on big axis is supposed to show this LED, fix it
+    if sum(handles.LEDsToEnable,2) == 4
+        if handles.LEDsToEnable(2) == 1
+            set(handles.selectLEDsShow,'Value',2);
+            handles.settingsStruct.selectLEDsShow = 2;
+            newFrameData = get(handles.imgHandLEDQuad2,'CData');
+            newLims = get(handles.LEDQuad2Ax,'CLim');
+        elseif handles.LEDsToEnable(3) == 1
+            set(handles.selectLEDsShow,'Value',3);
+            handles.settingsStruct.selectLEDsShow = 3;
+            newFrameData = get(handles.imgHandLEDQuad3,'CData');
+            newLims = get(handles.LEDQuad3Ax,'CLim');
+        elseif handles.LEDsToEnable(4) == 1
+            set(handles.selectLEDsShow,'Value',4);
+            handles.settingsStruct.selectLEDsShow = 4;
+            newFrameData = get(handles.imgHandLEDQuad4,'CData');
+            newLims = get(handles.LEDQuad4Ax,'CLim');
+        end
+        set(handles.imgHandLED1,'CData',newFrameData);
+        set(handles.LEDQuad1Ax,'CLim',newLims);
+    else
+        if handles.LEDsToEnable(2) == 1
+            set(handles.selectLEDsShow,'Value',2);
+            handles.settingsStruct.selectLEDsShow = 2;
+        elseif handles.LEDsToEnable(3) == 1
+            set(handles.selectLEDsShow,'Value',3);
+            handles.settingsStruct.selectLEDsShow = 3;
+        elseif handles.LEDsToEnable(4) == 1
+            set(handles.selectLEDsShow,'Value',4);
+            handles.settingsStruct.selectLEDsShow = 4;
+        end 
+    end
 end
 % Determine if quad view was enabled before changing LEDs
 prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
@@ -1139,6 +1248,40 @@ if (sum(handles.LEDsToEnable,2) == 1) && (get(handles.selectLEDsEnable2,'value')
     set(handles.selectLEDsEnable2,'value',1);
     return
 end
+if (get(handles.selectLEDsEnable2,'Value') == 0) && (handles.settingsStruct.selectLEDsShow == 2)
+    % if we de-selected this LED, but the show LED on big axis is supposed to show this LED, fix it
+    if sum(handles.LEDsToEnable,2) == 4
+        if handles.LEDsToEnable(1) == 1
+            set(handles.selectLEDsShow,'Value',1);
+            handles.settingsStruct.selectLEDsShow = 1;
+            newFrameData = get(handles.imgHandLEDQuad1,'CData');
+            newLims = get(handles.LEDQuad1Ax,'CLim');
+        elseif handles.LEDsToEnable(3) == 1
+            set(handles.selectLEDsShow,'Value',3);
+            handles.settingsStruct.selectLEDsShow = 3;
+            newFrameData = get(handles.imgHandLEDQuad3,'CData');
+            newLims = get(handles.LEDQuad3Ax,'CLim');
+        elseif handles.LEDsToEnable(4) == 1
+            set(handles.selectLEDsShow,'Value',4);
+            handles.settingsStruct.selectLEDsShow = 4;
+            newFrameData = get(handles.imgHandLEDQuad4,'CData');
+            newLims = get(handles.LEDQuad4Ax,'CLim');
+        end
+        set(handles.imgHandLED1,'CData',newFrameData);
+        set(handles.LEDQuad1Ax,'CLim',newLims);
+    else
+        if handles.LEDsToEnable(1) == 1
+            set(handles.selectLEDsShow,'Value',1);
+            handles.settingsStruct.selectLEDsShow = 1;
+        elseif handles.LEDsToEnable(3) == 1
+            set(handles.selectLEDsShow,'Value',3);
+            handles.settingsStruct.selectLEDsShow = 3;
+        elseif handles.LEDsToEnable(4) == 1
+            set(handles.selectLEDsShow,'Value',4);
+            handles.settingsStruct.selectLEDsShow = 4;
+        end 
+    end
+end
 % Determine if quad view was enabled before changing LEDs
 prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 % Save the new setting for this LED
@@ -1261,6 +1404,40 @@ if (sum(handles.LEDsToEnable,2) == 1) && (get(handles.selectLEDsEnable3,'value')
     disp('Error: you cannot disable all LEDs.')
     set(handles.selectLEDsEnable3,'value',1);
     return
+end
+if (get(handles.selectLEDsEnable3,'Value') == 0) && (handles.settingsStruct.selectLEDsShow == 3)
+    % if we de-selected this LED, but the show LED on big axis is supposed to show this LED, fix it
+    if sum(handles.LEDsToEnable,2) == 4
+        if handles.LEDsToEnable(1) == 1
+            set(handles.selectLEDsShow,'Value',1);
+            handles.settingsStruct.selectLEDsShow = 1;
+            newFrameData = get(handles.imgHandLEDQuad1,'CData');
+            newLims = get(handles.LEDQuad1Ax,'CLim');
+        elseif handles.LEDsToEnable(2) == 1
+            set(handles.selectLEDsShow,'Value',2);
+            handles.settingsStruct.selectLEDsShow = 2;
+            newFrameData = get(handles.imgHandLEDQuad2,'CData');
+            newLims = get(handles.LEDQuad2Ax,'CLim');
+        elseif handles.LEDsToEnable(4) == 1
+            set(handles.selectLEDsShow,'Value',4);
+            handles.settingsStruct.selectLEDsShow = 4;
+            newFrameData = get(handles.imgHandLEDQuad4,'CData');
+            newLims = get(handles.LEDQuad4Ax,'CLim');
+        end
+        set(handles.imgHandLED1,'CData',newFrameData);
+        set(handles.LEDQuad1Ax,'CLim',newLims);
+    else
+        if handles.LEDsToEnable(1) == 1
+            set(handles.selectLEDsShow,'Value',1);
+            handles.settingsStruct.selectLEDsShow = 1;
+        elseif handles.LEDsToEnable(2) == 1
+            set(handles.selectLEDsShow,'Value',2);
+            handles.settingsStruct.selectLEDsShow = 2;
+        elseif handles.LEDsToEnable(4) == 1
+            set(handles.selectLEDsShow,'Value',4);
+            handles.settingsStruct.selectLEDsShow = 4;
+        end 
+    end
 end
 % Determine if quad view was enabled before changing LEDs
 prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
@@ -1385,6 +1562,40 @@ if (sum(handles.LEDsToEnable,2) == 1) && (get(handles.selectLEDsEnable4,'value')
     disp('Error: you cannot disable all LEDs.')
     set(handles.selectLEDsEnable4,'value',1);
     return
+end
+if (get(handles.selectLEDsEnable4,'Value') == 0) && (handles.settingsStruct.selectLEDsShow == 4)
+    % if we de-selected this LED, but the show LED on big axis is supposed to show this LED, fix it
+    if sum(handles.LEDsToEnable,2) == 4
+        if handles.LEDsToEnable(1) == 1
+            set(handles.selectLEDsShow,'Value',1);
+            handles.settingsStruct.selectLEDsShow = 1;
+            newFrameData = get(handles.imgHandLEDQuad1,'CData');
+            newLims = get(handles.LEDQuad1Ax,'CLim');
+        elseif handles.LEDsToEnable(2) == 1
+            set(handles.selectLEDsShow,'Value',2);
+            handles.settingsStruct.selectLEDsShow = 2;
+            newFrameData = get(handles.imgHandLEDQuad2,'CData');
+            newLims = get(handles.LEDQuad2Ax,'CLim');
+        elseif handles.LEDsToEnable(3) == 1
+            set(handles.selectLEDsShow,'Value',3);
+            handles.settingsStruct.selectLEDsShow = 3;
+            newFrameData = get(handles.imgHandLEDQuad3,'CData');
+            newLims = get(handles.LEDQuad3Ax,'CLim');
+        end
+        set(handles.imgHandLED1,'CData',newFrameData);
+        set(handles.LEDQuad1Ax,'CLim',newLims);
+    else
+        if handles.LEDsToEnable(1) == 1
+            set(handles.selectLEDsShow,'Value',1);
+            handles.settingsStruct.selectLEDsShow = 1;
+        elseif handles.LEDsToEnable(2) == 1
+            set(handles.selectLEDsShow,'Value',2);
+            handles.settingsStruct.selectLEDsShow = 2;
+        elseif handles.LEDsToEnable(3) == 1
+            set(handles.selectLEDsShow,'Value',3);
+            handles.settingsStruct.selectLEDsShow = 3;
+        end 
+    end
 end
 % Determine if quad view was enabled before changing LEDs
 prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;

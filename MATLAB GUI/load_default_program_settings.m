@@ -24,9 +24,9 @@ settingsStruct.commStatHistInCenter = 1;
 
 % SELECT LEDS SETTINGS
 settingsStruct.selectLEDsEnable1 = 0; % MAKE SURE THAT AT LEAST ONE LED IS ENABLED BEFORE STARTING
-settingsStruct.selectLEDsEnable2 = 1;
+settingsStruct.selectLEDsEnable2 = 0;
 settingsStruct.selectLEDsEnable3 = 0;
-settingsStruct.selectLEDsEnable4 = 1;
+settingsStruct.selectLEDsEnable4 = 0;
 settingsStruct.selectLEDsShow = 1; % LED channel to show on big image axis, only important if >2 LEDs are selected (Quad-channel view mode is automatically turned on)
 
 % SAVE SETTINGS

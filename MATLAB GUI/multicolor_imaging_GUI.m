@@ -115,12 +115,6 @@ disp(['Capture exposure time set to ' num2str(newExpTime) ' ms']);
 
 % --- Executes during object creation, after setting all properties.
 function capExpTime_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to capExpTime (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -447,18 +441,20 @@ if get(handles.prevStartButton,'Value') == 1
     start(handles.vidObj);
     
     guidata(hObject,handles);
+    
     while get(handles.prevStartButton,'Value') == 1 % While the toggle button is DOWN
         % Get current GUI UI data (for update-able properties)
         handles = guidata(hObject);
         numLEDsEnabled = sum(handles.LEDsToEnable,2);
         
-        if handles.vidObj.FramesAvailable > (numLEDsEnabled-1) % when >= number of frames requested are available, gather data and show them
+        if handles.vidObj.FramesAvailable > numLEDsEnabled
+            getdata(handles.vidObj,handles.vidObj.FramesAvailable);
+            disp('WARNING: DETECTED DROPPED FRAMES')
+        end
+        
+        if handles.vidObj.FramesAvailable == numLEDsEnabled % when the number of frames requested are available, gather data and show them
             [currentFrameSet,timeDataNow] = getdata(handles.vidObj,handles.vidObj.FramesAvailable);
-            if length(timeDataNow) > numLEDsEnabled
-                currentFrameSet = currentFrameSet(:,:,:,(end-numLEDsEnabled+1):end);
-                timeDataNow = timeDataNow((end-numLEDsEnabled+1):end);
-                disp('WARNING: DETECTED DROPPED FRAMES')
-            end
+
             % Gather data and crop to square (shifted in x)
             croppedFrames = squeeze(currentFrameSet(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,:));
             
@@ -684,38 +680,44 @@ maskedLEDQuad4Data = LEDQuad4Data.*handles.imageMask;
 
 % find min and max for each within central circular region
 QVals = quantile(double(maskedLED1Data(maskedLED1Data>0)),[handles.settingsStruct.analysisAutoScaleLowQuantile,handles.settingsStruct.analysisAutoScaleHighQuantile]);
-if QVals(1) == QVals(2)
-    QVals(2) = QVals(2)+1;
+if QVals(1) == QVals(2) % if the quantiles are exactly the same, then there's probably no valid image data, and it's better to set this to default 0 to 2^(cam bits)
+    QVals(1) = 0;
+    QVals(2) = 2^(handles.settingsStruct.constCameraBits)-1;
 end
 handles.settingsStruct.blackLevelLED1 = QVals(1);
 handles.settingsStruct.whiteLevelLED1 = QVals(2);
 QVals = quantile(double(maskedLED2Data(maskedLED2Data>0)),[handles.settingsStruct.analysisAutoScaleLowQuantile,handles.settingsStruct.analysisAutoScaleHighQuantile]);
 if QVals(1) == QVals(2)
-    QVals(2) = QVals(2)+1;
+    QVals(1) = 0;
+    QVals(2) = 2^(handles.settingsStruct.constCameraBits)-1;
 end
 handles.settingsStruct.blackLevelLED2 = QVals(1);
 handles.settingsStruct.whiteLevelLED2 = QVals(2);
 QVals = quantile(double(maskedLEDQuad1Data(maskedLEDQuad1Data>0)),[handles.settingsStruct.analysisAutoScaleLowQuantile,handles.settingsStruct.analysisAutoScaleHighQuantile]);
 if QVals(1) == QVals(2)
-    QVals(2) = QVals(2)+1;
+    QVals(1) = 0;
+    QVals(2) = 2^(handles.settingsStruct.constCameraBits)-1;
 end
 handles.settingsStruct.blackLevelLEDQuad1 = QVals(1);
 handles.settingsStruct.whiteLevelLEDQuad1 = QVals(2);
 QVals = quantile(double(maskedLEDQuad2Data(maskedLEDQuad2Data>0)),[handles.settingsStruct.analysisAutoScaleLowQuantile,handles.settingsStruct.analysisAutoScaleHighQuantile]);
 if QVals(1) == QVals(2)
-    QVals(2) = QVals(2)+1;
+    QVals(1) = 0;
+    QVals(2) = 2^(handles.settingsStruct.constCameraBits)-1;
 end
 handles.settingsStruct.blackLevelLEDQuad2 = QVals(1);
 handles.settingsStruct.whiteLevelLEDQuad2 = QVals(2);
 QVals = quantile(double(maskedLEDQuad3Data(maskedLEDQuad3Data>0)),[handles.settingsStruct.analysisAutoScaleLowQuantile,handles.settingsStruct.analysisAutoScaleHighQuantile]);
 if QVals(1) == QVals(2)
-    QVals(2) = QVals(2)+1;
+    QVals(1) = 0;
+    QVals(2) = 2^(handles.settingsStruct.constCameraBits)-1;
 end
 handles.settingsStruct.blackLevelLEDQuad3 = QVals(1);
 handles.settingsStruct.whiteLevelLEDQuad3 = QVals(2);
 QVals = quantile(double(maskedLEDQuad4Data(maskedLEDQuad4Data>0)),[handles.settingsStruct.analysisAutoScaleLowQuantile,handles.settingsStruct.analysisAutoScaleHighQuantile]);
 if QVals(1) == QVals(2)
-    QVals(2) = QVals(2)+1;
+    QVals(1) = 0;
+    QVals(2) = 2^(handles.settingsStruct.constCameraBits)-1;
 end
 handles.settingsStruct.blackLevelLEDQuad4 = QVals(1);
 handles.settingsStruct.whiteLevelLEDQuad4 = QVals(2);
@@ -1044,7 +1046,7 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
         handles.LED1WhiteValueIndicator.Visible = 'off';
         handles.LED2DisplayedValues.Visible = 'off';
         handles.LED2BlackValueIndicator.Visible = 'off';
-        handles.LED2WhiteValueIndicator.Visible = 'off';
+        handles.LED2WhiteValueIndicator.Visible = 'off';     
         handles.imgHandLEDQuad1.Visible = 'on'; %If we have transitions from quad off to on, then we MUST have enabled this channel
         handles.LEDQuad1DisplayedValues.Visible = 'on';
         handles.LEDQuad1BlackValueIndicator.Visible = 'on';
@@ -1233,8 +1235,14 @@ else % now we are NOT in quad mode
     else % if we were not in quad mode and are still not in quad mode
         if handles.settingsStruct.selectLEDsEnable2 == 1
             handles.imgHandLED2.Visible = 'on';
+            handles.LED2DisplayedValues.Visible = 'on';
+            handles.LED2BlackValueIndicator.Visible = 'on';
+            handles.LED2WhiteValueIndicator.Visible = 'on';
         else
             handles.imgHandLED2.Visible = 'off';
+            handles.LED2DisplayedValues.Visible = 'off';
+            handles.LED2BlackValueIndicator.Visible = 'off';
+            handles.LED2WhiteValueIndicator.Visible = 'off';
         end
     end
 end
@@ -1506,17 +1514,31 @@ else
     handles.settingsStruct.selectLEDsShow = 4;
     set(handles.selectLEDsShow,'Value',4);
 end
+
+% And if we're not in preview mode, then switch that frame's data to big
+% axis, and adjust scales
+if get(handles.prevStartButton,'Value') == 0
+    if handles.settingsStruct.selectLEDsShow == 1
+        newFrameData = get(handles.imgHandLEDQuad1,'CData');
+        newLims = get(handles.LEDQuad1Ax,'CLim');
+    elseif handles.settingsStruct.selectLEDsShow == 2
+        newFrameData = get(handles.imgHandLEDQuad2,'CData');
+        newLims = get(handles.LEDQuad2Ax,'CLim');
+    elseif handles.settingsStruct.selectLEDsShow == 3
+        newFrameData = get(handles.imgHandLEDQuad3,'CData');
+        newLims = get(handles.LEDQuad3Ax,'CLim');
+    elseif handles.settingsStruct.selectLEDsShow == 4
+        newFrameData = get(handles.imgHandLEDQuad4,'CData');
+        newLims = get(handles.LEDQuad4Ax,'CLim');
+    end
+    set(handles.imgHandLED1,'CData',newFrameData);
+    set(handles.LED1Ax,'CLim',newLims);
+end
 guidata(hObject,handles);
 
 
 % --- Executes during object creation, after setting all properties.
 function selectLEDsShow_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to selectLEDsShow (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end

@@ -63,13 +63,21 @@ else
     end
 end
 
-% Set numerical indicators of black vs white, depending on viewing mode
-% (hide the rest)
+% Set numerical indicators of black vs white
+set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED1)]);
+set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLED1)]);
+set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED2)]);
+set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLED2)]);
+set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLEDQuad1)]);
+set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLEDQuad1)]);
+set(handles.LEDQuad2BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLEDQuad2)]);
+set(handles.LEDQuad2WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLEDQuad2)]);
+set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLEDQuad3)]);
+set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLEDQuad3)]);
+set(handles.LEDQuad4BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLEDQuad4)]);
+set(handles.LEDQuad4WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLEDQuad4)]);
+% Hide all that are not needed
 if handles.settingsStruct.selectLEDsQuadViewOn == 0 % Not in quad-channel mode
-    set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED1)]);
-    set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLED1)]);
-    set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED2)]);
-    set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLED2)]);
     handles.LEDQuad1BlackValueIndicator.Visible = 'off';
     handles.LEDQuad1WhiteValueIndicator.Visible = 'off';
     handles.LEDQuad1DisplayedValues.Visible = 'off';
@@ -82,40 +90,32 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 0 % Not in quad-channel mode
     handles.LEDQuad4BlackValueIndicator.Visible = 'off';
     handles.LEDQuad4WhiteValueIndicator.Visible = 'off';
     handles.LEDQuad4DisplayedValues.Visible = 'off';
+    if sum(handles.LEDsToEnable,2) == 1
+        handles.LED2BlackValueIndicator.Visible = 'off';
+        handles.LED2WhiteValueIndicator.Visible = 'off';
+        handles.LED2DisplayedValues.Visible = 'off';
+    end
 else % in quad-channel view
-    if handles.settingsStruct.selectLEDsEnable1 == 1
-        set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED1)]);
-        set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLED1)]);
-    else
+    if handles.settingsStruct.selectLEDsEnable1 == 0
         handles.LEDQuad1BlackValueIndicator.Visible = 'off';
         handles.LEDQuad1WhiteValueIndicator.Visible = 'off';
         handles.LEDQuad1DisplayedValues.Visible = 'off';
     end
-    if handles.settingsStruct.selectLEDsEnable2 == 1
-        set(handles.LEDQuad2BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED2)]);
-        set(handles.LEDQuad2WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLED2)]);
-    else
+    if handles.settingsStruct.selectLEDsEnable2 == 0
         handles.LEDQuad2BlackValueIndicator.Visible = 'off';
         handles.LEDQuad2WhiteValueIndicator.Visible = 'off';
         handles.LEDQuad2DisplayedValues.Visible = 'off';
     end
-    if handles.settingsStruct.selectLEDsEnable3 == 1
-        set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED3)]);
-        set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLED3)]);
-    else
+    if handles.settingsStruct.selectLEDsEnable3 == 0
         handles.LEDQuad3BlackValueIndicator.Visible = 'off';
         handles.LEDQuad3WhiteValueIndicator.Visible = 'off';
         handles.LEDQuad3DisplayedValues.Visible = 'off';
     end
-    if handles.settingsStruct.selectLEDsEnable4 == 1
-        set(handles.LEDQuad4BlackValueIndicator,'String',['Black: ' num2str(handles.settingsStruct.blackLevelLED4)]);
-        set(handles.LEDQuad4WhiteValueIndicator,'String',['White: ' num2str(handles.settingsStruct.whiteLevelLED4)]);
-    else
+    if handles.settingsStruct.selectLEDsEnable4 == 0
         handles.LEDQuad4BlackValueIndicator.Visible = 'off';
         handles.LEDQuad4WhiteValueIndicator.Visible = 'off';
         handles.LEDQuad4DisplayedValues.Visible = 'off';
     end
-  
     handles.LED1BlackValueIndicator.Visible = 'off';
     handles.LED1WhiteValueIndicator.Visible = 'off';
     handles.LED1DisplayedValues.Visible = 'off';

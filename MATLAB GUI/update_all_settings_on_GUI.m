@@ -34,6 +34,28 @@ set(handles.selectLEDsLabel1,'String',['LED1: ' handles.settingsStruct.constLED1
 set(handles.selectLEDsLabel2,'String',['LED2: ' handles.settingsStruct.constLED2CenterWavelength]);
 set(handles.selectLEDsLabel3,'String',['LED3: ' handles.settingsStruct.constLED3CenterWavelength]);
 set(handles.selectLEDsLabel4,'String',['LED4: ' handles.settingsStruct.constLED4CenterWavelength]);
+% A few checks on the initial parameters
+if handles.LEDsToEnable(handles.settingsStruct.selectLEDsShow) == 0 %if the requested LED to show on big axis is not enabled, then switch it
+    if handles.LEDsToEnable(1) == 1
+        set(handles.selectLEDsShow,'Value',1);
+        handles.settingsStruct.selectLEDsShow = 1;
+    elseif handles.LEDsToEnable(2) == 1
+        set(handles.selectLEDsShow,'Value',2);
+        handles.settingsStruct.selectLEDsShow = 2;
+    elseif handles.LEDsToEnable(3) == 1
+        set(handles.selectLEDsShow,'Value',3);
+        handles.settingsStruct.selectLEDsShow = 3;
+    elseif handles.LEDsToEnable(4) == 1
+        set(handles.selectLEDsShow,'Value',4);
+        handles.settingsStruct.selectLEDsShow = 4;
+    end
+end
+if sum(handles.LEDsToEnable,2) == 0
+    set(handles.selectLEDsShow,'Value',1)
+    set(handles.selectLEDsEnable1,'Value',1);
+    handles.LEDsToEnable(1) = 1;
+    handles.settingsStruct.selectLEDsEnable1 = 1;
+end
 
 % SAVE SETTINGS
 set(handles.saveBaseName,'String',handles.settingsStruct.saveBaseName);

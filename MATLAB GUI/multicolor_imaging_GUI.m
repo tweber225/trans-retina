@@ -442,21 +442,27 @@ if get(handles.prevStartButton,'Value') == 1
     
     guidata(hObject,handles);
     
+    % Var allocation before the loop begins
+    numLEDsEnabled = sum(handles.LEDsToEnable,2);
+    numPixsInMask = sum(handles.imageMask(:));
+    maskedCroppedFrames = zeros(numPixsInMask,numLEDsEnabled);
+    repMask = repmat(handles.imageMask,[1 1 1 numLEDsEnabled]);
+    
     while get(handles.prevStartButton,'Value') == 1 % While the toggle button is DOWN
         % Get current GUI UI data (for update-able properties)
         handles = guidata(hObject);
-        numLEDsEnabled = sum(handles.LEDsToEnable,2);
         
-        if handles.vidObj.FramesAvailable > numLEDsEnabled
+        numFramesAvailNow = handles.vidObj.FramesAvailable;        
+        if numFramesAvailNow > numLEDsEnabled
             getdata(handles.vidObj,handles.vidObj.FramesAvailable);
             disp('WARNING: DETECTED DROPPED FRAMES')
         end
         
-        if handles.vidObj.FramesAvailable == numLEDsEnabled % when the number of frames requested are available, gather data and show them
-            [currentFrameSet,timeDataNow] = getdata(handles.vidObj,handles.vidObj.FramesAvailable);
+        if numFramesAvailNow == numLEDsEnabled % when the number of frames requested are available, gather data and show them
+            [currentFrameSet,timeDataNow] = getdata(handles.vidObj,numLEDsEnabled);
 
             % Gather data and crop to square (shifted in x)
-            croppedFrames = squeeze(currentFrameSet(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,:));
+            croppedFrames = (currentFrameSet(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,:));
             
             % LED1DisplayedValues data - dependent on whether "quad-channel view"
             % (quadview) is on
@@ -468,28 +474,28 @@ if get(handles.prevStartButton,'Value') == 1
                 bigFrameToShow = -1;
                 bigFrameRequest = get(handles.selectLEDsShow,'Value');
                 if handles.settingsStruct.selectLEDsEnable1 == 1
-                    set(handles.imgHandLEDQuad1, 'CData', croppedFrames(:,:,frameIdx));
+                    set(handles.imgHandLEDQuad1, 'CData', croppedFrames(:,:,:,frameIdx));
                     if bigFrameRequest == 1;
                         bigFrameToShow = frameIdx;
                     end
                     frameIdx = frameIdx+1;
                 end
                 if handles.settingsStruct.selectLEDsEnable2 == 1
-                    set(handles.imgHandLEDQuad2, 'CData', croppedFrames(:,:,frameIdx));
+                    set(handles.imgHandLEDQuad2, 'CData', croppedFrames(:,:,:,frameIdx));
                     if bigFrameRequest == 2;
                         bigFrameToShow = frameIdx;
                     end
                     frameIdx = frameIdx+1;
                 end
                 if handles.settingsStruct.selectLEDsEnable3 == 1
-                    set(handles.imgHandLEDQuad3, 'CData', croppedFrames(:,:,frameIdx));
+                    set(handles.imgHandLEDQuad3, 'CData', croppedFrames(:,:,:,frameIdx));
                     if bigFrameRequest == 3;
                         bigFrameToShow = frameIdx;
                     end
                     frameIdx = frameIdx+1;
                 end
                 if handles.settingsStruct.selectLEDsEnable4 == 1
-                    set(handles.imgHandLEDQuad4, 'CData', croppedFrames(:,:,frameIdx));
+                    set(handles.imgHandLEDQuad4, 'CData', croppedFrames(:,:,:,frameIdx));
                     if bigFrameRequest == 4;
                         bigFrameToShow = frameIdx;
                     end
@@ -497,22 +503,22 @@ if get(handles.prevStartButton,'Value') == 1
                 
                 % Show one of these (specified in select LEDs panel) in
                 % large LED1Ax frame
-                set(handles.imgHandLED1, 'CData', croppedFrames(:,:,bigFrameToShow));
+                set(handles.imgHandLED1, 'CData', croppedFrames(:,:,:,bigFrameToShow));
                 
             else % if not in quad mode, we can just put the frames into each standard axis
                 if numLEDsEnabled == 1
-                    set(handles.imgHandLED1, 'CData', croppedFrames(:,:,1));
+                    set(handles.imgHandLED1, 'CData', croppedFrames(:,:,:,1));
                 else
-                    set(handles.imgHandLED1, 'CData', croppedFrames(:,:,1));
-                    set(handles.imgHandLED2, 'CData', croppedFrames(:,:,2));
+                    set(handles.imgHandLED1, 'CData', croppedFrames(:,:,:,1));
+                    set(handles.imgHandLED2, 'CData', croppedFrames(:,:,:,2));
                 end
             end
-                        
-            % Do computations on the masked images only
-            maskedCroppedFrames = zeros(sum(handles.imageMask(:)),numLEDsEnabled);
-            for frameIdx = 1:numLEDsEnabled
-                maskedImage = croppedFrames(:,:,frameIdx).*handles.imageMask;
-                maskedCroppedFrames(:,frameIdx) = maskedImage(maskedImage>0);
+            
+            % Mask image if doing any RT Stats or Hist
+            if handles.settingsStruct.commRTHistogram || handles.settingsStruct.commRTStats
+                % Do computations on the masked images only
+                intermediateCroppedFrames = croppedFrames.*repMask;
+                maskedCroppedFrames = reshape(intermediateCroppedFrames(intermediateCroppedFrames>0),[numPixsInMask,numLEDsEnabled]);
             end
             
             % If requested, compute histogram
@@ -591,7 +597,7 @@ if get(handles.prevStartButton,'Value') == 1
             set(handles.prevFPSIndicator,'String',[num2str(1/(timeDataNow(1)-timeDataLastPair),4) ' fsps']); % calculate FPS
             
             drawnow; % Must drawnow to show new frame data
-            timeDataLastPair = timeDataNow(1); % Record this pair's time for next FPS calculation
+            timeDataLastPair = timeDataNow(1); % Record this pair's time for next Frame Sets Per Second calculation
         end
         
     end

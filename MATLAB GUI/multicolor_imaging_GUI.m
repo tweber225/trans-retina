@@ -1084,7 +1084,8 @@ guidata(hObject,handles);
 
 
 
-% --- Executes on button press in selectLEDsEnable1.
+% --- Executes on button press in selectLEDsEnable1. -- NOTE: this button
+% is unavailable to click during preview mode (and of course capture mode)
 function selectLEDsEnable1_Callback(hObject, eventdata, handles)
 if (sum(handles.LEDsToEnable,2) == 1) && (get(handles.selectLEDsEnable1,'value') == 0)
     disp('Error: you cannot disable all LEDs.')
@@ -1092,7 +1093,9 @@ if (sum(handles.LEDsToEnable,2) == 1) && (get(handles.selectLEDsEnable1,'value')
     return
 end
 if (get(handles.selectLEDsEnable1,'Value') == 0) && (handles.settingsStruct.selectLEDsShow == 1)
-    % if we de-selected this LED, but the show LED on big axis is supposed to show this LED, fix it
+    % if we de-selected this LED, but the show LED on big axis is supposed
+    % to show this LED, fix it, and put the right data on the big axis
+    % RELEVANT FOR 4->3 LED CHANNELS
     if sum(handles.LEDsToEnable,2) == 4
         if handles.LEDsToEnable(2) == 1
             set(handles.selectLEDsShow,'Value',2);
@@ -1125,10 +1128,12 @@ if (get(handles.selectLEDsEnable1,'Value') == 0) && (handles.settingsStruct.sele
         end 
     end
 end
+
 % Determine if quad view was enabled before changing LEDs
 prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 % Save the new setting for this LED
 handles.settingsStruct.selectLEDsEnable1 = get(handles.selectLEDsEnable1,'value');
+prevLEDsToEnable = handles.LEDsToEnable; % for switching image data around
 handles.LEDsToEnable(1) = handles.settingsStruct.selectLEDsEnable1;
 % Confirm (on command line) the LED change made
 if handles.settingsStruct.selectLEDsEnable1 == 1
@@ -1144,11 +1149,6 @@ else
     handles.settingsStruct.selectLEDsQuadViewOn = 0;
 end
 
-% Switch RT Histograms and RT Stats on/off
-commRTStats_Callback(hObject, eventdata, handles);
-commRTHistogram_Callback(hObject, eventdata, handles);
-guidata(hObject, handles);
-
 % Determine which image axes to show/hide
 if handles.settingsStruct.selectLEDsQuadViewOn == 1
     if prevQuad == 0
@@ -1161,28 +1161,53 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
         handles.LED1WhiteValueIndicator.Visible = 'off';
         handles.LED2DisplayedValues.Visible = 'off';
         handles.LED2BlackValueIndicator.Visible = 'off';
-        handles.LED2WhiteValueIndicator.Visible = 'off';     
+        handles.LED2WhiteValueIndicator.Visible = 'off';
+        
         handles.imgHandLEDQuad1.Visible = 'on'; %If we have transitions from quad off to on, then we MUST have enabled this channel
         handles.LEDQuad1DisplayedValues.Visible = 'on';
         handles.LEDQuad1BlackValueIndicator.Visible = 'on';
         handles.LEDQuad1WhiteValueIndicator.Visible = 'on';
+        % Also blank this frame axis (in case there is old imagery still
+        % present)
+        set(handles.imgHistLEDQuad1,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16'));
+        
+        % For switching frames
+        switchFrames=ones(handles.settingsStruct.derivePrevNumPixPerDim,handles.settingsStruct.derivePrevNumPixPerDim,2,'uint16');
+        switchFrames(:,:,1) = get(handles.imgHandLED1,'CData'); 
+        switchFrames(:,:,2) = get(handles.imgHandLED2,'CData');
+        quadIdx = 1;
+        if prevLEDsToEnable(1) == 1
+            set(handles.imgHandLEDQuad1,'CData',switchFrames(:,:,quadIdx));
+            quadIdx = quadIdx + 1;
+        end
         if handles.LEDsToEnable(2) == 1
             handles.imgHandLEDQuad2.Visible = 'on';
             handles.LEDQuad2DisplayedValues.Visible = 'on';
             handles.LEDQuad2BlackValueIndicator.Visible = 'on';
         	handles.LEDQuad2WhiteValueIndicator.Visible = 'on';
+            if prevLEDsToEnable(2) == 1
+                set(handles.imgHandLEDQuad2,'CData',switchFrames(:,:,quadIdx));
+                quadIdx = quadIdx + 1;
+            end
         end
         if handles.LEDsToEnable(3) == 1
             handles.imgHandLEDQuad3.Visible = 'on';
             handles.LEDQuad3DisplayedValues.Visible = 'on';
             handles.LEDQuad3BlackValueIndicator.Visible = 'on';
             handles.LEDQuad3WhiteValueIndicator.Visible = 'on';
+            if prevLEDsToEnable(3) == 1
+                set(handles.imgHandLEDQuad3,'CData',switchFrames(:,:,quadIdx));
+                quadIdx = quadIdx + 1;
+            end
         end
         if handles.LEDsToEnable(4) == 1
             handles.imgHandLEDQuad4.Visible = 'on';
             handles.LEDQuad4DisplayedValues.Visible = 'on';
             handles.LEDQuad4BlackValueIndicator.Visible = 'on';
             handles.LEDQuad4WhiteValueIndicator.Visible = 'on';
+            if prevLEDsToEnable(4) == 1
+                set(handles.imgHandLEDQuad4,'CData',switchFrames(:,:,quadIdx));
+            end
         end
     else
         % If we were in quad mode and we still are, then there are two possibilities
@@ -1191,6 +1216,7 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
             handles.LEDQuad1DisplayedValues.Visible = 'on';
             handles.LEDQuad1BlackValueIndicator.Visible = 'on';
             handles.LEDQuad1WhiteValueIndicator.Visible = 'on';
+            set(handles.imgHistLEDQuad1,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % show blank frame
         else
             handles.imgHandLEDQuad1.Visible = 'off';
             handles.LEDQuad1DisplayedValues.Visible = 'off';
@@ -1224,12 +1250,14 @@ else % now we are NOT in quad mode
         handles.LEDQuad4DisplayedValues.Visible = 'off';
         handles.LEDQuad4BlackValueIndicator.Visible = 'off';
         handles.LEDQuad4WhiteValueIndicator.Visible = 'off';
+        % Determine which frames to put where
     else % if we were not in quad mode and are still not in quad mode
         if handles.settingsStruct.selectLEDsEnable1 == 1
             handles.imgHandLED2.Visible = 'on';
             handles.LED2DisplayedValues.Visible = 'on';
             handles.LED2BlackValueIndicator.Visible = 'on';
             handles.LED2WhiteValueIndicator.Visible = 'on';
+            set(handles.imgHistLED2,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % blank the second axis
         else
             handles.imgHandLED2.Visible = 'off';
             handles.LED2DisplayedValues.Visible = 'off';
@@ -1238,6 +1266,11 @@ else % now we are NOT in quad mode
         end
     end
 end
+
+% Recompute RT Stats and Histograms (if requested, functions below will
+% check this)
+commRTStats_Callback(hObject, eventdata, handles);
+commRTHistogram_Callback(hObject, eventdata, handles);
 guidata(hObject,handles);
 
 

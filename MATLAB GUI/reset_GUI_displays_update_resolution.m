@@ -19,7 +19,7 @@ handles.settingsStruct.blackLevelLEDQuad4 = handles.settingsStruct.blackLevelLED
 handles.settingsStruct.whiteLevelLEDQuad4 = handles.settingsStruct.whiteLevelLED1;
 
 % Make a square black image of the correct size
-blackFrame = uint16(ones(newResolution));
+blackFrame = ones(newResolution,'uint16');
 
 % Display black images, and then store all the imagehandles
 % Make handles to all the images

@@ -1590,12 +1590,6 @@ else % now we are NOT in quad mode
             handles.LED2BlackValueIndicator.Visible = 'on';
             handles.LED2WhiteValueIndicator.Visible = 'on';
             set(handles.imgHandLED2,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % blank the second axis
-            blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
-            set(handles.LED2Ax,'CLim',blankLims);
-            handles.settingsStruct.blackLevelLED2= blankLims(1);
-            handles.settingsStruct.whiteLevelLED2 = blankLims(2);
-            set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
-            set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
         else
             handles.imgHandLED2.Visible = 'off';
             handles.LED2DisplayedValues.Visible = 'off';
@@ -1605,13 +1599,7 @@ else % now we are NOT in quad mode
             countVect = 1:4;
             if 2 < countVect(logical(handles.LEDsToEnable))
                 swapFrame = get(handles.imgHandLED2,'CData');
-                swapCLim = get(handles.LED2Ax,'CLim');
                 set(handles.imgHandLED1,'CData',swapFrame);
-                set(handles.LED1Ax,'CLim',swapCLim);
-                handles.settingsStruct.blackLevelLED1= swapCLim(1);
-                handles.settingsStruct.whiteLevelLED1 = swapCLim(2);
-                set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
-                set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
             end
         end
     end

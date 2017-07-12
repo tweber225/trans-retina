@@ -1590,6 +1590,12 @@ else % now we are NOT in quad mode
             handles.LED2BlackValueIndicator.Visible = 'on';
             handles.LED2WhiteValueIndicator.Visible = 'on';
             set(handles.imgHandLED2,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % blank the second axis
+            blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
+            set(handles.LED2Ax,'CLim',blankLims);
+            handles.settingsStruct.blackLevelLED2= blankLims(1);
+            handles.settingsStruct.whiteLevelLED2 = blankLims(2);
+            set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
+            set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
         else
             handles.imgHandLED2.Visible = 'off';
             handles.LED2DisplayedValues.Visible = 'off';
@@ -1599,7 +1605,13 @@ else % now we are NOT in quad mode
             countVect = 1:4;
             if 2 < countVect(logical(handles.LEDsToEnable))
                 swapFrame = get(handles.imgHandLED2,'CData');
+                swapCLim = get(handles.LED2Ax,'CLim');
                 set(handles.imgHandLED1,'CData',swapFrame);
+                set(handles.LED1Ax,'CLim',swapCLim);
+                handles.settingsStruct.blackLevelLED1= swapCLim(1);
+                handles.settingsStruct.whiteLevelLED1 = swapCLim(2);
+                set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
+                set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
             end
         end
     end
@@ -1619,8 +1631,10 @@ if (sum(handles.LEDsToEnable,2) == 1) && (get(handles.selectLEDsEnable3,'value')
     return
 end
 if (get(handles.selectLEDsEnable3,'Value') == 0) && (handles.settingsStruct.selectLEDsShow == 3)
-    % if we de-selected this LED, but the show LED on big axis is supposed to show this LED, fix it
-    if sum(handles.LEDsToEnable,2) == 4
+    % if we de-selected this LED, but the show LED on big axis is supposed
+    % to show this LED, fix it, and put the right data on the big axis
+    % RELEVANT FOR 4->3 LED CHANNELS
+    if sum(handles.LEDsToEnable,2) == 4 % if the sum here is 4 (was 4 before clicking), then we must have deselected this LED
         if handles.LEDsToEnable(1) == 1
             set(handles.selectLEDsShow,'Value',1);
             handles.settingsStruct.selectLEDsShow = 1;
@@ -1638,9 +1652,13 @@ if (get(handles.selectLEDsEnable3,'Value') == 0) && (handles.settingsStruct.sele
             newLims = get(handles.LEDQuad4Ax,'CLim');
         end
         set(handles.imgHandLED1,'CData',newFrameData);
-        set(handles.LEDQuad1Ax,'CLim',newLims);
+        set(handles.LED1Ax,'CLim',newLims);
+        handles.settingsStruct.blackLevelLED1= newLims(1);
+        handles.settingsStruct.whiteLevelLED1 = newLims(2);
+        set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
+        set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
     else
-        if handles.LEDsToEnable(1) == 1
+        if handles.LEDsToEnable(1) == 1 % and these 3 options just change the selected LED to show on big axis (but nothing changes)
             set(handles.selectLEDsShow,'Value',1);
             handles.settingsStruct.selectLEDsShow = 1;
         elseif handles.LEDsToEnable(2) == 1
@@ -1652,10 +1670,12 @@ if (get(handles.selectLEDsEnable3,'Value') == 0) && (handles.settingsStruct.sele
         end 
     end
 end
+
 % Determine if quad view was enabled before changing LEDs
 prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 % Save the new setting for this LED
 handles.settingsStruct.selectLEDsEnable3 = get(handles.selectLEDsEnable3,'value');
+prevLEDsToEnable = handles.LEDsToEnable; % for switching image data around
 handles.LEDsToEnable(3) = handles.settingsStruct.selectLEDsEnable3;
 % Confirm (on command line) the LED change made
 if handles.settingsStruct.selectLEDsEnable3 == 1
@@ -1671,11 +1691,6 @@ else
     handles.settingsStruct.selectLEDsQuadViewOn = 0;
 end
 
-% Switch RT Histograms and RT Stats on/off
-commRTStats_Callback(hObject, eventdata, handles);
-commRTHistogram_Callback(hObject, eventdata, handles);
-guidata(hObject, handles);
-
 % Determine which image axes to show/hide
 if handles.settingsStruct.selectLEDsQuadViewOn == 1
     if prevQuad == 0
@@ -1689,27 +1704,74 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
         handles.LED2DisplayedValues.Visible = 'off';
         handles.LED2BlackValueIndicator.Visible = 'off';
         handles.LED2WhiteValueIndicator.Visible = 'off';
-        handles.imgHandLEDQuad3.Visible = 'on'; %If we have transitions from quad off to on, then we MUST have enabled this channel
-        handles.LEDQuad3DisplayedValues.Visible = 'on';
-        handles.LEDQuad3BlackValueIndicator.Visible = 'on';
-        handles.LEDQuad3WhiteValueIndicator.Visible = 'on';
+        
+        % Variable for switching frames
+        switchFrames=ones(handles.settingsStruct.derivePrevNumPixPerDim,handles.settingsStruct.derivePrevNumPixPerDim,2,'uint16');
+        switchCLim=zeros(2,2);
+        switchFrames(:,:,1) = get(handles.imgHandLED1,'CData'); 
+        switchFrames(:,:,2) = get(handles.imgHandLED2,'CData');
+        switchCLim(:,1) = get(handles.LED1Ax,'CLim');
+        switchCLim(:,2) = get(handles.LED2Ax,'CLim');
+        quadIdx = 1;
+        
         if handles.LEDsToEnable(1) == 1
             handles.imgHandLEDQuad1.Visible = 'on';
             handles.LEDQuad1DisplayedValues.Visible = 'on';
             handles.LEDQuad1BlackValueIndicator.Visible = 'on';
         	handles.LEDQuad1WhiteValueIndicator.Visible = 'on';
+            if prevLEDsToEnable(1) == 1
+                set(handles.imgHandLEDQuad1,'CData',switchFrames(:,:,quadIdx));
+                set(handles.LEDQuad1Ax,'CLim',switchCLim(:,quadIdx));
+                handles.settingsStruct.blackLevelLEDQuad1= switchCLim(1,quadIdx);
+                handles.settingsStruct.whiteLevelLEDQuad1 = switchCLim(2,quadIdx);
+                set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
+                set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
+                quadIdx = quadIdx + 1;
+            end
         end
         if handles.LEDsToEnable(2) == 1
             handles.imgHandLEDQuad2.Visible = 'on';
             handles.LEDQuad2DisplayedValues.Visible = 'on';
             handles.LEDQuad2BlackValueIndicator.Visible = 'on';
             handles.LEDQuad2WhiteValueIndicator.Visible = 'on';
+            if prevLEDsToEnable(2) == 1
+                set(handles.imgHandLEDQuad2,'CData',switchFrames(:,:,quadIdx));
+                set(handles.LEDQuad2Ax,'CLim',switchCLim(:,quadIdx));
+                handles.settingsStruct.blackLevelLEDQuad2= switchCLim(1,quadIdx);
+                handles.settingsStruct.whiteLevelLEDQuad2 = switchCLim(2,quadIdx);
+                set(handles.LEDQuad2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
+                set(handles.LEDQuad2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
+                quadIdx = quadIdx + 1;
+            end
         end
+        
+        %If we have transitions from quad off to on, then we MUST have enabled this channel
+        handles.imgHandLEDQuad3.Visible = 'on'; 
+        handles.LEDQuad3DisplayedValues.Visible = 'on';
+        handles.LEDQuad3BlackValueIndicator.Visible = 'on';
+        handles.LEDQuad3WhiteValueIndicator.Visible = 'on';
+        % Also blank this frame axis (in case there is old imagery)
+        set(handles.imgHandLEDQuad3,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16'));
+        blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
+        set(handles.LEDQuad3Ax,'CLim',blankLims);
+        handles.settingsStruct.blackLevelLEDQuad3= blankLims(1);
+        handles.settingsStruct.whiteLevelLEDQuad3 = blankLims(2);
+        set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
+        set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
+
         if handles.LEDsToEnable(4) == 1
             handles.imgHandLEDQuad4.Visible = 'on';
             handles.LEDQuad4DisplayedValues.Visible = 'on';
             handles.LEDQuad4BlackValueIndicator.Visible = 'on';
             handles.LEDQuad4WhiteValueIndicator.Visible = 'on';
+            if prevLEDsToEnable(4) == 1
+                set(handles.imgHandLEDQuad4,'CData',switchFrames(:,:,quadIdx));
+                set(handles.LEDQuad4Ax,'CLim',switchCLim(:,quadIdx));
+                handles.settingsStruct.blackLevelLEDQuad4= switchCLim(1,quadIdx);
+                handles.settingsStruct.whiteLevelLEDQuad4 = switchCLim(2,quadIdx);
+                set(handles.LEDQuad4BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
+                set(handles.LEDQuad4WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
+            end
         end
     else
         % If we were in quad mode and we still are, then there are two possibilities
@@ -1718,6 +1780,13 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
             handles.LEDQuad3DisplayedValues.Visible = 'on';
             handles.LEDQuad3BlackValueIndicator.Visible = 'on';
             handles.LEDQuad3WhiteValueIndicator.Visible = 'on';
+            set(handles.imgHandLEDQuad3,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % show blank frame
+            blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
+            set(handles.LEDQuad3Ax,'CLim',blankLims);
+            handles.settingsStruct.blackLevelLEDQuad3= blankLims(1);
+            handles.settingsStruct.whiteLevelLEDQuad3 = blankLims(2);
+            set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
+            set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
         else
             handles.imgHandLEDQuad3.Visible = 'off';
             handles.LEDQuad3DisplayedValues.Visible = 'off';
@@ -1750,7 +1819,39 @@ else % now we are NOT in quad mode
         handles.LEDQuad3WhiteValueIndicator.Visible = 'off';
         handles.LEDQuad4DisplayedValues.Visible = 'off';
         handles.LEDQuad4BlackValueIndicator.Visible = 'off';
-        handles.LEDQuad4WhiteValueIndicator.Visible = 'off';   
+        handles.LEDQuad4WhiteValueIndicator.Visible = 'off';
+        % Determine which frames to put where--use LEDsToEnable to
+        % determine which frame data to add to 2-image axes
+        switchFrames=ones(handles.settingsStruct.derivePrevNumPixPerDim,handles.settingsStruct.derivePrevNumPixPerDim,2,'uint16');
+        switchCLim = zeros(2,2);
+        quadIdx = 1;
+        if handles.LEDsToEnable(1) == 1
+            switchFrames(:,:,quadIdx) = get(handles.imgHandLEDQuad1,'CData');
+            switchCLim(:,quadIdx) = get(handles.LEDQuad1Ax,'CLim');
+            quadIdx = quadIdx+1;
+        end
+        if handles.LEDsToEnable(2) == 1
+            switchFrames(:,:,quadIdx) = get(handles.imgHandLEDQuad2,'CData');
+            switchCLim(:,quadIdx) = get(handles.LEDQuad2Ax,'CLim');
+            quadIdx = quadIdx+1;
+        end
+        if handles.LEDsToEnable(4) == 1
+            switchFrames(:,:,quadIdx) = get(handles.imgHandLEDQuad4,'CData');
+            switchCLim(:,quadIdx) = get(handles.LEDQuad4Ax,'CLim');
+        end
+        set(handles.imgHandLED1,'CData',switchFrames(:,:,1));
+        set(handles.imgHandLED2,'CData',switchFrames(:,:,2));
+        set(handles.LED1Ax,'CLim',switchCLim(:,1));
+        set(handles.LED2Ax,'CLim',switchCLim(:,2));
+        handles.settingsStruct.blackLevelLED1= switchCLim(1,1);
+        handles.settingsStruct.whiteLevelLED1 = switchCLim(2,1);
+        set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
+        set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+        handles.settingsStruct.blackLevelLED2= switchCLim(1,2);
+        handles.settingsStruct.whiteLevelLED2 = switchCLim(2,2);
+        set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
+        set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
+
     else % if we were not in quad mode and are still not in quad mode
         if handles.settingsStruct.selectLEDsEnable3 == 1
             handles.imgHandLED2.Visible = 'on';
@@ -1765,6 +1866,10 @@ else % now we are NOT in quad mode
         end
     end
 end
+
+% Switch RT Histograms and RT Stats on/off
+commRTStats_Callback(hObject, eventdata, handles);
+commRTHistogram_Callback(hObject, eventdata, handles);
 guidata(hObject,handles);
 
 

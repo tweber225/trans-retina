@@ -32,6 +32,12 @@ elseif strcmp(settingType,'capture')
     set(handles.saveBaseName,'Enable','on');
     set(handles.saveSettings,'Enable','on');
     set(handles.saveFrameTimes,'Enable','on');
+    set(handles.selectLEDsEnable1,'Enable','on');
+    set(handles.selectLEDsEnable2,'Enable','on');
+    set(handles.selectLEDsEnable3,'Enable','on');
+    set(handles.selectLEDsEnable4,'Enable','on');
+    set(handles.selectLEDsShow,'Enable','on');
+    
     
     set(handles.capStartButton,'Value',0);
     set(handles.capStartButton,'String','Start Capture');

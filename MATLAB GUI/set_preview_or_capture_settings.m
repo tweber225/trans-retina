@@ -78,7 +78,7 @@ elseif strcmp(settingType,'capture')
     
     % Limit the capture acquistion's total number of frame (for two LED's
     % this is 2X the number of frames on the GUI)
-    handles.vidObj.FramesPerTrigger = 2*handles.settingsStruct.capNumFrames;
+    handles.vidObj.FramesPerTrigger = sum(handles.LEDsToEnable,2)*handles.settingsStruct.capNumFrames;
     
     % Disable settings that should not be changed during active preview
     set(handles.capExpTime,'Enable','off');
@@ -95,6 +95,11 @@ elseif strcmp(settingType,'capture')
     set(handles.saveBaseName,'Enable','off');
     set(handles.saveSettings,'Enable','off');
     set(handles.saveFrameTimes,'Enable','off');
+    set(handles.selectLEDsEnable1,'Enable','off');
+    set(handles.selectLEDsEnable2,'Enable','off');
+    set(handles.selectLEDsEnable3,'Enable','off');
+    set(handles.selectLEDsEnable4,'Enable','off');
+    set(handles.selectLEDsShow,'Enable','off');
 
 
     % Change the start button's string

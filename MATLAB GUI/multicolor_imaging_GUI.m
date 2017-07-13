@@ -296,16 +296,14 @@ end
 % !!! Starts CAPTURE Button 
 % --- Executes on button press in capStartButton.
 function capStartButton_Callback(hObject, eventdata, handles)
-% hObject    handle to capStartButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 if get(handles.capStartButton,'Value') == 1
     % Output TTL HIGH to Arduino to signal the start of an acquisition and
     % arm the arduino's toggling
-    outputSingleScan(handles.NIDaqSession,1);
+    outputSingleScan(handles.NIDaqSession,[1 handles.LEDsToEnable]);
+    numLEDsEnabled = sum(handles.LEDsToEnable,2);
     
-    % Set total number of frames (2x the number of frame pairs)
-    numFramesTotal = 2*handles.settingsStruct.capNumFrames;
+    % Set total number of frames ([Number LEDs]x the number of frame sets requested)
+    %NOT SURE IF NEEDED: numFramesTotal = numLEDsEnabled*handles.settingsStruct.capNumFrames;
 
     disp('Starting Capture')      
     handles.settingsStruct.saveCapStartTime = datetime('now');
@@ -319,56 +317,204 @@ if get(handles.capStartButton,'Value') == 1
     end
     
     % Set up space for the image files & frame times
-    LED1Frames = zeros([handles.settingsStruct.numPixPerDim, handles.settingsStruct.numPixPerDim, handles.settingsStruct.capNumFrames],'uint16');
-    LED2Frames = LED1Frames;
-    timesList = zeros([handles.settingsStruct.capNumFrames 2]);
+    captureFrames = zeros([handles.settingsStruct.numPixPerDim,handles.settingsStruct.numPixPerDim,1,numLEDsEnabled,handles.settingsStruct.capNumFrames],'uint16');
+    timesList = zeros([numLEDsEnabled,handles.settingsStruct.capNumFrames]);
     
     % Set up camera for preview with the latest settings
     handles = set_preview_or_capture_settings(handles,'capture');
     
-    timeDataLastPair = 0; % (for FPS calculation)
-    start(handles.vidObj);
+    % Var allocation before the loop begins
+    timeDataLastPair = 0; % for frame sets per second (FSPS) calculation
+    numLEDsEnabled = sum(handles.LEDsToEnable,2);
+    numPixsInMask = sum(handles.imageMask(:));
+    maskedCroppedFrames = zeros(numPixsInMask,numLEDsEnabled);
+    repMask = repmat(handles.imageMask,[1 1 1 numLEDsEnabled]);
+    
     
     guidata(hObject,handles);
     
-    pairIdx = 0; % Counter to track number of frames and stop the loop when done
-    while (pairIdx < numFramesTotal) && (get(handles.capStartButton,'Value') == 1) % While we haven't acquire all the frames yet AND the toggle button is still DOWN
+    setIdx = 1; % Counter to track number of frames and stop the loop when done
+    
+    start(handles.vidObj);
+
+    while ((setIdx-1) < handles.settingsStruct.capNumFrames) && (get(handles.capStartButton,'Value') == 1) % While we haven't acquire all the frames yet AND the toggle button is still DOWN
         % Don't get new GUI info here (as opposed to as is done in Preview)
         % because Capture Mode isn't supposed to be changed on the fly
         
-        if handles.vidObj.FramesAvailable > 2 % Try to make up for dropped frames
-            disp('Warning! Program is struggling to keep up')
-            %droppedFrameData = getdata(handles.vidObj, 1); % try to recover, b/c if we lose a frame, we would be out of sync with the LEDs and GUI displays
-            %pairIdx=pairIdx+1;
+        % Get number of frames that are available now, check below whether
+        % there are too many frames (not keeping up!) or just the right
+        % number of frames (gather the data and show+analyze)
+        numFramesAvailNow = handles.vidObj.FramesAvailable;
+        
+        if numFramesAvailNow > numLEDsEnabled % Warn if not keeping up with frame rate
+            disp('WARNING: Program is struggling to keep up with frame rate.')
+            set(handles.capStartButton,'String','(!)Abort');
+            handles.settingsStruct.capWarningFlag = 1; % Log this warning in the metadata/settings
         end
         
-        if handles.vidObj.FramesAvailable > 1 % when 2 frames are available put them up on the GUI displays
-            [currentFramePair,timeDataNow] = getdata(handles.vidObj,handles.vidObj.FramesAvailable);
-            LED1Frames(:,:,1+pairIdx/2) = currentFramePair(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,1);
-            LED2Frames(:,:,1+pairIdx/2) = currentFramePair(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,2);
-            timesList(1+pairIdx/2,1) = timeDataNow(1);
-            timesList(1+pairIdx/2,2) = timeDataNow(2);
+        if numFramesAvailNow >= numLEDsEnabled % when N frames are available put them up on the GUI displays
+            [currentFrameSet,timeDataNow] = getdata(handles.vidObj,numLEDsEnabled);
             
-            % LED1DisplayedValues the current data shifted in X
-            set(handles.imgHandLED1, 'CData', LED1Frames(:,:,1+pairIdx/2));
-            set(handles.imgHandLED2, 'CData', LED2Frames(:,:,1+pairIdx/2));
+            % Crop to square (shifted in x) and place in big recording
+            % matrix, also save time data for frames
+            captureFrames(:,:,1,:,setIdx) = currentFrameSet(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,:);
+            timesList(:,setIdx) = timeDataNow(:);
             
-            set(handles.capFPSIndicator,'String',[num2str(1/(timeDataNow(1)-timeDataLastPair),4) ' fpps']); % calculate FPS
+            % Show image data - dependent on whether "quad-channel view"
+            % (quadview) is on
+            if handles.settingsStruct.selectLEDsQuadViewOn == 1 % if quad mode is ON
+                % Show all the individual images in smaller "thumbnails",
+                % and determine which frame in buffer belongs in each image
+                % spot on GUI
+                frameIdx = 1;
+                bigFrameToShow = -1;
+                bigFrameRequest = get(handles.selectLEDsShow,'Value');
+                if handles.settingsStruct.selectLEDsEnable1 == 1
+                    set(handles.imgHandLEDQuad1, 'CData', captureFrames(:,:,1,frameIdx,setIdx));
+                    if bigFrameRequest == 1;
+                        bigFrameToShow = frameIdx;
+                    end
+                    frameIdx = frameIdx+1;
+                end
+                if handles.settingsStruct.selectLEDsEnable2 == 1
+                    set(handles.imgHandLEDQuad2, 'CData', captureFrames(:,:,1,frameIdx,setIdx));
+                    if bigFrameRequest == 2;
+                        bigFrameToShow = frameIdx;
+                    end
+                    frameIdx = frameIdx+1;
+                end
+                if handles.settingsStruct.selectLEDsEnable3 == 1
+                    set(handles.imgHandLEDQuad3, 'CData', captureFrames(:,:,1,frameIdx,setIdx));
+                    if bigFrameRequest == 3;
+                        bigFrameToShow = frameIdx;
+                    end
+                    frameIdx = frameIdx+1;
+                end
+                if handles.settingsStruct.selectLEDsEnable4 == 1
+                    set(handles.imgHandLEDQuad4, 'CData', captureFrames(:,:,1,frameIdx,setIdx));
+                    if bigFrameRequest == 4;
+                        bigFrameToShow = frameIdx;
+                    end
+                end
+                
+                % Show one of these (specified in select LEDs panel) in
+                % large LED1Ax frame
+                set(handles.imgHandLED1, 'CData', captureFrames(:,:,1,bigFrameToShow,setIdx));
+                
+            else % if not in quad mode, we can just put the frames into each standard axis
+                if numLEDsEnabled == 1
+                    set(handles.imgHandLED1, 'CData', captureFrames(:,:,1,1,setIdx));
+                else
+                    set(handles.imgHandLED1, 'CData', captureFrames(:,:,1,1,setIdx));
+                    set(handles.imgHandLED2, 'CData', captureFrames(:,:,1,2,setIdx));
+                end
+            end
+            
+            % Mask current image set if doing any RT Stats or Hist
+            if handles.settingsStruct.commRTHistogram || handles.settingsStruct.commRTStats
+                % Do computations on the masked images only
+                intermediateCroppedFrames = captureFrames(:,:,1,:,setIdx).*repMask;
+                maskedCroppedFrames = reshape(intermediateCroppedFrames(intermediateCroppedFrames>0),[numPixsInMask,numLEDsEnabled]);
+            end
+            
+            % If requested, compute histogram
+            if handles.settingsStruct.commRTHistogram == 1
+                if handles.settingsStruct.selectLEDsQuadViewOn == 0 % for regular (non-quad) view
+                    handles.histHandLED1.Data = maskedCroppedFrames(:,1);
+                    if numLEDsEnabled>1
+                        handles.histHandLED2.Data = maskedCroppedFrames(:,2);
+                    end
+                else % different handling, if IN quad mode:
+                    quadIdx = 1;
+                    if handles.settingsStruct.selectLEDsEnable1 == 1
+                        handles.histHandLEDQuad1.Data = maskedCroppedFrames(:,quadIdx);
+                        quadIdx = quadIdx + 1;
+                    end
+                    if handles.settingsStruct.selectLEDsEnable2 == 1
+                        handles.histHandLEDQuad2.Data = maskedCroppedFrames(:,quadIdx);
+                        quadIdx = quadIdx + 1;
+                    end
+                    if handles.settingsStruct.selectLEDsEnable3 == 1
+                        handles.histHandLEDQuad3.Data = maskedCroppedFrames(:,quadIdx);
+                        quadIdx = quadIdx + 1;
+                    end
+                    if handles.settingsStruct.selectLEDsEnable4 == 1
+                        handles.histHandLEDQuad4.Data = maskedCroppedFrames(:,quadIdx);
+                    end
+                end
+            end
+            
+            % If requested, compute statistics
+            if handles.settingsStruct.commRTStats == 1
+                if handles.settingsStruct.selectLEDsQuadViewOn == 0 % if quad-view not enabled...
+                    set(handles.LED1MaxIndicator,'String',['Max: ' num2str(max(maskedCroppedFrames(:,1)))]);
+                    set(handles.LED1MinIndicator,'String',['Min: ' num2str(min(maskedCroppedFrames(:,1)))]);
+                    set(handles.LED1MeanIndicator,'String',['Mean: ' num2str(mean(maskedCroppedFrames(:,1)),4)]);
+                    set(handles.LED1MedianIndicator,'String',['Median: ' num2str(median(maskedCroppedFrames(:,1)),4)]);
+                    percentSat = 100*sum(maskedCroppedFrames(:,1) == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedFrames(:,1));
+                    set(handles.LED1PercentSaturatedIndicator,'String',['% Saturated: ' num2str(percentSat,3) '%']);
+                    if numLEDsEnabled > 1
+                        set(handles.LED2MaxIndicator,'String',['Max: ' num2str(max(maskedCroppedFrames(:,2)))]);
+                        set(handles.LED2MinIndicator,'String',['Min: ' num2str(min(maskedCroppedFrames(:,2)))]);
+                        set(handles.LED2MeanIndicator,'String',['Mean: ' num2str(mean(maskedCroppedFrames(:,2)),4)]);
+                        set(handles.LED2MedianIndicator,'String',['Median: ' num2str(median(maskedCroppedFrames(:,2)),4)]);
+                        percentSat = 100*sum(maskedCroppedFrames(:,2) == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedFrames(:,2));
+                        set(handles.LED2PercentSaturatedIndicator,'String',['% Saturated: ' num2str(percentSat,3) '%']);
+                    end
+                else % otherwise we are in quad view, and there's slightly different information to show
+                    quadIdx = 1;
+                    if handles.settingsStruct.selectLEDsEnable1 == 1
+                        percentSat = 100*sum(maskedCroppedFrames(:,quadIdx) == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedFrames(:,quadIdx));
+                        dispStr = [handles.settingsStruct.constLED1CenterWavelength ': Min: ' num2str(min(maskedCroppedFrames(:,quadIdx))) ', Max: ' num2str(max(maskedCroppedFrames(:,quadIdx))) ', Mean: ' num2str(mean(maskedCroppedFrames(:,quadIdx)),5) ', Sat: ' num2str(percentSat,3) '%'];
+                        set(handles.LEDQuad1StatsIndicator,'String',dispStr);
+                        quadIdx = quadIdx + 1;
+                    end
+                    if handles.settingsStruct.selectLEDsEnable2 == 1
+                        percentSat = 100*sum(maskedCroppedFrames(:,quadIdx) == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedFrames(:,quadIdx));
+                        dispStr = [handles.settingsStruct.constLED2CenterWavelength ': Min: ' num2str(min(maskedCroppedFrames(:,quadIdx))) ', Max: ' num2str(max(maskedCroppedFrames(:,quadIdx))) ', Mean: ' num2str(mean(maskedCroppedFrames(:,quadIdx)),5) ', Sat: ' num2str(percentSat,3) '%'];
+                        set(handles.LEDQuad2StatsIndicator,'String',dispStr);
+                        quadIdx = quadIdx + 1;
+                    end
+                    if handles.settingsStruct.selectLEDsEnable3 == 1
+                        percentSat = 100*sum(maskedCroppedFrames(:,quadIdx) == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedFrames(:,quadIdx));
+                        dispStr = [handles.settingsStruct.constLED3CenterWavelength ': Min: ' num2str(min(maskedCroppedFrames(:,quadIdx))) ', Max: ' num2str(max(maskedCroppedFrames(:,quadIdx))) ', Mean: ' num2str(mean(maskedCroppedFrames(:,quadIdx)),5) ', Sat: ' num2str(percentSat,3) '%'];
+                        set(handles.LEDQuad3StatsIndicator,'String',dispStr);
+                        quadIdx = quadIdx + 1;
+                    end
+                    if handles.settingsStruct.selectLEDsEnable4 == 1
+                        percentSat = 100*sum(maskedCroppedFrames(:,quadIdx) == (2^handles.settingsStruct.constCameraBits-1))/numel(maskedCroppedFrames(:,quadIdx));
+                        dispStr = [handles.settingsStruct.constLED4CenterWavelength ': Min: ' num2str(min(maskedCroppedFrames(:,quadIdx))) ', Max: ' num2str(max(maskedCroppedFrames(:,quadIdx))) ', Mean: ' num2str(mean(maskedCroppedFrames(:,quadIdx)),5) ', Sat: ' num2str(percentSat,3) '%'];
+                        set(handles.LEDQuad4StatsIndicator,'String',dispStr);
+                    end
+                end
+            end
+            
+            % Update Frame Sets Per Second Indicator
+            set(handles.capFPSIndicator,'String',[num2str(1/(timeDataNow(1)-timeDataLastPair),4) ' fsps']); % calculate FPS
+            
             drawnow; % Must drawnow to show new frame data
-            timeDataLastPair = timeDataNow(1); % Record this pair's time for next FPS calculation
-            pairIdx=pairIdx+2; % increment the pair counter
+            timeDataLastPair = timeDataNow(1); % Record this set's time for next FSPS calculation
+                       
+            % update the start capture button with progress and any warning
+            if handles.settingsStruct.capWarningFlag == 1
+                progStr = ['(!)Abort ' num2str(setIdx) '/' num2str(handles.settingsStruct.capNumFrames)];
+            else
+                progStr = ['Abort ' num2str(setIdx) '/' num2str(handles.settingsStruct.capNumFrames)];
+            end
+            set(handles.capStartButton,'String',progStr);
             
-            % update the button with progress
-            set(handles.capStartButton,'String',['Abort ' num2str(pairIdx/2) '/' num2str(numFramesTotal/2)]);
+            % increment the set counter
+            setIdx=setIdx+1; 
         end
-        
     end
+    
     stop(handles.vidObj)
     handles = re_enable_preview_or_capture_settings(handles,'capture');
     disp('Capture ended')
    
-    % Save the files as tiffs
+    % Start the saving procedure
     disp('Saving...')
+    set(handles.capStartButton,'String','Saving...');drawnow;
     
     % First check whether a folder exists to save in
     dateDir = ['data' filesep datestr(now,'yymmdd')];
@@ -384,8 +530,20 @@ if get(handles.capStartButton,'Value') == 1
         mkdir(dateAndCapDir);
     end
     
-    saveastiff(LED1Frames,[dateAndCapDir filesep fileName '_1.tiff']);
-    saveastiff(LED2Frames,[dateAndCapDir filesep fileName '_2.tiff']);
+    % Save data in tiff stacks (one for each LED channel)
+    LEDOptions = {handles.settingsStruct.constLED1CenterWavelength,handles.settingsStruct.constLED2CenterWavelength,handles.settingsStruct.constLED3CenterWavelength,handles.settingsStruct.constLED4CenterWavelength};
+    LEDsEnabled = LEDOptions(logical(handles.LEDsToEnable));
+    
+    saveastiff(reshape(captureFrames(:,:,1,1,:),[handles.settingsStruct.numPixPerDim,handles.settingsStruct.numPixPerDim,handles.settingsStruct.capNumFrames]),[dateAndCapDir filesep fileName '_' LEDsEnabled{1} '.tiff']);
+    if numLEDsEnabled > 1
+        saveastiff(reshape(captureFrames(:,:,1,2,:),[handles.settingsStruct.numPixPerDim,handles.settingsStruct.numPixPerDim,handles.settingsStruct.capNumFrames]),[dateAndCapDir filesep fileName '_' LEDsEnabled{2} '.tiff']);
+    end
+    if numLEDsEnabled > 2
+        saveastiff(reshape(captureFrames(:,:,1,3,:),[handles.settingsStruct.numPixPerDim,handles.settingsStruct.numPixPerDim,handles.settingsStruct.capNumFrames]),[dateAndCapDir filesep fileName '_' LEDsEnabled{3} '.tiff']);
+    end
+    if numLEDsEnabled > 3
+        saveastiff(reshape(captureFrames(:,:,1,4,:),[handles.settingsStruct.numPixPerDim,handles.settingsStruct.numPixPerDim,handles.settingsStruct.capNumFrames]),[dateAndCapDir filesep fileName '_' LEDsEnabled{4} '.tiff']);
+    end
     disp(['Finished Saving Data (' handles.settingsStruct.saveBaseName '_capture' num2str(handles.settingsStruct.saveCapNum) ')'])
     
     % If the save settings check box is active, then export the
@@ -407,12 +565,23 @@ if get(handles.capStartButton,'Value') == 1
     
     % Send TTL low signal to Arduino to signal the acquisition has finished
     % so it can reset its toggle
-    outputSingleScan(handles.NIDaqSession,0);
+    outputSingleScan(handles.NIDaqSession,[0 handles.LEDsToEnable]);
+    
+    % Reset warning flag and aborted flag
+    handles.settingStruct.capWarningFlag = 0;
+    handles.settingStruct.capAborted = 0;
+    
+    % And finally reset the Capture Start button
+    set(handles.capStartButton,'String','Start Capture');
     
     guidata(hObject, handles);
 else
     disp('Aborting Capture!')
+    % Flag this dataset as aborted
+    handles.settingsStruct.capAborted = 1;
+    % Reset button--not sure whether this is necessary
     set(handles.capStartButton,'String','Start Capture');
+    guidata(hObject, handles);
 end
 
 
@@ -437,24 +606,31 @@ if get(handles.prevStartButton,'Value') == 1
     % that should not be changed
     handles = set_preview_or_capture_settings(handles,'preview');
     
-    timeDataLastPair = 0; % for frame sets per second (FSPS) calculation
-    start(handles.vidObj);
-    
-    guidata(hObject,handles);
-    
     % Var allocation before the loop begins
+    timeDataLastPair = 0; % for frame sets per second (FSPS) calculation
     numLEDsEnabled = sum(handles.LEDsToEnable,2);
     numPixsInMask = sum(handles.imageMask(:));
     maskedCroppedFrames = zeros(numPixsInMask,numLEDsEnabled);
     repMask = repmat(handles.imageMask,[1 1 1 numLEDsEnabled]);
     
+    start(handles.vidObj);
+    
+    guidata(hObject,handles);
+     
     while get(handles.prevStartButton,'Value') == 1 % While the toggle button is DOWN
         % Get current GUI UI data (for update-able properties)
         handles = guidata(hObject);
         
+        % Get number of frames that are available now, check below whether
+        % there are too many frames (not keeping up!) or just the right
+        % number of frames (gather the data and show+analyze)
         numFramesAvailNow = handles.vidObj.FramesAvailable;        
-        if numFramesAvailNow > numLEDsEnabled
-            getdata(handles.vidObj,handles.vidObj.FramesAvailable);
+        
+        if numFramesAvailNow > numLEDsEnabled 
+            %If there are more frames available than LED channels enabled,
+            %then the program is not keeping up. Try to take up slack by
+            %gathering a number of frames and not doing anything with them
+            getdata(handles.vidObj,numLEDsEnabled);
             disp('WARNING: DETECTED DROPPED FRAMES')
             set(handles.prevStartButton,'String','Dropped Fr.');
         end
@@ -463,11 +639,11 @@ if get(handles.prevStartButton,'Value') == 1
             [currentFrameSet,timeDataNow] = getdata(handles.vidObj,numLEDsEnabled);
 
             % Gather data and crop to square (shifted in x)
-            croppedFrames = (currentFrameSet(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,:));
+            croppedFrames = currentFrameSet(:,(1+handles.settingsStruct.commXShift):(handles.settingsStruct.numPixPerDim+handles.settingsStruct.commXShift),1,:);
             
-            % LED1DisplayedValues data - dependent on whether "quad-channel view"
+            % Show image data - dependent on whether "quad-channel view"
             % (quadview) is on
-            if handles.settingsStruct.selectLEDsQuadViewOn == 1
+            if handles.settingsStruct.selectLEDsQuadViewOn == 1 % if quad mode is ON
                 % Show all the individual images in smaller "thumbnails",
                 % and determine which frame in buffer belongs in each image
                 % spot on GUI
@@ -598,10 +774,10 @@ if get(handles.prevStartButton,'Value') == 1
             set(handles.prevFPSIndicator,'String',[num2str(1/(timeDataNow(1)-timeDataLastPair),4) ' fsps']); % calculate FPS
             
             drawnow; % Must drawnow to show new frame data
-            timeDataLastPair = timeDataNow(1); % Record this pair's time for next Frame Sets Per Second calculation
+            timeDataLastPair = timeDataNow(1); % Record this set's time for next Frame Sets Per Second calculation
         end
-        
     end
+    
     stop(handles.vidObj)
     handles = re_enable_preview_or_capture_settings(handles,'preview');
     
@@ -1215,8 +1391,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
                 set(handles.LEDQuad3Ax,'CLim',switchCLim(:,quadIdx));
                 handles.settingsStruct.blackLevelLEDQuad3= switchCLim(1,quadIdx);
                 handles.settingsStruct.whiteLevelLEDQuad3 = switchCLim(2,quadIdx);
-                set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
-                set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
+                set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
+                set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
                 quadIdx = quadIdx + 1;
             end
         end
@@ -1901,9 +2077,11 @@ if (sum(handles.LEDsToEnable,2) == 1) && (get(handles.selectLEDsEnable4,'value')
     return
 end
 if (get(handles.selectLEDsEnable4,'Value') == 0) && (handles.settingsStruct.selectLEDsShow == 4)
-    % if we de-selected this LED, but the show LED on big axis is supposed to show this LED, fix it
+    % if we de-selected this LED, but the show LED on big axis is supposed
+    % to show this LED, fix it, and put the right data on the big axis
+    % RELEVANT FOR 4->3 LED CHANNELS
     if sum(handles.LEDsToEnable,2) == 4
-        if handles.LEDsToEnable(1) == 1
+        if handles.LEDsToEnable(1) == 1 % if the sum here is 4 (was 4 before clicking), then we must have deselected this LED
             set(handles.selectLEDsShow,'Value',1);
             handles.settingsStruct.selectLEDsShow = 1;
             newFrameData = get(handles.imgHandLEDQuad1,'CData');
@@ -1920,9 +2098,13 @@ if (get(handles.selectLEDsEnable4,'Value') == 0) && (handles.settingsStruct.sele
             newLims = get(handles.LEDQuad3Ax,'CLim');
         end
         set(handles.imgHandLED1,'CData',newFrameData);
-        set(handles.LEDQuad1Ax,'CLim',newLims);
+        set(handles.LED1Ax,'CLim',newLims);
+        handles.settingsStruct.blackLevelLED1= newLims(1);
+        handles.settingsStruct.whiteLevelLED1 = newLims(2);
+        set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
+        set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
     else
-        if handles.LEDsToEnable(1) == 1
+        if handles.LEDsToEnable(1) == 1 % and these 3 options just change the selected LED to show on big axis (but nothing changes)
             set(handles.selectLEDsShow,'Value',1);
             handles.settingsStruct.selectLEDsShow = 1;
         elseif handles.LEDsToEnable(2) == 1
@@ -1938,6 +2120,7 @@ end
 prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 % Save the new setting for this LED
 handles.settingsStruct.selectLEDsEnable4 = get(handles.selectLEDsEnable4,'value');
+prevLEDsToEnable = handles.LEDsToEnable; % for switching image data around
 handles.LEDsToEnable(4) = handles.settingsStruct.selectLEDsEnable4;
 % Confirm (on command line) the LED change made
 if handles.settingsStruct.selectLEDsEnable4 == 1
@@ -1953,11 +2136,6 @@ else
     handles.settingsStruct.selectLEDsQuadViewOn = 0;
 end
 
-% Switch RT Histograms and RT Stats on/off
-commRTStats_Callback(hObject, eventdata, handles);
-commRTHistogram_Callback(hObject, eventdata, handles);
-guidata(hObject, handles);
-
 % Determine which image axes to show/hide
 if handles.settingsStruct.selectLEDsQuadViewOn == 1
     if prevQuad == 0
@@ -1971,28 +2149,75 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
         handles.LED2DisplayedValues.Visible = 'off';
         handles.LED2BlackValueIndicator.Visible = 'off';
         handles.LED2WhiteValueIndicator.Visible = 'off';
-        handles.imgHandLEDQuad4.Visible = 'on'; %If we have transitions from quad off to on, then we MUST have enabled this channel
-        handles.LEDQuad4DisplayedValues.Visible = 'on';
-        handles.LEDQuad4BlackValueIndicator.Visible = 'on';
-        handles.LEDQuad4WhiteValueIndicator.Visible = 'on';
+        
+        % Variable for switching frames
+        switchFrames=ones(handles.settingsStruct.derivePrevNumPixPerDim,handles.settingsStruct.derivePrevNumPixPerDim,2,'uint16');
+        switchCLim=zeros(2,2);
+        switchFrames(:,:,1) = get(handles.imgHandLED1,'CData'); 
+        switchFrames(:,:,2) = get(handles.imgHandLED2,'CData');
+        switchCLim(:,1) = get(handles.LED1Ax,'CLim');
+        switchCLim(:,2) = get(handles.LED2Ax,'CLim');
+        quadIdx = 1;
+        
         if handles.LEDsToEnable(1) == 1
             handles.imgHandLEDQuad1.Visible = 'on';
             handles.LEDQuad1DisplayedValues.Visible = 'on';
             handles.LEDQuad1BlackValueIndicator.Visible = 'on';
             handles.LEDQuad1WhiteValueIndicator.Visible = 'on';
+            if prevLEDsToEnable(1) == 1
+                set(handles.imgHandLEDQuad1,'CData',switchFrames(:,:,quadIdx));
+                set(handles.LEDQuad1Ax,'CLim',switchCLim(:,quadIdx));
+                handles.settingsStruct.blackLevelLEDQuad1= switchCLim(1,quadIdx);
+                handles.settingsStruct.whiteLevelLEDQuad1 = switchCLim(2,quadIdx);
+                set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
+                set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
+                quadIdx = quadIdx + 1;
+            end
         end
         if handles.LEDsToEnable(2) == 1
             handles.imgHandLEDQuad2.Visible = 'on';
             handles.LEDQuad2DisplayedValues.Visible = 'on';
             handles.LEDQuad2BlackValueIndicator.Visible = 'on';
         	handles.LEDQuad2WhiteValueIndicator.Visible = 'on';
+            if prevLEDsToEnable(2) == 1
+                set(handles.imgHandLEDQuad2,'CData',switchFrames(:,:,quadIdx));
+                set(handles.LEDQuad2Ax,'CLim',switchCLim(:,quadIdx));
+                handles.settingsStruct.blackLevelLEDQuad2= switchCLim(1,quadIdx);
+                handles.settingsStruct.whiteLevelLEDQuad2 = switchCLim(2,quadIdx);
+                set(handles.LEDQuad2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
+                set(handles.LEDQuad2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
+                quadIdx = quadIdx + 1;
+            end
         end
         if handles.LEDsToEnable(3) == 1
             handles.imgHandLEDQuad3.Visible = 'on';
             handles.LEDQuad3DisplayedValues.Visible = 'on';
             handles.LEDQuad3BlackValueIndicator.Visible = 'on';
             handles.LEDQuad3WhiteValueIndicator.Visible = 'on';
+            if prevLEDsToEnable(3) == 1
+                set(handles.imgHandLEDQuad3,'CData',switchFrames(:,:,quadIdx));
+                set(handles.LEDQuad3Ax,'CLim',switchCLim(:,quadIdx));
+                handles.settingsStruct.blackLevelLEDQuad3= switchCLim(1,quadIdx);
+                handles.settingsStruct.whiteLevelLEDQuad3 = switchCLim(2,quadIdx);
+                set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
+                set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
+            end
         end
+        
+        %If we have transitions from quad off to on, then we MUST have enabled this channel
+        handles.imgHandLEDQuad4.Visible = 'on'; 
+        handles.LEDQuad4DisplayedValues.Visible = 'on';
+        handles.LEDQuad4BlackValueIndicator.Visible = 'on';
+        handles.LEDQuad4WhiteValueIndicator.Visible = 'on';
+         % Also blank this frame axis (in case there is old imagery)
+        set(handles.imgHandLEDQuad4,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16'));
+        blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
+        set(handles.LEDQuad4Ax,'CLim',blankLims);
+        handles.settingsStruct.blackLevelLEDQuad4= blankLims(1);
+        handles.settingsStruct.whiteLevelLEDQuad4 = blankLims(2);
+        set(handles.LEDQuad4BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
+        set(handles.LEDQuad4WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
+
     else
         % If we were in quad mode and we still are, then there are two possibilities
         if handles.settingsStruct.selectLEDsEnable4 == 1
@@ -2000,6 +2225,13 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
             handles.LEDQuad4DisplayedValues.Visible = 'on';
             handles.LEDQuad4BlackValueIndicator.Visible = 'on';
             handles.LEDQuad4WhiteValueIndicator.Visible = 'on';
+            set(handles.imgHandLEDQuad1,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % show blank frame
+            blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
+            set(handles.LEDQuad1Ax,'CLim',blankLims);
+            handles.settingsStruct.blackLevelLEDQuad1= blankLims(1);
+            handles.settingsStruct.whiteLevelLEDQuad1 = blankLims(2);
+            set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
+            set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
         else
             handles.imgHandLEDQuad4.Visible = 'off';
             handles.LEDQuad4DisplayedValues.Visible = 'off';
@@ -2007,7 +2239,7 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
             handles.LEDQuad4WhiteValueIndicator.Visible = 'off';
         end
     end
-else % now we are not in quad mode
+else % now we are NOT in quad mode
     if prevQuad == 1 % but if we just were in quad mode, then make sure to hide all those axis
         disp('Turning quad-channel view mode off')
         handles.imgHandLED2.Visible = 'on';
@@ -2032,21 +2264,67 @@ else % now we are not in quad mode
         handles.LEDQuad3WhiteValueIndicator.Visible = 'off';
         handles.LEDQuad4DisplayedValues.Visible = 'off';
         handles.LEDQuad4BlackValueIndicator.Visible = 'off';
-        handles.LEDQuad4WhiteValueIndicator.Visible = 'off';    
+        handles.LEDQuad4WhiteValueIndicator.Visible = 'off';  
+        % Determine which frames to put where--use LEDsToEnable to
+        % determine which frame data to add to 2-image axes
+        switchFrames=ones(handles.settingsStruct.derivePrevNumPixPerDim,handles.settingsStruct.derivePrevNumPixPerDim,2,'uint16');
+        switchCLim = zeros(2,2);
+        quadIdx = 1;
+        if handles.LEDsToEnable(1) == 1
+            switchFrames(:,:,quadIdx) = get(handles.imgHandLEDQuad1,'CData');
+            switchCLim(:,quadIdx) = get(handles.LEDQuad1Ax,'CLim');
+            quadIdx = quadIdx+1;
+        end
+        if handles.LEDsToEnable(2) == 1
+            switchFrames(:,:,quadIdx) = get(handles.imgHandLEDQuad2,'CData');
+            switchCLim(:,quadIdx) = get(handles.LEDQuad2Ax,'CLim');
+            quadIdx = quadIdx+1;
+        end
+        if handles.LEDsToEnable(3) == 1
+            switchFrames(:,:,quadIdx) = get(handles.imgHandLEDQuad3,'CData');
+            switchCLim(:,quadIdx) = get(handles.LEDQuad3Ax,'CLim');
+        end
+        set(handles.imgHandLED1,'CData',switchFrames(:,:,1));
+        set(handles.imgHandLED2,'CData',switchFrames(:,:,2));
+        set(handles.LED1Ax,'CLim',switchCLim(:,1));
+        set(handles.LED2Ax,'CLim',switchCLim(:,2));
+        handles.settingsStruct.blackLevelLED1= switchCLim(1,1);
+        handles.settingsStruct.whiteLevelLED1 = switchCLim(2,1);
+        set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
+        set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+        handles.settingsStruct.blackLevelLED2= switchCLim(1,2);
+        handles.settingsStruct.whiteLevelLED2 = switchCLim(2,2);
+        set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
+        set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
+
     else % if we were not in quad mode and are still not in quad mode
         if handles.settingsStruct.selectLEDsEnable4 == 1
             handles.imgHandLED2.Visible = 'on';
             handles.LED2DisplayedValues.Visible = 'on';
             handles.LED2BlackValueIndicator.Visible = 'on';
             handles.LED2WhiteValueIndicator.Visible = 'on';
+            set(handles.imgHandLED2,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % blank the second axis
+            blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
+            set(handles.LED2Ax,'CLim',blankLims);
+            handles.settingsStruct.blackLevelLED2= blankLims(1);
+            handles.settingsStruct.whiteLevelLED2 = blankLims(2);
+            set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
+            set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
         else
             handles.imgHandLED2.Visible = 'off';
             handles.LED2DisplayedValues.Visible = 'off';
             handles.LED2BlackValueIndicator.Visible = 'off';
             handles.LED2WhiteValueIndicator.Visible = 'off';
+            % Transfer image data here is not necessary since deselecting
+            % the last LED will never mean any other LED needs to be moved
+            % to big image axis 1
         end
     end
 end
+
+% Switch RT Histograms and RT Stats on/off
+commRTStats_Callback(hObject, eventdata, handles);
+commRTHistogram_Callback(hObject, eventdata, handles);
 guidata(hObject,handles);
 
 

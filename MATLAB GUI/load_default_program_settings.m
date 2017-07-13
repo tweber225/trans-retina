@@ -81,11 +81,11 @@ else
     settingsStruct.selectLEDsQuadViewOn = 0;
 end
 
-
 % ANALYSIS SETTINGS
 settingsStruct.analysisSelectCenterRadPercent = 0.9;
 settingsStruct.analysisAutoScaleHighQuantile = 0.995;
 settingsStruct.analysisAutoScaleLowQuantile = 0.005;
 settingsStruct.analysisHistogramBins = 128;
 settingsStruct.analysisReduceNumPixels = 0;
+
 

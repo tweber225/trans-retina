@@ -14,12 +14,12 @@ settingsStruct.capPixClock = 2; % Note: 1=12, 2=24MS/s
 settingsStruct.capGain = 1; % Note: 1=1.00, 2=0.67ADU/e-
 settingsStruct.capNumFrames = 20; % actually it's the NUMBER of frame SETS (pairs, trios, etc.)
 settingsStruct.capWarningFlag = 0; % needs to be set to 0 always
-handles.settingStruct.capAborted = 0; % needs to be set to 0 always
+settingsStruct.capAborted = 0; % needs to be set to 0 always
 
 % COMMON SETTINGS
 settingsStruct.commIRMode = 0;
 settingsStruct.commAutoScale = 0;
-settingsStruct.commXShift = 0;
+settingsStruct.commXShift = 107;
 settingsStruct.commRTStats = 1;
 settingsStruct.commRTHistogram = 0;
 settingsStruct.commStatHistInCenter = 1;

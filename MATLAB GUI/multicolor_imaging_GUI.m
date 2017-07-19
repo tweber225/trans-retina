@@ -2255,7 +2255,7 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
             handles.LEDQuad4DisplayedValues.Visible = 'on';
             handles.LEDQuad4BlackValueIndicator.Visible = 'on';
             handles.LEDQuad4WhiteValueIndicator.Visible = 'on';
-            set(handles.imgHandLEDQuad1,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % show blank frame
+            set(handles.imgHandLEDQuad4,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % show blank frame
             blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
             set(handles.LEDQuad1Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLEDQuad1= blankLims(1);

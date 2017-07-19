@@ -18,11 +18,14 @@ if strcmp(settingType,'preview')
 elseif strcmp(settingType,'capture')
     
     % Enable settings that were disabled during preview
-    set(handles.capExpTime,'Enable','on');
-    set(handles.capBinSize,'Enable','on');
-    set(handles.capPixClock,'Enable','on');
-    set(handles.capGain,'Enable','on');
+    if handles.settingsStruct.capLockSettings == 0
+        set(handles.capExpTime,'Enable','on');
+        set(handles.capBinSize,'Enable','on');
+        set(handles.capPixClock,'Enable','on');
+        set(handles.capGain,'Enable','on');
+    end
     set(handles.capNumFrames,'Enable','on');
+    set(handles.capLockSettings,'Enable','on');
     set(handles.commIRMode,'Enable','on');
     set(handles.commAutoScale,'Enable','on');
     set(handles.commXShift,'Enable','on');

@@ -86,6 +86,7 @@ elseif strcmp(settingType,'capture')
     set(handles.capPixClock,'Enable','off');
     set(handles.capGain,'Enable','off');
     set(handles.capNumFrames,'Enable','off');
+    set(handles.capLockSettings,'Enable','off');
     set(handles.commIRMode,'Enable','off');
     set(handles.commAutoScale,'Enable','off');
     set(handles.commXShift,'Enable','off');

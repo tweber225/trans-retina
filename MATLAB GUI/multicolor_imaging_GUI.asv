@@ -188,10 +188,9 @@ handles.settingsStruct.prevExpTime = newExpTime;
 handles.srcObj.E2ExposureTime = newExpTime;
 disp(['Preview exposure time set to ' num2str(newExpTime) ' ms']);
 % also if the capture lock settings is on, change the capture mode setting
-if handles.settingsStruct.capLockSettings== 1
+if handles.settingsStruct.capLockSetting == 1
     handles.settingsStruct.capExpTime = newExpTime;
     set(handles.capExpTime,'String',num2str(newExpTime));
-    disp(['Capture exposure time set to ' num2str(newExpTime) ' ms']);
 end
 guidata(hObject, handles);
 
@@ -225,11 +224,10 @@ switch handles.settingsStruct.prevBinSize
 end
 disp(['Preview bin size set to ' dispSize ]);
 % also if the capture lock settings is on, change the capture mode setting
-if handles.settingsStruct.capLockSettings == 1
+if handles.settingsStruct.capLockSetting == 1
     handles.settingsStruct.capBinSize = handles.settingsStruct.prevBinSize;
     set(handles.capBinSize,'Value',handles.settingsStruct.capBinSize);
     handles.settingsStruct.deriveCapNumPixPerDim = handles.settingsStruct.derivePrevNumPixPerDim;
-    disp(['Capture bin size set to ' dispSize ]);
 end
 guidata(hObject, handles);
 
@@ -259,10 +257,9 @@ switch handles.settingsStruct.prevGain
 end
 disp(['Preview gain set to ' dispGain]);
 % also if the capture lock settings is on, change the capture mode setting
-if handles.settingsStruct.capLockSettings== 1
+if handles.settingsStruct.capLockSetting == 1
     handles.settingsStruct.capGain = handles.settingsStruct.prevGain;
     set(handles.capGain,'Value',handles.settingsStruct.capGain);
-    disp(['Capture gain set to ' dispGain]);
 end
 guidata(hObject, handles);
 
@@ -1239,16 +1236,8 @@ switch handles.settingsStruct.prevPixClock
     case 2
         dispPixClock = '24 MPix/s';
 end
-disp(['Preview pixel read set to ' dispPixClock]);
-% if the lock capture settings option is enabled, then update the capture
-% mode's setting for this
-if handles.settingsStruct.capLockSettings == 1
-    handles.settingsStruct.capPixClock = handles.settingsStruct.prevPixClock;
-    set(handles.capPixClock,'Value',handles.settingsStruct.capPixClock);
-    disp(['Capture pixel read set to ' dispPixClock]);
-end
 guidata(hObject, handles);
-
+disp(['Preview pixel read set to ' dispPixClock]);
 
 % --- Executes during object creation, after setting all properties.
 function prevPixClock_CreateFcn(hObject, eventdata, handles)
@@ -2417,23 +2406,28 @@ if handles.settingsStruct.capLockSettings == 1
     set(handles.capBinSize,'Enable','off');
     set(handles.capPixClock,'Enable','off');
     set(handles.capGain,'Enable','off');
+    
     % set the corresponding value from Preview mode's setting
     set(handles.capExpTime,'String',num2str(handles.settingsStruct.prevExpTime));
     set(handles.capBinSize,'Value',handles.settingsStruct.prevBinSize);
     set(handles.capPixClock,'Value',handles.settingsStruct.prevPixClock);
     set(handles.capGain,'Value',handles.settingsStruct.prevGain);
+    
     % Over-write capture mode's settingsStruct values
     handles.settingsStruct.capExpTime= handles.settingsStruct.prevExpTime;
     handles.settingsStruct.capBinSize= handles.settingsStruct.prevBinSize;
     handles.settingsStruct.capPixClock= handles.settingsStruct.prevPixClock;
     handles.settingsStruct.capGain= handles.settingsStruct.prevGain;
+    
 else % otherwise re-enable those settings for arbitrary changes
     set(handles.capExpTime,'Enable','on');
     set(handles.capBinSize,'Enable','on');
     set(handles.capPixClock,'Enable','on');
     set(handles.capGain,'Enable','on');
+    
 end
-guidata(hObject,handles);
+
+
 
 
 

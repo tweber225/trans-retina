@@ -15,6 +15,7 @@ settingsStruct.capGain = 1; % Note: 1=1.00, 2=0.67ADU/e-
 settingsStruct.capNumFrames = 20; % actually it's the NUMBER of frame SETS (pairs, trios, etc.)
 settingsStruct.capWarningFlag = 0; % needs to be set to 0 always
 settingsStruct.capAborted = 0; % needs to be set to 0 always
+settingsStruct.capLockSettings = 0; % To lock capture exposure time, bin size, pix clock, gain to those settings used in Preview Mode
 
 % COMMON SETTINGS
 settingsStruct.commIRMode = 0;

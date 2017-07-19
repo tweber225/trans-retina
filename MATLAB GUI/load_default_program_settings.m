@@ -18,11 +18,11 @@ settingsStruct.capAborted = 0; % needs to be set to 0 always
 settingsStruct.capLockSettings = 0; % To lock capture exposure time, bin size, pix clock, gain to those settings used in Preview Mode
 
 % COMMON SETTINGS
-settingsStruct.commIRMode = 0;
+settingsStruct.commIRMode = 1;
 settingsStruct.commAutoScale = 0;
 settingsStruct.commXShift = 107;
 settingsStruct.commRTStats = 1;
-settingsStruct.commRTHistogram = 0;
+settingsStruct.commRTHistogram = 1;
 settingsStruct.commStatHistInCenter = 1;
 
 % SELECT LEDS SETTINGS

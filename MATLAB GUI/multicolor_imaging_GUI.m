@@ -22,7 +22,7 @@ function varargout = multicolor_imaging_GUI(varargin)
 
 % Edit the above text to modify the response to help multicolor_imaging_GUI
 
-% Last Modified by GUIDE v2.5 19-Jul-2017 09:45:36
+% Last Modified by GUIDE v2.5 19-Jul-2017 12:03:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -2436,6 +2436,46 @@ end
 guidata(hObject,handles);
 
 
+% --- Executes on button press in commResetLevels.
+function commResetLevels_Callback(hObject, eventdata, handles)
+% Change all the settings struct values
+white = 2^handles.settingsStruct.constCameraBits - 1;
+handles.settingsStruct.blackLevelLED1 = 0;
+handles.settingsStruct.whiteLevelLED1 = white;
+handles.settingsStruct.blackLevelLED2 = 0; 
+handles.settingsStruct.whiteLevelLED2 = white;
+handles.settingsStruct.blackLevelLEDQuad1 = 0;
+handles.settingsStruct.whiteLevelLEDQuad1 = white;
+handles.settingsStruct.blackLevelLEDQuad2 = 0;
+handles.settingsStruct.whiteLevelLEDQuad2 = white;
+handles.settingsStruct.blackLevelLEDQuad3 = 0;
+handles.settingsStruct.whiteLevelLEDQuad3 = white;
+handles.settingsStruct.blackLevelLEDQuad4 = 0;
+handles.settingsStruct.whiteLevelLEDQuad4 = white;
+% Change CLim's
+set(handles.LED1Ax,'CLim',[handles.settingsStruct.blackLevelLED1,handles.settingsStruct.whiteLevelLED1]);
+set(handles.LED2Ax,'CLim',[handles.settingsStruct.blackLevelLED2,handles.settingsStruct.whiteLevelLED2]);
+set(handles.LEDQuad1Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad1,handles.settingsStruct.whiteLevelLEDQuad1]);
+set(handles.LEDQuad2Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad2,handles.settingsStruct.whiteLevelLEDQuad2]);
+set(handles.LEDQuad3Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad3,handles.settingsStruct.whiteLevelLEDQuad3]);
+set(handles.LEDQuad4Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad4,handles.settingsStruct.whiteLevelLEDQuad4]);
+% Set the indicators of black vs white values correctly
+set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
+set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
+set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
+set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
+set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
+set(handles.LEDQuad2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
+set(handles.LEDQuad2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
+set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
+set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
+set(handles.LEDQuad4BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
+set(handles.LEDQuad4WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
+% update GUI
+guidata(hObject,handles);
+
+
 
 % CLOSING FUNCTION - CLEANS UP CONNECTIONS (very important to get this
 % right)
@@ -2455,6 +2495,5 @@ delete(handles.NIDaqSession);
 daqreset
 
 delete(hObject);
-
 
 

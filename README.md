@@ -22,5 +22,3 @@ Features to add to GUI:
 -separate enable buttons for capture mode set of LEDs (ie different LEDs for Preview and Capture Modes)
 
 -limit on number of frames for capture mode (to avoid over allocating memory, otherwise we need to do some quick calculations before starting with knowledge of the available memory, 4 channels, full res >4.3GB)
-
--predicted acquisition duration time

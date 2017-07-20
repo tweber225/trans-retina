@@ -2,26 +2,27 @@ function settingsStruct = load_default_program_settings()
 % Separate function that returns the default settings in a structure
 
 % PREVIEW SETTINGS
-settingsStruct.prevExpTime = 20; % in ms
+settingsStruct.prevExpTime = 80; % in ms
 settingsStruct.prevBinSize = 2; % Note: 1=1x1, 2=2x2, 3=4x4pixels
 settingsStruct.prevPixClock = 2; % Note: 1=12, 2=24MS/s
-settingsStruct.prevGain = 2; % Note: 1=1.00, 2=0.67ADU/e-
+settingsStruct.prevGain = 1; % Note: 1=1.00, 2=0.67ADU/e-
 
 % CAPTURE SETTINGS
-settingsStruct.capExpTime = 10; % in ms
-settingsStruct.capBinSize = 1; % Note: 1=1x1, 2=2x2, 3=4x4pixels
+settingsStruct.capExpTime = 80; % in ms
+settingsStruct.capBinSize = 2; % Note: 1=1x1, 2=2x2, 3=4x4pixels
 settingsStruct.capPixClock = 2; % Note: 1=12, 2=24MS/s
 settingsStruct.capGain = 1; % Note: 1=1.00, 2=0.67ADU/e-
-settingsStruct.capNumFrames = 20; % actually it's the NUMBER of frame SETS (pairs, trios, etc.)
+settingsStruct.capNumFrames = 1; % actually it's the NUMBER of frame SETS (pairs, trios, etc.)
 settingsStruct.capWarningFlag = 0; % needs to be set to 0 always
 settingsStruct.capAborted = 0; % needs to be set to 0 always
+settingsStruct.capLockSettings = 0; % To lock capture exposure time, bin size, pix clock, gain to those settings used in Preview Mode
 
 % COMMON SETTINGS
-settingsStruct.commIRMode = 0;
+settingsStruct.commIRMode = 1;
 settingsStruct.commAutoScale = 0;
 settingsStruct.commXShift = 107;
 settingsStruct.commRTStats = 1;
-settingsStruct.commRTHistogram = 0;
+settingsStruct.commRTHistogram = 1;
 settingsStruct.commStatHistInCenter = 1;
 
 % SELECT LEDS SETTINGS
@@ -45,16 +46,16 @@ settingsStruct.D1DelayTime_unit = 'us';
 settingsStruct.D2DelayTime = 0;
 settingsStruct.E1ExposureTime_unit = 'ms';
 settingsStruct.RDIDoubleImageMode = 'off';
-settingsStruct.TMTimestampMode = 'No Stamp'; %'BinaryAndAscii'; %  options: 'No Stamp', 'Binary', 'BinaryAndAscii'
+settingsStruct.TMTimestampMode = 'BinaryAndAscii'; %  options: 'No Stamp', 'Binary', 'BinaryAndAscii'
 
 % CONSTANTS
 settingsStruct.constCameraBits = 14;
 settingsStruct.constNumPixWidth = 1392;
 settingsStruct.constNumPixHeight = 1040;
-settingsStruct.constLED1CenterWavelength = '660nm';
-settingsStruct.constLED2CenterWavelength = '730nm';
-settingsStruct.constLED3CenterWavelength = '780nm';
-settingsStruct.constLED4CenterWavelength = '850nm';
+settingsStruct.constLED1CenterWavelength = '850nm';
+settingsStruct.constLED2CenterWavelength = '780nm';
+settingsStruct.constLED3CenterWavelength = '730nm';
+settingsStruct.constLED4CenterWavelength = '660nm';
 
 % DERIVED SETTINGS/PARAMETERS (some useful settings that are dependent on
 % settings above)

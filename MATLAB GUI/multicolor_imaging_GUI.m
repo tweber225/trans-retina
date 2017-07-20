@@ -22,7 +22,7 @@ function varargout = multicolor_imaging_GUI(varargin)
 
 % Edit the above text to modify the response to help multicolor_imaging_GUI
 
-% Last Modified by GUIDE v2.5 05-Jul-2017 16:36:31
+% Last Modified by GUIDE v2.5 19-Jul-2017 12:03:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -87,6 +87,9 @@ guidata(hObject, handles);
 % Black out all image frames - and generate handles for image data
 handles = reset_GUI_displays_update_resolution(handles,handles.settingsStruct.derivePrevNumPixPerDim);
 
+% Display the estimates (time and data) for capture
+handles = estimate_capture_time_data(handles);
+
 guidata(hObject, handles);
 
 
@@ -109,8 +112,10 @@ function capExpTime_Callback(hObject, eventdata, handles)
 newExpTime = str2double(get(handles.capExpTime,'String'));
 % Update this in the settings structure
 handles.settingsStruct.capExpTime = newExpTime;
-guidata(hObject, handles);
+handles = estimate_capture_time_data(handles);
 disp(['Capture exposure time set to ' num2str(newExpTime) ' ms']);
+guidata(hObject, handles);
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -134,6 +139,7 @@ switch handles.settingsStruct.capBinSize
         handles.settingsStruct.deriveCapNumPixPerDim = handles.settingsStruct.constNumPixHeight/4;
         dispSize = '4x4';
 end
+handles = estimate_capture_time_data(handles);
 guidata(hObject, handles);
 disp(['Capture bin size set to ' dispSize ]);
 
@@ -185,8 +191,15 @@ handles.settingsStruct.prevExpTime = newExpTime;
 % it will automatically update the exposure time, so it can be changed
 % mid-preview.
 handles.srcObj.E2ExposureTime = newExpTime;
-guidata(hObject, handles);
 disp(['Preview exposure time set to ' num2str(newExpTime) ' ms']);
+% also if the capture lock settings is on, change the capture mode setting
+if handles.settingsStruct.capLockSettings== 1
+    handles.settingsStruct.capExpTime = newExpTime;
+    set(handles.capExpTime,'String',num2str(newExpTime));
+    handles = estimate_capture_time_data(handles);
+    disp(['Capture exposure time set to ' num2str(newExpTime) ' ms']);
+end
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -216,8 +229,17 @@ switch handles.settingsStruct.prevBinSize
         handles.settingsStruct.derivePrevNumPixPerDim = handles.settingsStruct.constNumPixHeight/4;
         dispSize = '4x4';
 end
-guidata(hObject, handles);
 disp(['Preview bin size set to ' dispSize ]);
+% also if the capture lock settings is on, change the capture mode setting
+if handles.settingsStruct.capLockSettings == 1
+    handles.settingsStruct.capBinSize = handles.settingsStruct.prevBinSize;
+    set(handles.capBinSize,'Value',handles.settingsStruct.capBinSize);
+    handles.settingsStruct.deriveCapNumPixPerDim = handles.settingsStruct.derivePrevNumPixPerDim;
+    handles = estimate_capture_time_data(handles);
+    disp(['Capture bin size set to ' dispSize ]);
+end
+guidata(hObject, handles);
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -242,8 +264,15 @@ switch handles.settingsStruct.prevGain
     case 2
         dispGain = '0.67 ADU/e-';
 end
-guidata(hObject, handles);
 disp(['Preview gain set to ' dispGain]);
+% also if the capture lock settings is on, change the capture mode setting
+if handles.settingsStruct.capLockSettings== 1
+    handles.settingsStruct.capGain = handles.settingsStruct.prevGain;
+    set(handles.capGain,'Value',handles.settingsStruct.capGain);
+    disp(['Capture gain set to ' dispGain]);
+end
+guidata(hObject, handles);
+
 
 % --- Executes during object creation, after setting all properties.
 function prevGain_CreateFcn(hObject, eventdata, handles)
@@ -793,8 +822,10 @@ end
 
 function capNumFrames_Callback(hObject, eventdata, handles)
 handles.settingsStruct.capNumFrames = str2double(get(handles.capNumFrames,'String'));
+handles = estimate_capture_time_data(handles);
 guidata(hObject, handles);
 disp(['Capture number of frame pairs set to ' num2str(handles.settingsStruct.capNumFrames)]);
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1192,6 +1223,7 @@ switch handles.settingsStruct.capPixClock
     case 2
         dispPixClock = '24 MPix/s';
 end
+handles = estimate_capture_time_data(handles);
 guidata(hObject, handles);
 disp(['Capture pixel read set to ' dispPixClock]);
 
@@ -1217,8 +1249,17 @@ switch handles.settingsStruct.prevPixClock
     case 2
         dispPixClock = '24 MPix/s';
 end
-guidata(hObject, handles);
 disp(['Preview pixel read set to ' dispPixClock]);
+% if the lock capture settings option is enabled, then update the capture
+% mode's setting for this
+if handles.settingsStruct.capLockSettings == 1
+    handles.settingsStruct.capPixClock = handles.settingsStruct.prevPixClock;
+    set(handles.capPixClock,'Value',handles.settingsStruct.capPixClock);
+    handles = estimate_capture_time_data(handles);
+    disp(['Capture pixel read set to ' dispPixClock]);
+end
+guidata(hObject, handles);
+
 
 % --- Executes during object creation, after setting all properties.
 function prevPixClock_CreateFcn(hObject, eventdata, handles)
@@ -1344,7 +1385,7 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
         handles.LED2WhiteValueIndicator.Visible = 'off';
         
         % Variable for switching frames
-        switchFrames=ones(handles.settingsStruct.derivePrevNumPixPerDim,handles.settingsStruct.derivePrevNumPixPerDim,2,'uint16');
+        switchFrames=ones(size(handles.imageMask,1),size(handles.imageMask,2),2,'uint16');
         switchCLim=zeros(2,2);
         switchFrames(:,:,1) = get(handles.imgHandLED1,'CData'); 
         switchFrames(:,:,2) = get(handles.imgHandLED2,'CData');
@@ -1358,7 +1399,7 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
         handles.LEDQuad1BlackValueIndicator.Visible = 'on';
         handles.LEDQuad1WhiteValueIndicator.Visible = 'on';
         % Also blank this frame axis (in case there is old imagery)
-        set(handles.imgHandLEDQuad1,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16'));
+        set(handles.imgHandLEDQuad1,'CData',ones(size(handles.imageMask,1),'uint16'));
         blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
         set(handles.LEDQuad1Ax,'CLim',blankLims);
         handles.settingsStruct.blackLevelLEDQuad1= blankLims(1);
@@ -1417,7 +1458,7 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
             handles.LEDQuad1DisplayedValues.Visible = 'on';
             handles.LEDQuad1BlackValueIndicator.Visible = 'on';
             handles.LEDQuad1WhiteValueIndicator.Visible = 'on';
-            set(handles.imgHandLEDQuad1,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % show blank frame
+            set(handles.imgHandLEDQuad1,'CData',ones(size(handles.imageMask,1),'uint16')); % show blank frame
             blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
             set(handles.LEDQuad1Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLEDQuad1= blankLims(1);
@@ -1459,7 +1500,7 @@ else % now we are NOT in quad mode
         handles.LEDQuad4WhiteValueIndicator.Visible = 'off';
         % Determine which frames to put where--use LEDsToEnable to
         % determine which frame data to add to 2-image axes
-        switchFrames=ones(handles.settingsStruct.derivePrevNumPixPerDim,handles.settingsStruct.derivePrevNumPixPerDim,2,'uint16');
+        switchFrames=ones(size(handles.imageMask,1),size(handles.imageMask,2),2,'uint16');
         switchCLim = zeros(2,2);
         quadIdx = 1;
         if handles.LEDsToEnable(2) == 1
@@ -1495,7 +1536,7 @@ else % now we are NOT in quad mode
             handles.LED2DisplayedValues.Visible = 'on';
             handles.LED2BlackValueIndicator.Visible = 'on';
             handles.LED2WhiteValueIndicator.Visible = 'on';
-            set(handles.imgHandLED2,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % blank the second axis
+            set(handles.imgHandLED2,'CData',ones(size(handles.imageMask,1),'uint16')); % blank the second axis
             blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
             set(handles.LED2Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLED2= blankLims(1);
@@ -1613,7 +1654,7 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
         handles.LED2WhiteValueIndicator.Visible = 'off';
         
         % Variable for switching frames
-        switchFrames=ones(handles.settingsStruct.derivePrevNumPixPerDim,handles.settingsStruct.derivePrevNumPixPerDim,2,'uint16');
+        switchFrames=ones(size(handles.imageMask,1),size(handles.imageMask,2),2,'uint16');
         switchCLim=zeros(2,2);
         switchFrames(:,:,1) = get(handles.imgHandLED1,'CData'); 
         switchFrames(:,:,2) = get(handles.imgHandLED2,'CData');
@@ -1643,7 +1684,7 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
         handles.LEDQuad2BlackValueIndicator.Visible = 'on';
         handles.LEDQuad2WhiteValueIndicator.Visible = 'on';
         % Also blank this frame axis (in case there is old imagery)
-        set(handles.imgHandLEDQuad2,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16'));
+        set(handles.imgHandLEDQuad2,'CData',ones(size(handles.imageMask,1),'uint16'));
         blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
         set(handles.LEDQuad2Ax,'CLim',blankLims);
         handles.settingsStruct.blackLevelLEDQuad2= blankLims(1);
@@ -1687,7 +1728,7 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
             handles.LEDQuad2DisplayedValues.Visible = 'on';
             handles.LEDQuad2BlackValueIndicator.Visible = 'on';
             handles.LEDQuad2WhiteValueIndicator.Visible = 'on';
-            set(handles.imgHandLEDQuad2,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % show blank frame
+            set(handles.imgHandLEDQuad2,'CData',ones(size(handles.imageMask,1),'uint16')); % show blank frame
             blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
             set(handles.LEDQuad2Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLEDQuad2= blankLims(1);
@@ -1729,7 +1770,7 @@ else % now we are NOT in quad mode
         handles.LEDQuad4WhiteValueIndicator.Visible = 'off';
         % Determine which frames to put where--use LEDsToEnable to
         % determine which frame data to add to 2-image axes
-        switchFrames=ones(handles.settingsStruct.derivePrevNumPixPerDim,handles.settingsStruct.derivePrevNumPixPerDim,2,'uint16');
+        switchFrames=ones(size(handles.imageMask,1),size(handles.imageMask,2),2,'uint16');
         switchCLim = zeros(2,2);
         quadIdx = 1;
         if handles.LEDsToEnable(1) == 1
@@ -1765,7 +1806,7 @@ else % now we are NOT in quad mode
             handles.LED2DisplayedValues.Visible = 'on';
             handles.LED2BlackValueIndicator.Visible = 'on';
             handles.LED2WhiteValueIndicator.Visible = 'on';
-            set(handles.imgHandLED2,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % blank the second axis
+            set(handles.imgHandLED2,'CData',ones(size(handles.imageMask,1),'uint16')); % blank the second axis
             blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
             set(handles.LED2Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLED2= blankLims(1);
@@ -1882,7 +1923,7 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
         handles.LED2WhiteValueIndicator.Visible = 'off';
         
         % Variable for switching frames
-        switchFrames=ones(handles.settingsStruct.derivePrevNumPixPerDim,handles.settingsStruct.derivePrevNumPixPerDim,2,'uint16');
+        switchFrames=ones(size(handles.imageMask,1),size(handles.imageMask,2),2,'uint16');
         switchCLim=zeros(2,2);
         switchFrames(:,:,1) = get(handles.imgHandLED1,'CData'); 
         switchFrames(:,:,2) = get(handles.imgHandLED2,'CData');
@@ -1927,7 +1968,7 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
         handles.LEDQuad3BlackValueIndicator.Visible = 'on';
         handles.LEDQuad3WhiteValueIndicator.Visible = 'on';
         % Also blank this frame axis (in case there is old imagery)
-        set(handles.imgHandLEDQuad3,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16'));
+        set(handles.imgHandLEDQuad3,'CData',ones(size(handles.imageMask,1),'uint16'));
         blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
         set(handles.LEDQuad3Ax,'CLim',blankLims);
         handles.settingsStruct.blackLevelLEDQuad3= blankLims(1);
@@ -1956,7 +1997,7 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
             handles.LEDQuad3DisplayedValues.Visible = 'on';
             handles.LEDQuad3BlackValueIndicator.Visible = 'on';
             handles.LEDQuad3WhiteValueIndicator.Visible = 'on';
-            set(handles.imgHandLEDQuad3,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % show blank frame
+            set(handles.imgHandLEDQuad3,'CData',ones(size(handles.imageMask,1),'uint16')); % show blank frame
             blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
             set(handles.LEDQuad3Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLEDQuad3= blankLims(1);
@@ -1998,7 +2039,7 @@ else % now we are NOT in quad mode
         handles.LEDQuad4WhiteValueIndicator.Visible = 'off';
         % Determine which frames to put where--use LEDsToEnable to
         % determine which frame data to add to 2-image axes
-        switchFrames=ones(handles.settingsStruct.derivePrevNumPixPerDim,handles.settingsStruct.derivePrevNumPixPerDim,2,'uint16');
+        switchFrames=ones(size(handles.imageMask,1),size(handles.imageMask,2),2,'uint16');
         switchCLim = zeros(2,2);
         quadIdx = 1;
         if handles.LEDsToEnable(1) == 1
@@ -2034,7 +2075,7 @@ else % now we are NOT in quad mode
             handles.LED2DisplayedValues.Visible = 'on';
             handles.LED2BlackValueIndicator.Visible = 'on';
             handles.LED2WhiteValueIndicator.Visible = 'on';
-            set(handles.imgHandLED2,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % blank the second axis
+            set(handles.imgHandLED2,'CData',ones(size(handles.imageMask,1),'uint16')); % blank the second axis
             blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
             set(handles.LED2Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLED2= blankLims(1);
@@ -2151,7 +2192,7 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
         handles.LED2WhiteValueIndicator.Visible = 'off';
         
         % Variable for switching frames
-        switchFrames=ones(handles.settingsStruct.derivePrevNumPixPerDim,handles.settingsStruct.derivePrevNumPixPerDim,2,'uint16');
+        switchFrames=ones(size(handles.imageMask,1),size(handles.imageMask,2),2,'uint16');
         switchCLim=zeros(2,2);
         switchFrames(:,:,1) = get(handles.imgHandLED1,'CData'); 
         switchFrames(:,:,2) = get(handles.imgHandLED2,'CData');
@@ -2210,7 +2251,7 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
         handles.LEDQuad4BlackValueIndicator.Visible = 'on';
         handles.LEDQuad4WhiteValueIndicator.Visible = 'on';
          % Also blank this frame axis (in case there is old imagery)
-        set(handles.imgHandLEDQuad4,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16'));
+        set(handles.imgHandLEDQuad4,'CData',ones(size(handles.imageMask,1),'uint16'));
         blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
         set(handles.LEDQuad4Ax,'CLim',blankLims);
         handles.settingsStruct.blackLevelLEDQuad4= blankLims(1);
@@ -2225,7 +2266,7 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
             handles.LEDQuad4DisplayedValues.Visible = 'on';
             handles.LEDQuad4BlackValueIndicator.Visible = 'on';
             handles.LEDQuad4WhiteValueIndicator.Visible = 'on';
-            set(handles.imgHandLEDQuad1,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % show blank frame
+            set(handles.imgHandLEDQuad4,'CData',ones(size(handles.imageMask,1),'uint16')); % show blank frame
             blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
             set(handles.LEDQuad1Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLEDQuad1= blankLims(1);
@@ -2267,7 +2308,7 @@ else % now we are NOT in quad mode
         handles.LEDQuad4WhiteValueIndicator.Visible = 'off';  
         % Determine which frames to put where--use LEDsToEnable to
         % determine which frame data to add to 2-image axes
-        switchFrames=ones(handles.settingsStruct.derivePrevNumPixPerDim,handles.settingsStruct.derivePrevNumPixPerDim,2,'uint16');
+        switchFrames=ones(size(handles.imageMask,1),size(handles.imageMask,2),2,'uint16');
         switchCLim = zeros(2,2);
         quadIdx = 1;
         if handles.LEDsToEnable(1) == 1
@@ -2303,7 +2344,7 @@ else % now we are NOT in quad mode
             handles.LED2DisplayedValues.Visible = 'on';
             handles.LED2BlackValueIndicator.Visible = 'on';
             handles.LED2WhiteValueIndicator.Visible = 'on';
-            set(handles.imgHandLED2,'CData',ones(handles.settingsStruct.derivePrevNumPixPerDim,'uint16')); % blank the second axis
+            set(handles.imgHandLED2,'CData',ones(size(handles.imageMask,1),'uint16')); % blank the second axis
             blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
             set(handles.LED2Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLED2= blankLims(1);
@@ -2376,6 +2417,77 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
+% --- Executes on button press in capLockSettings.
+function capLockSettings_Callback(hObject, eventdata, handles)
+% Set value in parameters struct
+handles.settingsStruct.capLockSettings = get(handles.capLockSettings,'Value');
+% if selected, change settings
+if handles.settingsStruct.capLockSettings == 1
+    % freeze (unenable those locked settings)
+    set(handles.capExpTime,'Enable','off');
+    set(handles.capBinSize,'Enable','off');
+    set(handles.capPixClock,'Enable','off');
+    set(handles.capGain,'Enable','off');
+    % set the corresponding value from Preview mode's setting
+    set(handles.capExpTime,'String',num2str(handles.settingsStruct.prevExpTime));
+    set(handles.capBinSize,'Value',handles.settingsStruct.prevBinSize);
+    set(handles.capPixClock,'Value',handles.settingsStruct.prevPixClock);
+    set(handles.capGain,'Value',handles.settingsStruct.prevGain);
+    % Over-write capture mode's settingsStruct values
+    handles.settingsStruct.capExpTime= handles.settingsStruct.prevExpTime;
+    handles.settingsStruct.capBinSize= handles.settingsStruct.prevBinSize;
+    handles.settingsStruct.capPixClock= handles.settingsStruct.prevPixClock;
+    handles.settingsStruct.capGain= handles.settingsStruct.prevGain;
+else % otherwise re-enable those settings for arbitrary changes
+    set(handles.capExpTime,'Enable','on');
+    set(handles.capBinSize,'Enable','on');
+    set(handles.capPixClock,'Enable','on');
+    set(handles.capGain,'Enable','on');
+end
+handles = estimate_capture_time_data(handles);
+guidata(hObject,handles);
+
+
+% --- Executes on button press in commResetLevels.
+function commResetLevels_Callback(hObject, eventdata, handles)
+% Change all the settings struct values
+white = 2^handles.settingsStruct.constCameraBits - 1;
+handles.settingsStruct.blackLevelLED1 = 0;
+handles.settingsStruct.whiteLevelLED1 = white;
+handles.settingsStruct.blackLevelLED2 = 0; 
+handles.settingsStruct.whiteLevelLED2 = white;
+handles.settingsStruct.blackLevelLEDQuad1 = 0;
+handles.settingsStruct.whiteLevelLEDQuad1 = white;
+handles.settingsStruct.blackLevelLEDQuad2 = 0;
+handles.settingsStruct.whiteLevelLEDQuad2 = white;
+handles.settingsStruct.blackLevelLEDQuad3 = 0;
+handles.settingsStruct.whiteLevelLEDQuad3 = white;
+handles.settingsStruct.blackLevelLEDQuad4 = 0;
+handles.settingsStruct.whiteLevelLEDQuad4 = white;
+% Change CLim's
+set(handles.LED1Ax,'CLim',[handles.settingsStruct.blackLevelLED1,handles.settingsStruct.whiteLevelLED1]);
+set(handles.LED2Ax,'CLim',[handles.settingsStruct.blackLevelLED2,handles.settingsStruct.whiteLevelLED2]);
+set(handles.LEDQuad1Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad1,handles.settingsStruct.whiteLevelLEDQuad1]);
+set(handles.LEDQuad2Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad2,handles.settingsStruct.whiteLevelLEDQuad2]);
+set(handles.LEDQuad3Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad3,handles.settingsStruct.whiteLevelLEDQuad3]);
+set(handles.LEDQuad4Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad4,handles.settingsStruct.whiteLevelLEDQuad4]);
+% Set the indicators of black vs white values correctly
+set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
+set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
+set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
+set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
+set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
+set(handles.LEDQuad2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
+set(handles.LEDQuad2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
+set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
+set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
+set(handles.LEDQuad4BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
+set(handles.LEDQuad4WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
+% update GUI
+guidata(hObject,handles);
+
+
 
 % CLOSING FUNCTION - CLEANS UP CONNECTIONS (very important to get this
 % right)
@@ -2395,3 +2507,5 @@ delete(handles.NIDaqSession);
 daqreset
 
 delete(hObject);
+
+

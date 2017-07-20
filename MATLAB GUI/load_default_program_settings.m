@@ -46,7 +46,7 @@ settingsStruct.D1DelayTime_unit = 'us';
 settingsStruct.D2DelayTime = 0;
 settingsStruct.E1ExposureTime_unit = 'ms';
 settingsStruct.RDIDoubleImageMode = 'off';
-settingsStruct.TMTimestampMode = 'No Stamp'; %'BinaryAndAscii'; %  options: 'No Stamp', 'Binary', 'BinaryAndAscii'
+settingsStruct.TMTimestampMode = 'BinaryAndAscii'; %  options: 'No Stamp', 'Binary', 'BinaryAndAscii'
 
 % CONSTANTS
 settingsStruct.constCameraBits = 14;

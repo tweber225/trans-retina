@@ -22,7 +22,7 @@ function varargout = multicolor_imaging_GUI(varargin)
 
 % Edit the above text to modify the response to help multicolor_imaging_GUI
 
-% Last Modified by GUIDE v2.5 19-Jul-2017 12:03:46
+% Last Modified by GUIDE v2.5 20-Jul-2017 17:11:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -75,7 +75,7 @@ handles.srcObj = getselectedsource(handles.vidObj); % adapter source
 handles.vidObj.LoggingMode = 'memory';
 
 % FOR DEBUGGING/TESTING FRAME NUMBERS
-handles.srcObj.TMTimestampMode = 'BinaryAndAscii';
+%handles.srcObj.TMTimestampMode = 'BinaryAndAscii';
 
 % Update GUI settings, set up default camera parameters
 handles = update_all_settings_on_GUI(handles);
@@ -945,20 +945,21 @@ set(handles.LEDQuad3Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad3,handles
 set(handles.LEDQuad4Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad4,handles.settingsStruct.whiteLevelLEDQuad4]);
 
 % Set the indicators of black vs white values correctly
-set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
-set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
-set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
-set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
-set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
-set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
-set(handles.LEDQuad2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
-set(handles.LEDQuad2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
-set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
-set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
-set(handles.LEDQuad4BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
-set(handles.LEDQuad4WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
+set(handles.LED1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED1))]);
+set(handles.LED1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+set(handles.LED2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED2))]);
+set(handles.LED2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED2))]);
+set(handles.LEDQuad1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
+set(handles.LEDQuad1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
+set(handles.LEDQuad2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
+set(handles.LEDQuad2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
+set(handles.LEDQuad3BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
+set(handles.LEDQuad3WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
+set(handles.LEDQuad4BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
+set(handles.LEDQuad4WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
 
 guidata(hObject, handles);
+
 
 % --- Executes on button press in commRTStats.
 function commRTStats_Callback(hObject, eventdata, handles)
@@ -1334,8 +1335,8 @@ if (get(handles.selectLEDsEnable1,'Value') == 0) && (handles.settingsStruct.sele
         set(handles.LED1Ax,'CLim',newLims);
         handles.settingsStruct.blackLevelLED1= newLims(1);
         handles.settingsStruct.whiteLevelLED1 = newLims(2);
-        set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
-        set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+        set(handles.LED1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED1))]);
+        set(handles.LED1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED1))]);
     else
         if handles.LEDsToEnable(2) == 1 % and these 3 options just change the selected LED to show on big axis (but nothing changes)
             set(handles.selectLEDsShow,'Value',2);
@@ -1404,8 +1405,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
         set(handles.LEDQuad1Ax,'CLim',blankLims);
         handles.settingsStruct.blackLevelLEDQuad1= blankLims(1);
         handles.settingsStruct.whiteLevelLEDQuad1 = blankLims(2);
-        set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
-        set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
+        set(handles.LEDQuad1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
+        set(handles.LEDQuad1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
         
         if handles.LEDsToEnable(2) == 1
             handles.imgHandLEDQuad2.Visible = 'on';
@@ -1417,8 +1418,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
                 set(handles.LEDQuad2Ax,'CLim',switchCLim(:,quadIdx));
                 handles.settingsStruct.blackLevelLEDQuad2= switchCLim(1,quadIdx);
                 handles.settingsStruct.whiteLevelLEDQuad2 = switchCLim(2,quadIdx);
-                set(handles.LEDQuad2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
-                set(handles.LEDQuad2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
+                set(handles.LEDQuad2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
+                set(handles.LEDQuad2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
                 quadIdx = quadIdx + 1;
             end
         end
@@ -1432,8 +1433,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
                 set(handles.LEDQuad3Ax,'CLim',switchCLim(:,quadIdx));
                 handles.settingsStruct.blackLevelLEDQuad3= switchCLim(1,quadIdx);
                 handles.settingsStruct.whiteLevelLEDQuad3 = switchCLim(2,quadIdx);
-                set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
-                set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
+                set(handles.LEDQuad3BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
+                set(handles.LEDQuad3WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
                 quadIdx = quadIdx + 1;
             end
         end
@@ -1447,8 +1448,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
                 set(handles.LEDQuad4Ax,'CLim',switchCLim(:,quadIdx));
                 handles.settingsStruct.blackLevelLEDQuad4 = switchCLim(1,quadIdx);
                 handles.settingsStruct.whiteLevelLEDQuad4 = switchCLim(2,quadIdx);
-                set(handles.LEDQuad4BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
-                set(handles.LEDQuad4WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
+                set(handles.LEDQuad4BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
+                set(handles.LEDQuad4WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
             end
         end
     else
@@ -1463,8 +1464,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
             set(handles.LEDQuad1Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLEDQuad1= blankLims(1);
             handles.settingsStruct.whiteLevelLEDQuad1 = blankLims(2);
-            set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
-            set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
+            set(handles.LEDQuad1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
+            set(handles.LEDQuad1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
         else
             handles.imgHandLEDQuad1.Visible = 'off';
             handles.LEDQuad1DisplayedValues.Visible = 'off';
@@ -1523,12 +1524,12 @@ else % now we are NOT in quad mode
         set(handles.LED2Ax,'CLim',switchCLim(:,2));
         handles.settingsStruct.blackLevelLED1= switchCLim(1,1);
         handles.settingsStruct.whiteLevelLED1 = switchCLim(2,1);
-        set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
-        set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+        set(handles.LED1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED1))]);
+        set(handles.LED1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED1))]);
         handles.settingsStruct.blackLevelLED2= switchCLim(1,2);
         handles.settingsStruct.whiteLevelLED2 = switchCLim(2,2);
-        set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
-        set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
+        set(handles.LED2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED2))]);
+        set(handles.LED2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED2))]);
 
     else % if we were not in quad mode and are still not in quad mode
         if handles.settingsStruct.selectLEDsEnable1 == 1
@@ -1541,8 +1542,8 @@ else % now we are NOT in quad mode
             set(handles.LED2Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLED2= blankLims(1);
             handles.settingsStruct.whiteLevelLED2 = blankLims(2);
-            set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
-            set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
+            set(handles.LED2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED2))]);
+            set(handles.LED2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED2))]);
         else
             handles.imgHandLED2.Visible = 'off';
             handles.LED2DisplayedValues.Visible = 'off';
@@ -1557,8 +1558,8 @@ else % now we are NOT in quad mode
                 set(handles.LED1Ax,'CLim',swapCLim);
                 handles.settingsStruct.blackLevelLED1= swapCLim(1);
                 handles.settingsStruct.whiteLevelLED1 = swapCLim(2);
-                set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
-                set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+                set(handles.LED1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED1))]);
+                set(handles.LED1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED1))]);
             end
         end
     end
@@ -1604,8 +1605,8 @@ if (get(handles.selectLEDsEnable2,'Value') == 0) && (handles.settingsStruct.sele
         set(handles.LEDQuad1Ax,'CLim',newLims);
         handles.settingsStruct.blackLevelLED1= newLims(1);
         handles.settingsStruct.whiteLevelLED1 = newLims(2);
-        set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
-        set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+        set(handles.LED1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED1))]);
+        set(handles.LED1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED1))]);
     else
         if handles.LEDsToEnable(1) == 1
             set(handles.selectLEDsShow,'Value',1);
@@ -1672,8 +1673,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
                 set(handles.LEDQuad1Ax,'CLim',switchCLim(:,quadIdx));
                 handles.settingsStruct.blackLevelLEDQuad1= switchCLim(1,quadIdx);
                 handles.settingsStruct.whiteLevelLEDQuad1 = switchCLim(2,quadIdx);
-                set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
-                set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
+                set(handles.LEDQuad1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
+                set(handles.LEDQuad1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
                 quadIdx = quadIdx + 1;
             end
         end
@@ -1689,8 +1690,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
         set(handles.LEDQuad2Ax,'CLim',blankLims);
         handles.settingsStruct.blackLevelLEDQuad2= blankLims(1);
         handles.settingsStruct.whiteLevelLEDQuad2 = blankLims(2);
-        set(handles.LEDQuad2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
-        set(handles.LEDQuad2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
+        set(handles.LEDQuad2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
+        set(handles.LEDQuad2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
 
         if handles.LEDsToEnable(3) == 1
             handles.imgHandLEDQuad3.Visible = 'on';
@@ -1702,8 +1703,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
                 set(handles.LEDQuad3Ax,'CLim',switchCLim(:,quadIdx));
                 handles.settingsStruct.blackLevelLEDQuad3= switchCLim(1,quadIdx);
                 handles.settingsStruct.whiteLevelLEDQuad3 = switchCLim(2,quadIdx);
-                set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
-                set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
+                set(handles.LEDQuad3BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
+                set(handles.LEDQuad3WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
                 quadIdx = quadIdx + 1;
             end
         end
@@ -1717,8 +1718,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
                 set(handles.LEDQuad4Ax,'CLim',switchCLim(:,quadIdx));
                 handles.settingsStruct.blackLevelLEDQuad4= switchCLim(1,quadIdx);
                 handles.settingsStruct.whiteLevelLEDQuad4 = switchCLim(2,quadIdx);
-                set(handles.LEDQuad4BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
-                set(handles.LEDQuad4WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
+                set(handles.LEDQuad4BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
+                set(handles.LEDQuad4WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
             end
         end
     else
@@ -1733,8 +1734,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
             set(handles.LEDQuad2Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLEDQuad2= blankLims(1);
             handles.settingsStruct.whiteLevelLEDQuad2 = blankLims(2);
-            set(handles.LEDQuad2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
-            set(handles.LEDQuad2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
+            set(handles.LEDQuad2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
+            set(handles.LEDQuad2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
         else
             handles.imgHandLEDQuad2.Visible = 'off';
             handles.LEDQuad2DisplayedValues.Visible = 'off';
@@ -1793,12 +1794,12 @@ else % now we are NOT in quad mode
         set(handles.LED2Ax,'CLim',switchCLim(:,2));
         handles.settingsStruct.blackLevelLED1= switchCLim(1,1);
         handles.settingsStruct.whiteLevelLED1 = switchCLim(2,1);
-        set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
-        set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+        set(handles.LED1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED1))]);
+        set(handles.LED1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED1))]);
         handles.settingsStruct.blackLevelLED2= switchCLim(1,2);
         handles.settingsStruct.whiteLevelLED2 = switchCLim(2,2);
-        set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
-        set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
+        set(handles.LED2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED2))]);
+        set(handles.LED2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED2))]);
         
     else % if we were not in quad mode and are still not in quad mode
         if handles.settingsStruct.selectLEDsEnable2 == 1
@@ -1811,8 +1812,8 @@ else % now we are NOT in quad mode
             set(handles.LED2Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLED2= blankLims(1);
             handles.settingsStruct.whiteLevelLED2 = blankLims(2);
-            set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
-            set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
+            set(handles.LED2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED2))]);
+            set(handles.LED2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED2))]);
         else
             handles.imgHandLED2.Visible = 'off';
             handles.LED2DisplayedValues.Visible = 'off';
@@ -1827,8 +1828,8 @@ else % now we are NOT in quad mode
                 set(handles.LED1Ax,'CLim',swapCLim);
                 handles.settingsStruct.blackLevelLED1= swapCLim(1);
                 handles.settingsStruct.whiteLevelLED1 = swapCLim(2);
-                set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
-                set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+                set(handles.LED1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED1))]);
+                set(handles.LED1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED1))]);
             end
         end
     end
@@ -1872,8 +1873,8 @@ if (get(handles.selectLEDsEnable3,'Value') == 0) && (handles.settingsStruct.sele
         set(handles.LED1Ax,'CLim',newLims);
         handles.settingsStruct.blackLevelLED1= newLims(1);
         handles.settingsStruct.whiteLevelLED1 = newLims(2);
-        set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
-        set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+        set(handles.LED1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED1))]);
+        set(handles.LED1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED1))]);
     else
         if handles.LEDsToEnable(1) == 1 % and these 3 options just change the selected LED to show on big axis (but nothing changes)
             set(handles.selectLEDsShow,'Value',1);
@@ -1941,8 +1942,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
                 set(handles.LEDQuad1Ax,'CLim',switchCLim(:,quadIdx));
                 handles.settingsStruct.blackLevelLEDQuad1= switchCLim(1,quadIdx);
                 handles.settingsStruct.whiteLevelLEDQuad1 = switchCLim(2,quadIdx);
-                set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
-                set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
+                set(handles.LEDQuad1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
+                set(handles.LEDQuad1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
                 quadIdx = quadIdx + 1;
             end
         end
@@ -1956,8 +1957,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
                 set(handles.LEDQuad2Ax,'CLim',switchCLim(:,quadIdx));
                 handles.settingsStruct.blackLevelLEDQuad2= switchCLim(1,quadIdx);
                 handles.settingsStruct.whiteLevelLEDQuad2 = switchCLim(2,quadIdx);
-                set(handles.LEDQuad2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
-                set(handles.LEDQuad2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
+                set(handles.LEDQuad2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
+                set(handles.LEDQuad2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
                 quadIdx = quadIdx + 1;
             end
         end
@@ -1973,8 +1974,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
         set(handles.LEDQuad3Ax,'CLim',blankLims);
         handles.settingsStruct.blackLevelLEDQuad3= blankLims(1);
         handles.settingsStruct.whiteLevelLEDQuad3 = blankLims(2);
-        set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
-        set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
+        set(handles.LEDQuad3BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
+        set(handles.LEDQuad3WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
 
         if handles.LEDsToEnable(4) == 1
             handles.imgHandLEDQuad4.Visible = 'on';
@@ -1986,8 +1987,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
                 set(handles.LEDQuad4Ax,'CLim',switchCLim(:,quadIdx));
                 handles.settingsStruct.blackLevelLEDQuad4= switchCLim(1,quadIdx);
                 handles.settingsStruct.whiteLevelLEDQuad4 = switchCLim(2,quadIdx);
-                set(handles.LEDQuad4BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
-                set(handles.LEDQuad4WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
+                set(handles.LEDQuad4BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
+                set(handles.LEDQuad4WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
             end
         end
     else
@@ -2002,8 +2003,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
             set(handles.LEDQuad3Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLEDQuad3= blankLims(1);
             handles.settingsStruct.whiteLevelLEDQuad3 = blankLims(2);
-            set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
-            set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
+            set(handles.LEDQuad3BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
+            set(handles.LEDQuad3WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
         else
             handles.imgHandLEDQuad3.Visible = 'off';
             handles.LEDQuad3DisplayedValues.Visible = 'off';
@@ -2062,12 +2063,12 @@ else % now we are NOT in quad mode
         set(handles.LED2Ax,'CLim',switchCLim(:,2));
         handles.settingsStruct.blackLevelLED1= switchCLim(1,1);
         handles.settingsStruct.whiteLevelLED1 = switchCLim(2,1);
-        set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
-        set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+        set(handles.LED1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED1))]);
+        set(handles.LED1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED1))]);
         handles.settingsStruct.blackLevelLED2= switchCLim(1,2);
         handles.settingsStruct.whiteLevelLED2 = switchCLim(2,2);
-        set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
-        set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
+        set(handles.LED2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED2))]);
+        set(handles.LED2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED2))]);
 
     else % if we were not in quad mode and are still not in quad mode
         if handles.settingsStruct.selectLEDsEnable3 == 1
@@ -2080,8 +2081,8 @@ else % now we are NOT in quad mode
             set(handles.LED2Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLED2= blankLims(1);
             handles.settingsStruct.whiteLevelLED2 = blankLims(2);
-            set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
-            set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
+            set(handles.LED2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED2))]);
+            set(handles.LED2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED2))]);
         else
             handles.imgHandLED2.Visible = 'off';
             handles.LED2DisplayedValues.Visible = 'off';
@@ -2096,8 +2097,8 @@ else % now we are NOT in quad mode
                 set(handles.LED1Ax,'CLim',swapCLim);
                 handles.settingsStruct.blackLevelLED1= swapCLim(1);
                 handles.settingsStruct.whiteLevelLED1 = swapCLim(2);
-                set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
-                set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+                set(handles.LED1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED1))]);
+                set(handles.LED1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED1))]);
             end
         end
     end
@@ -2142,8 +2143,8 @@ if (get(handles.selectLEDsEnable4,'Value') == 0) && (handles.settingsStruct.sele
         set(handles.LED1Ax,'CLim',newLims);
         handles.settingsStruct.blackLevelLED1= newLims(1);
         handles.settingsStruct.whiteLevelLED1 = newLims(2);
-        set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
-        set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+        set(handles.LED1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED1))]);
+        set(handles.LED1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED1))]);
     else
         if handles.LEDsToEnable(1) == 1 % and these 3 options just change the selected LED to show on big axis (but nothing changes)
             set(handles.selectLEDsShow,'Value',1);
@@ -2210,8 +2211,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
                 set(handles.LEDQuad1Ax,'CLim',switchCLim(:,quadIdx));
                 handles.settingsStruct.blackLevelLEDQuad1= switchCLim(1,quadIdx);
                 handles.settingsStruct.whiteLevelLEDQuad1 = switchCLim(2,quadIdx);
-                set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
-                set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
+                set(handles.LEDQuad1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
+                set(handles.LEDQuad1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
                 quadIdx = quadIdx + 1;
             end
         end
@@ -2225,8 +2226,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
                 set(handles.LEDQuad2Ax,'CLim',switchCLim(:,quadIdx));
                 handles.settingsStruct.blackLevelLEDQuad2= switchCLim(1,quadIdx);
                 handles.settingsStruct.whiteLevelLEDQuad2 = switchCLim(2,quadIdx);
-                set(handles.LEDQuad2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
-                set(handles.LEDQuad2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
+                set(handles.LEDQuad2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
+                set(handles.LEDQuad2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
                 quadIdx = quadIdx + 1;
             end
         end
@@ -2240,8 +2241,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
                 set(handles.LEDQuad3Ax,'CLim',switchCLim(:,quadIdx));
                 handles.settingsStruct.blackLevelLEDQuad3= switchCLim(1,quadIdx);
                 handles.settingsStruct.whiteLevelLEDQuad3 = switchCLim(2,quadIdx);
-                set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
-                set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
+                set(handles.LEDQuad3BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
+                set(handles.LEDQuad3WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
             end
         end
         
@@ -2256,8 +2257,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
         set(handles.LEDQuad4Ax,'CLim',blankLims);
         handles.settingsStruct.blackLevelLEDQuad4= blankLims(1);
         handles.settingsStruct.whiteLevelLEDQuad4 = blankLims(2);
-        set(handles.LEDQuad4BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
-        set(handles.LEDQuad4WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
+        set(handles.LEDQuad4BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
+        set(handles.LEDQuad4WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
 
     else
         % If we were in quad mode and we still are, then there are two possibilities
@@ -2271,8 +2272,8 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
             set(handles.LEDQuad1Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLEDQuad1= blankLims(1);
             handles.settingsStruct.whiteLevelLEDQuad1 = blankLims(2);
-            set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
-            set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
+            set(handles.LEDQuad1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
+            set(handles.LEDQuad1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
         else
             handles.imgHandLEDQuad4.Visible = 'off';
             handles.LEDQuad4DisplayedValues.Visible = 'off';
@@ -2331,12 +2332,12 @@ else % now we are NOT in quad mode
         set(handles.LED2Ax,'CLim',switchCLim(:,2));
         handles.settingsStruct.blackLevelLED1= switchCLim(1,1);
         handles.settingsStruct.whiteLevelLED1 = switchCLim(2,1);
-        set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
-        set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+        set(handles.LED1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED1))]);
+        set(handles.LED1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED1))]);
         handles.settingsStruct.blackLevelLED2= switchCLim(1,2);
         handles.settingsStruct.whiteLevelLED2 = switchCLim(2,2);
-        set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
-        set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
+        set(handles.LED2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED2))]);
+        set(handles.LED2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED2))]);
 
     else % if we were not in quad mode and are still not in quad mode
         if handles.settingsStruct.selectLEDsEnable4 == 1
@@ -2349,8 +2350,8 @@ else % now we are NOT in quad mode
             set(handles.LED2Ax,'CLim',blankLims);
             handles.settingsStruct.blackLevelLED2= blankLims(1);
             handles.settingsStruct.whiteLevelLED2 = blankLims(2);
-            set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
-            set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
+            set(handles.LED2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED2))]);
+            set(handles.LED2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED2))]);
         else
             handles.imgHandLED2.Visible = 'off';
             handles.LED2DisplayedValues.Visible = 'off';
@@ -2472,18 +2473,18 @@ set(handles.LEDQuad2Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad2,handles
 set(handles.LEDQuad3Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad3,handles.settingsStruct.whiteLevelLEDQuad3]);
 set(handles.LEDQuad4Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad4,handles.settingsStruct.whiteLevelLEDQuad4]);
 % Set the indicators of black vs white values correctly
-set(handles.LED1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED1))]);
-set(handles.LED1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED1))]);
-set(handles.LED2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLED2))]);
-set(handles.LED2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLED2))]);
-set(handles.LEDQuad1BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
-set(handles.LEDQuad1WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
-set(handles.LEDQuad2BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
-set(handles.LEDQuad2WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
-set(handles.LEDQuad3BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
-set(handles.LEDQuad3WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
-set(handles.LEDQuad4BlackValueIndicator,'String',['Black: ' num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
-set(handles.LEDQuad4WhiteValueIndicator,'String',['White: ' num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
+set(handles.LED1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED1))]);
+set(handles.LED1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED1))]);
+set(handles.LED2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLED2))]);
+set(handles.LED2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLED2))]);
+set(handles.LEDQuad1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
+set(handles.LEDQuad1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
+set(handles.LEDQuad2BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad2))]);
+set(handles.LEDQuad2WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad2))]);
+set(handles.LEDQuad3BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad3))]);
+set(handles.LEDQuad3WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad3))]);
+set(handles.LEDQuad4BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
+set(handles.LEDQuad4WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
 % update GUI
 guidata(hObject,handles);
 
@@ -2507,5 +2508,184 @@ delete(handles.NIDaqSession);
 daqreset
 
 delete(hObject);
+
+
+
+% CALLBACKS FOR ALL THE EDIT BLACK/WHITE LEVEL EDIT BOXES
+
+function LED1BlackValueIndicator_Callback(hObject, eventdata, handles)
+newBlackVal = round(str2double(get(handles.LED1BlackValueIndicator,'String')));
+whiteVal = handles.settingsStruct.whiteLevelLED1;
+% Check whether too low or too high
+if newBlackVal < 0, newBlackVal = 0; end
+if newBlackVal >= whiteVal, newBlackVal = whiteVal-1; end
+% Put new val in edit box
+set(handles.LED1BlackValueIndicator,'String',num2str(newBlackVal));
+% Update this parameter in the settings struct
+handles.settingsStruct.blackLevelLED1 = newBlackVal;
+% Update the CLim
+set(handles.LED1Ax,'CLim',[handles.settingsStruct.blackLevelLED1,handles.settingsStruct.whiteLevelLED1]);
+guidata(hObject,handles);
+   
+function LED1WhiteValueIndicator_Callback(hObject, eventdata, handles)
+newWhiteVal = round(str2double(get(handles.LED1WhiteValueIndicator,'String')));
+blackVal = handles.settingsStruct.blackLevelLED1;
+maxVal = 2^handles.settingsStruct.constCameraBits-1;
+% Check whether too low or too high
+if newWhiteVal > maxVal, newWhiteVal = maxVal; end
+if newWhiteVal <= blackVal, newWhiteVal = blackVal+1; end
+% Put new val in edit box
+set(handles.LED1WhiteValueIndicator,'String',num2str(newWhiteVal));
+% Update this parameter in the settings struct
+handles.settingsStruct.whiteLevelLED1 = newWhiteVal;
+% Update the CLim
+set(handles.LED1Ax,'CLim',[handles.settingsStruct.blackLevelLED1,handles.settingsStruct.whiteLevelLED1]);
+guidata(hObject,handles);
+
+function LED2BlackValueIndicator_Callback(hObject, eventdata, handles)
+newBlackVal = round(str2double(get(handles.LED2BlackValueIndicator,'String')));
+whiteVal = handles.settingsStruct.whiteLevelLED2;
+% Check whether too low or too high
+if newBlackVal < 0, newBlackVal = 0; end
+if newBlackVal >= whiteVal, newBlackVal = whiteVal-1; end
+% Put new val in edit box
+set(handles.LED2BlackValueIndicator,'String',num2str(newBlackVal));
+% Update this parameter in the settings struct
+handles.settingsStruct.blackLevelLED2 = newBlackVal;
+% Update the CLim
+set(handles.LED2Ax,'CLim',[handles.settingsStruct.blackLevelLED2,handles.settingsStruct.whiteLevelLED2]);
+guidata(hObject,handles);
+
+function LED2WhiteValueIndicator_Callback(hObject, eventdata, handles)
+newWhiteVal = round(str2double(get(handles.LED2WhiteValueIndicator,'String')));
+blackVal = handles.settingsStruct.blackLevelLED2;
+maxVal = 2^handles.settingsStruct.constCameraBits-1;
+% Check whether too low or too high
+if newWhiteVal > maxVal, newWhiteVal = maxVal; end
+if newWhiteVal <= blackVal, newWhiteVal = blackVal+1; end
+% Put new val in edit box
+set(handles.LED2WhiteValueIndicator,'String',num2str(newWhiteVal));
+% Update this parameter in the settings struct
+handles.settingsStruct.whiteLevelLED2 = newWhiteVal;
+% Update the CLim
+set(handles.LED2Ax,'CLim',[handles.settingsStruct.blackLevelLED2,handles.settingsStruct.whiteLevelLED2]);
+guidata(hObject,handles);
+
+
+function LEDQuad1BlackValueIndicator_Callback(hObject, eventdata, handles)
+newBlackVal = round(str2double(get(handles.LEDQuad1BlackValueIndicator,'String')));
+whiteVal = handles.settingsStruct.whiteLevelLEDQuad1;
+% Check whether too low or too high
+if newBlackVal < 0, newBlackVal = 0; end
+if newBlackVal >= whiteVal, newBlackVal = whiteVal-1; end
+% Put new val in edit box
+set(handles.LEDQuad1BlackValueIndicator,'String',num2str(newBlackVal));
+% Update this parameter in the settings struct
+handles.settingsStruct.blackLevelLEDQuad1 = newBlackVal;
+% Update the CLim
+set(handles.LEDQuad1Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad1,handles.settingsStruct.whiteLevelLEDQuad1]);
+guidata(hObject,handles);
+
+function LEDQuad1WhiteValueIndicator_Callback(hObject, eventdata, handles)
+newWhiteVal = round(str2double(get(handles.LEDQuad1WhiteValueIndicator,'String')));
+blackVal = handles.settingsStruct.blackLevelLEDQuad1;
+maxVal = 2^handles.settingsStruct.constCameraBits-1;
+% Check whether too low or too high
+if newWhiteVal > maxVal, newWhiteVal = maxVal; end
+if newWhiteVal <= blackVal, newWhiteVal = blackVal+1; end
+% Put new val in edit box
+set(handles.LEDQuad1WhiteValueIndicator,'String',num2str(newWhiteVal));
+% Update this parameter in the settings struct
+handles.settingsStruct.whiteLevelLEDQuad1 = newWhiteVal;
+% Update the CLim
+set(handles.LEDQuad1Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad1,handles.settingsStruct.whiteLevelLEDQuad1]);
+guidata(hObject,handles);
+
+function LEDQuad2BlackValueIndicator_Callback(hObject, eventdata, handles)
+newBlackVal = round(str2double(get(handles.LEDQuad2BlackValueIndicator,'String')));
+whiteVal = handles.settingsStruct.whiteLevelLEDQuad2;
+% Check whether too low or too high
+if newBlackVal < 0, newBlackVal = 0; end
+if newBlackVal >= whiteVal, newBlackVal = whiteVal-1; end
+% Put new val in edit box
+set(handles.LEDQuad2BlackValueIndicator,'String',num2str(newBlackVal));
+% Update this parameter in the settings struct
+handles.settingsStruct.blackLevelLEDQuad2 = newBlackVal;
+% Update the CLim
+set(handles.LEDQuad2Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad2,handles.settingsStruct.whiteLevelLEDQuad2]);
+guidata(hObject,handles);
+
+function LEDQuad2WhiteValueIndicator_Callback(hObject, eventdata, handles)
+newWhiteVal = round(str2double(get(handles.LEDQuad2WhiteValueIndicator,'String')));
+blackVal = handles.settingsStruct.blackLevelLEDQuad2;
+maxVal = 2^handles.settingsStruct.constCameraBits-1;
+% Check whether too low or too high
+if newWhiteVal > maxVal, newWhiteVal = maxVal; end
+if newWhiteVal <= blackVal, newWhiteVal = blackVal+1; end
+% Put new val in edit box
+set(handles.LEDQuad2WhiteValueIndicator,'String',num2str(newWhiteVal));
+% Update this parameter in the settings struct
+handles.settingsStruct.whiteLevelLEDQuad2 = newWhiteVal;
+% Update the CLim
+set(handles.LEDQuad2Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad2,handles.settingsStruct.whiteLevelLEDQuad2]);
+guidata(hObject,handles);
+
+function LEDQuad3BlackValueIndicator_Callback(hObject, eventdata, handles)
+newBlackVal = round(str2double(get(handles.LEDQuad3BlackValueIndicator,'String')));
+whiteVal = handles.settingsStruct.whiteLevelLEDQuad3;
+% Check whether too low or too high
+if newBlackVal < 0, newBlackVal = 0; end
+if newBlackVal >= whiteVal, newBlackVal = whiteVal-1; end
+% Put new val in edit box
+set(handles.LEDQuad3BlackValueIndicator,'String',num2str(newBlackVal));
+% Update this parameter in the settings struct
+handles.settingsStruct.blackLevelLEDQuad3 = newBlackVal;
+% Update the CLim
+set(handles.LEDQuad3Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad3,handles.settingsStruct.whiteLevelLEDQuad3]);
+guidata(hObject,handles);
+
+function LEDQuad3WhiteValueIndicator_Callback(hObject, eventdata, handles)
+newWhiteVal = round(str2double(get(handles.LEDQuad3WhiteValueIndicator,'String')));
+blackVal = handles.settingsStruct.blackLevelLEDQuad3;
+maxVal = 2^handles.settingsStruct.constCameraBits-1;
+% Check whether too low or too high
+if newWhiteVal > maxVal, newWhiteVal = maxVal; end
+if newWhiteVal <= blackVal, newWhiteVal = blackVal+1; end
+% Put new val in edit box
+set(handles.LEDQuad3WhiteValueIndicator,'String',num2str(newWhiteVal));
+% Update this parameter in the settings struct
+handles.settingsStruct.whiteLevelLEDQuad3 = newWhiteVal;
+% Update the CLim
+set(handles.LEDQuad3Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad3,handles.settingsStruct.whiteLevelLEDQuad3]);
+guidata(hObject,handles);
+
+function LEDQuad4BlackValueIndicator_Callback(hObject, eventdata, handles)
+newBlackVal = round(str2double(get(handles.LEDQuad4BlackValueIndicator,'String')));
+whiteVal = handles.settingsStruct.whiteLevelLEDQuad4;
+% Check whether too low or too high
+if newBlackVal < 0, newBlackVal = 0; end
+if newBlackVal >= whiteVal, newBlackVal = whiteVal-1; end
+% Put new val in edit box
+set(handles.LEDQuad4BlackValueIndicator,'String',num2str(newBlackVal));
+% Update this parameter in the settings struct
+handles.settingsStruct.blackLevelLEDQuad4 = newBlackVal;
+% Update the CLim
+set(handles.LEDQuad4Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad4,handles.settingsStruct.whiteLevelLEDQuad4]);
+guidata(hObject,handles);
+
+function LEDQuad4WhiteValueIndicator_Callback(hObject, eventdata, handles)
+newWhiteVal = round(str2double(get(handles.LEDQuad4WhiteValueIndicator,'String')));
+blackVal = handles.settingsStruct.blackLevelLEDQuad4;
+maxVal = 2^handles.settingsStruct.constCameraBits-1;
+% Check whether too low or too high
+if newWhiteVal > maxVal, newWhiteVal = maxVal; end
+if newWhiteVal <= blackVal, newWhiteVal = blackVal+1; end
+% Put new val in edit box
+set(handles.LEDQuad4WhiteValueIndicator,'String',num2str(newWhiteVal));
+% Update this parameter in the settings struct
+handles.settingsStruct.whiteLevelLEDQuad4 = newWhiteVal;
+% Update the CLim
+set(handles.LEDQuad4Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad4,handles.settingsStruct.whiteLevelLEDQuad4]);
+guidata(hObject,handles);
 
 

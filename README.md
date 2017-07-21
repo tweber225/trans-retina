@@ -17,8 +17,6 @@ In the future repo may include some analysis code.
 
 Features to add to GUI:
 
--manual black/white level settings
+-Would be very useful: separate enable buttons for capture mode set of LEDs (i.e. different LEDs for Preview and Capture Modes)
 
--separate enable buttons for capture mode set of LEDs (ie different LEDs for Preview and Capture Modes)
-
--limit on number of frames for capture mode (to avoid over allocating memory, otherwise we need to do some quick calculations before starting with knowledge of the available memory, 4 channels, full res >4.3GB)
+-Low priority: limit on number of frames for capture mode (to avoid over allocating memory)

@@ -1298,6 +1298,13 @@ else
     handles.imageMask = ones(pixDim,'uint16').*imageMaskMask;
 end
 
+% if de-selected then disable the ascii timestamps because that will mess
+% up the thresholding
+if handles.settingsStruct.commStatHistInCenter == 0
+    handles.settingsStruct.TMTimestampMode = 'No Stamp';
+    handles.srcObj.TMTimestampMode = 'No Stamp';
+end
+
 guidata(hObject,handles);
 
 

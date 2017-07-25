@@ -22,7 +22,7 @@ function varargout = multicolor_imaging_GUI(varargin)
 
 % Edit the above text to modify the response to help multicolor_imaging_GUI
 
-% Last Modified by GUIDE v2.5 20-Jul-2017 17:11:48
+% Last Modified by GUIDE v2.5 25-Jul-2017 14:58:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,6 +59,8 @@ handles.settingsStruct = load_default_program_settings;
 
 % Make digital channels to send enable signal to Arduino with correct
 % configuration of LEDs
+handles.prevLEDsToEnable = [handles.settingsStruct.prevLEDsEnable1 handles.settingsStruct.prevLEDsEnable2 handles.settingsStruct.prevLEDsEnable3 handles.settingsStruct.prevLEDsEnable4];
+handles.capLEDsToEnable = [handles.settingsStruct.capLEDsEnable1 handles.settingsStruct.capLEDsEnable2 handles.settingsStruct.capLEDsEnable3 handles.settingsStruct.capLEDsEnable4];
 handles.LEDsToEnable = [handles.settingsStruct.selectLEDsEnable1 handles.settingsStruct.selectLEDsEnable2 handles.settingsStruct.selectLEDsEnable3 handles.settingsStruct.selectLEDsEnable4];
 disp('Starting DAQ System')
 handles.NIDaqSession = daq.createSession('ni');
@@ -73,9 +75,6 @@ handles.srcObj = getselectedsource(handles.vidObj); % adapter source
 
 %Set logging to memory
 handles.vidObj.LoggingMode = 'memory';
-
-% FOR DEBUGGING/TESTING FRAME NUMBERS
-%handles.srcObj.TMTimestampMode = 'BinaryAndAscii';
 
 % Update GUI settings, set up default camera parameters
 handles = update_all_settings_on_GUI(handles);
@@ -326,6 +325,42 @@ end
 % --- Executes on button press in capStartButton.
 function capStartButton_Callback(hObject, eventdata, handles)
 if get(handles.capStartButton,'Value') == 1
+    handles.settingsStruct.inCapMode = 1;
+    % Get LEDs to use for capture mode, switch axes view modes
+    if handles.prevLEDsToEnable(1) ~= handles.capLEDsToEnable(1)
+        % Force capture state for this button to capture state
+        set(handles.selectLEDsEnable1,'Value',handles.capLEDsToEnable(1));
+        % Run callback for this LED's button
+        selectLEDsEnable1_Callback(hObject, eventdata, handles)
+        handles = guidata(hObject);
+    end
+    if handles.prevLEDsToEnable(2) ~= handles.capLEDsToEnable(2)
+        % Force capture state for this button to capture state
+        set(handles.selectLEDsEnable2,'Value',handles.capLEDsToEnable(2));
+        % Run callback for this LED's button
+        selectLEDsEnable2_Callback(hObject, eventdata, handles)
+        handles = guidata(hObject);
+    end
+    if handles.prevLEDsToEnable(3) ~= handles.capLEDsToEnable(3)
+        % Force capture state for this button to capture state
+        set(handles.selectLEDsEnable3,'Value',handles.capLEDsToEnable(3));
+        % Run callback for this LED's button
+        selectLEDsEnable3_Callback(hObject, eventdata, handles)
+        handles = guidata(hObject);
+    end
+    if handles.prevLEDsToEnable(4) ~= handles.capLEDsToEnable(4)
+        % Force capture state for this button to capture state
+        set(handles.selectLEDsEnable4,'Value',handles.capLEDsToEnable(4));
+        % Run callback for this LED's button
+        selectLEDsEnable4_Callback(hObject, eventdata, handles)
+        handles = guidata(hObject);
+    end
+    % Force back state of all 4 buttons to preview mode
+    set(handles.selectLEDsEnable4,'Value',handles.prevLEDsToEnable(4));
+    set(handles.selectLEDsEnable3,'Value',handles.prevLEDsToEnable(3));
+    set(handles.selectLEDsEnable2,'Value',handles.prevLEDsToEnable(2));
+    set(handles.selectLEDsEnable1,'Value',handles.prevLEDsToEnable(1));
+        
     % Output TTL HIGH to Arduino to signal the start of an acquisition and
     % arm the arduino's toggling
     outputSingleScan(handles.NIDaqSession,[1 handles.LEDsToEnable]);
@@ -602,6 +637,8 @@ if get(handles.capStartButton,'Value') == 1
     
     % And finally reset the Capture Start button
     set(handles.capStartButton,'String','Start Capture');
+    handles.settingsStruct.justFinishedCap = 1;
+    handles.settingsStruct.inCapMode = 0;
     
     guidata(hObject, handles);
 else
@@ -618,6 +655,39 @@ end
 % --- Executes on button press in prevStartButton.
 function prevStartButton_Callback(hObject, eventdata, handles)
 if get(handles.prevStartButton,'Value') == 1
+    % Insure the right LEDs are selected for this preview
+    if handles.settingsStruct.justFinishedCap == 1
+        handles.settingsStruct.justFinishedCap = 0; % turn off this flag here or else it will affect callback fcns below
+        if handles.prevLEDsToEnable(1) ~= handles.capLEDsToEnable(1)
+            % Force capture state for this button to capture state
+            set(handles.selectLEDsEnable1,'Value',handles.prevLEDsToEnable(1));
+            % Run callback for this LED's button
+            selectLEDsEnable1_Callback(hObject, eventdata, handles)
+            handles = guidata(hObject);
+        end
+        if handles.prevLEDsToEnable(2) ~= handles.capLEDsToEnable(2)
+            % Force capture state for this button to capture state
+            set(handles.selectLEDsEnable2,'Value',handles.prevLEDsToEnable(2));
+            % Run callback for this LED's button
+            selectLEDsEnable2_Callback(hObject, eventdata, handles)
+            handles = guidata(hObject);
+        end
+        if handles.prevLEDsToEnable(3) ~= handles.capLEDsToEnable(3)
+            % Force capture state for this button to capture state
+            set(handles.selectLEDsEnable3,'Value',handles.prevLEDsToEnable(3));
+            % Run callback for this LED's button
+            selectLEDsEnable3_Callback(hObject, eventdata, handles)
+            handles = guidata(hObject);
+        end
+        if handles.prevLEDsToEnable(4) ~= handles.capLEDsToEnable(4)
+            % Force capture state for this button to capture state
+            set(handles.selectLEDsEnable4,'Value',handles.prevLEDsToEnable(4));
+            % Run callback for this LED's button
+            selectLEDsEnable4_Callback(hObject, eventdata, handles)
+            handles = guidata(hObject);
+        end
+    end
+    
     % Output TTL HIGH to Arduino to signal the start of an acquisition and
     % indicate active LEDs
     outputSingleScan(handles.NIDaqSession,[1 handles.LEDsToEnable]);
@@ -1312,6 +1382,41 @@ guidata(hObject,handles);
 % --- Executes on button press in selectLEDsEnable1. -- NOTE: this button
 % is unavailable to click during preview mode (and of course capture mode)
 function selectLEDsEnable1_Callback(hObject, eventdata, handles)
+% If we were just in capture mode with different LEDs selected, then fix
+% this before enabling anything here
+if handles.settingsStruct.justFinishedCap == 1
+    handles.settingsStruct.justFinishedCap = 0; % Important to disable this flag here or else it will go into a never-ending loop
+    if handles.prevLEDsToEnable(1) ~= handles.capLEDsToEnable(1)
+        % Get previous state
+        previousState = get(handles.selectLEDsEnable1,'Value');
+        % Force preview state for this button
+        set(handles.selectLEDsEnable1,'Value',handles.prevLEDsToEnable(1));
+        % Run callback for this LED's button & update handles
+        selectLEDsEnable1_Callback(hObject, eventdata, handles);handles = guidata(hObject);
+        % Reset Value to previous state-so the rest of the callback can do
+        % its thing
+        set(handles.selectLEDsEnable1,'Value',previousState);
+    end
+    if handles.prevLEDsToEnable(2) ~= handles.capLEDsToEnable(2)
+        % Force preview state for this button
+        set(handles.selectLEDsEnable2,'Value',handles.prevLEDsToEnable(2));
+        % Run callback for this LED's button & update handles
+        selectLEDsEnable2_Callback(hObject, eventdata, handles);handles = guidata(hObject);
+    end
+    if handles.prevLEDsToEnable(3) ~= handles.capLEDsToEnable(3)
+        % Force preview state for this button
+        set(handles.selectLEDsEnable3,'Value',handles.prevLEDsToEnable(3));
+        % Run callback for this LED's button & update handles
+        selectLEDsEnable3_Callback(hObject, eventdata, handles);handles = guidata(hObject);
+    end
+    if handles.prevLEDsToEnable(4) ~= handles.capLEDsToEnable(4)
+        % Force preview state for this button
+        set(handles.selectLEDsEnable4,'Value',handles.prevLEDsToEnable(4));
+        % Run callback for this LED's button & update handles
+        selectLEDsEnable4_Callback(hObject, eventdata, handles);handles = guidata(hObject);
+    end
+end
+
 if (sum(handles.LEDsToEnable,2) == 1) && (get(handles.selectLEDsEnable1,'value') == 0)
     disp('Error: You may not disable all LEDs.')
     set(handles.selectLEDsEnable1,'value',1);
@@ -1364,6 +1469,10 @@ prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 handles.settingsStruct.selectLEDsEnable1 = get(handles.selectLEDsEnable1,'value');
 prevLEDsToEnable = handles.LEDsToEnable; % for switching image data around
 handles.LEDsToEnable(1) = handles.settingsStruct.selectLEDsEnable1;
+if handles.settingsStruct.inCapMode == 0
+    handles.settingsStruct.prevLEDsEnable1 = handles.settingsStruct.selectLEDsEnable1;
+    handles.prevLEDsToEnable(1) = handles.settingsStruct.selectLEDsEnable1;
+end
 % Confirm (on command line) the LED change made
 if handles.settingsStruct.selectLEDsEnable1 == 1
     disp([handles.settingsStruct.constLED1CenterWavelength ' LED turned ON.']);
@@ -1582,6 +1691,40 @@ guidata(hObject,handles);
 % --- Executes on button press in selectLEDsEnable2. -- NOTE: this button
 % is unavailable to click during preview mode (and of course capture mode)
 function selectLEDsEnable2_Callback(hObject, eventdata, handles)
+% If we were just in capture mode with different LEDs selected, then fix
+% this before enabling anything here
+if handles.settingsStruct.justFinishedCap == 1
+    handles.settingsStruct.justFinishedCap = 0; % Important to disable this flag here or else it will go into a never-ending loop
+    if handles.prevLEDsToEnable(1) ~= handles.capLEDsToEnable(1)
+        % Force preview state for this button
+        set(handles.selectLEDsEnable1,'Value',handles.prevLEDsToEnable(1));
+        % Run callback for this LED's button & update handles
+        selectLEDsEnable1_Callback(hObject, eventdata, handles);handles = guidata(hObject);
+    end
+    if handles.prevLEDsToEnable(2) ~= handles.capLEDsToEnable(2)
+        % Get previous state
+        previousState = get(handles.selectLEDsEnable2,'Value');
+        % Force preview state for this button
+        set(handles.selectLEDsEnable2,'Value',handles.prevLEDsToEnable(2));
+        % Run callback for this LED's button & update handles
+        selectLEDsEnable2_Callback(hObject, eventdata, handles);handles = guidata(hObject);
+        % Reset Value to previous state-so the rest of the callback can do
+        % its thing
+        set(handles.selectLEDsEnable2,'Value',previousState);
+    end
+    if handles.prevLEDsToEnable(3) ~= handles.capLEDsToEnable(3)
+        % Force preview state for this button
+        set(handles.selectLEDsEnable3,'Value',handles.prevLEDsToEnable(3));
+        % Run callback for this LED's button & update handles
+        selectLEDsEnable3_Callback(hObject, eventdata, handles);handles = guidata(hObject);
+    end
+    if handles.prevLEDsToEnable(4) ~= handles.capLEDsToEnable(4)
+        % Force preview state for this button
+        set(handles.selectLEDsEnable4,'Value',handles.prevLEDsToEnable(4));
+        % Run callback for this LED's button & update handles
+        selectLEDsEnable4_Callback(hObject, eventdata, handles);handles = guidata(hObject);
+    end
+end
 if (sum(handles.LEDsToEnable,2) == 1) && (get(handles.selectLEDsEnable2,'value') == 0)
     disp('Error: You may not disable all LEDs.')
     set(handles.selectLEDsEnable2,'value',1);
@@ -1633,6 +1776,10 @@ prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 handles.settingsStruct.selectLEDsEnable2 = get(handles.selectLEDsEnable2,'value');
 prevLEDsToEnable = handles.LEDsToEnable; % for switching image data around
 handles.LEDsToEnable(2) = handles.settingsStruct.selectLEDsEnable2;
+if handles.settingsStruct.inCapMode == 0
+    handles.settingsStruct.prevLEDsEnable2 = handles.settingsStruct.selectLEDsEnable2;
+    handles.prevLEDsToEnable(2) = handles.settingsStruct.selectLEDsEnable2;
+end
 % Confirm (on command line) the LED change made
 if handles.settingsStruct.selectLEDsEnable2== 1
     disp([handles.settingsStruct.constLED2CenterWavelength ' LED turned ON.']);
@@ -1850,6 +1997,40 @@ guidata(hObject,handles);
 
 % --- Executes on button press in selectLEDsEnable3.
 function selectLEDsEnable3_Callback(hObject, eventdata, handles)
+% If we were just in capture mode with different LEDs selected, then fix
+% this before enabling anything here
+if handles.settingsStruct.justFinishedCap == 1
+    handles.settingsStruct.justFinishedCap = 0; % Important to disable this flag here or else it will go into a never-ending loop
+    if handles.prevLEDsToEnable(1) ~= handles.capLEDsToEnable(1)
+        % Force preview state for this button
+        set(handles.selectLEDsEnable1,'Value',handles.prevLEDsToEnable(1));
+        % Run callback for this LED's button & update handles
+        selectLEDsEnable1_Callback(hObject, eventdata, handles);handles = guidata(hObject);
+    end
+    if handles.prevLEDsToEnable(2) ~= handles.capLEDsToEnable(2)
+        % Force preview state for this button
+        set(handles.selectLEDsEnable2,'Value',handles.prevLEDsToEnable(2));
+        % Run callback for this LED's button & update handles
+        selectLEDsEnable2_Callback(hObject, eventdata, handles);handles = guidata(hObject);
+    end
+    if handles.prevLEDsToEnable(3) ~= handles.capLEDsToEnable(3)
+        % Get previous state
+        previousState = get(handles.selectLEDsEnable3,'Value');
+        % Force preview state for this button
+        set(handles.selectLEDsEnable3,'Value',handles.prevLEDsToEnable(3));
+        % Run callback for this LED's button & update handles
+        selectLEDsEnable3_Callback(hObject, eventdata, handles);handles = guidata(hObject);
+        % Reset Value to previous state-so the rest of the callback can do
+        % its thing
+        set(handles.selectLEDsEnable3,'Value',previousState);
+    end
+    if handles.prevLEDsToEnable(4) ~= handles.capLEDsToEnable(4)
+        % Force preview state for this button
+        set(handles.selectLEDsEnable4,'Value',handles.prevLEDsToEnable(4));
+        % Run callback for this LED's button & update handles
+        selectLEDsEnable4_Callback(hObject, eventdata, handles);handles = guidata(hObject);
+    end
+end
 if (sum(handles.LEDsToEnable,2) == 1) && (get(handles.selectLEDsEnable3,'value') == 0)
     disp('Error: you cannot disable all LEDs.')
     set(handles.selectLEDsEnable3,'value',1);
@@ -1902,6 +2083,10 @@ prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 handles.settingsStruct.selectLEDsEnable3 = get(handles.selectLEDsEnable3,'value');
 prevLEDsToEnable = handles.LEDsToEnable; % for switching image data around
 handles.LEDsToEnable(3) = handles.settingsStruct.selectLEDsEnable3;
+if handles.settingsStruct.inCapMode == 0
+    handles.settingsStruct.prevLEDsEnable3 = handles.settingsStruct.selectLEDsEnable3;
+    handles.prevLEDsToEnable(3) = handles.settingsStruct.selectLEDsEnable3;
+end
 % Confirm (on command line) the LED change made
 if handles.settingsStruct.selectLEDsEnable3 == 1
     disp([handles.settingsStruct.constLED3CenterWavelength ' LED turned ON.']);
@@ -2119,6 +2304,40 @@ guidata(hObject,handles);
 
 % --- Executes on button press in selectLEDsEnable4.
 function selectLEDsEnable4_Callback(hObject, eventdata, handles)
+% If we were just in capture mode with different LEDs selected, then fix
+% this before enabling anything here
+if handles.settingsStruct.justFinishedCap == 1
+    handles.settingsStruct.justFinishedCap = 0; % Important to disable this flag here or else it will go into a never-ending loop
+    if handles.prevLEDsToEnable(1) ~= handles.capLEDsToEnable(1)
+        % Force preview state for this button
+        set(handles.selectLEDsEnable1,'Value',handles.prevLEDsToEnable(1));
+        % Run callback for this LED's button & update handles
+        selectLEDsEnable1_Callback(hObject, eventdata, handles);handles = guidata(hObject);
+    end
+    if handles.prevLEDsToEnable(2) ~= handles.capLEDsToEnable(2)
+        % Force preview state for this button
+        set(handles.selectLEDsEnable2,'Value',handles.prevLEDsToEnable(2));
+        % Run callback for this LED's button & update handles
+        selectLEDsEnable2_Callback(hObject, eventdata, handles);handles = guidata(hObject);
+    end
+    if handles.prevLEDsToEnable(3) ~= handles.capLEDsToEnable(3)
+        % Force preview state for this button
+        set(handles.selectLEDsEnable3,'Value',handles.prevLEDsToEnable(3));
+        % Run callback for this LED's button & update handles
+        selectLEDsEnable3_Callback(hObject, eventdata, handles);handles = guidata(hObject);
+    end
+    if handles.prevLEDsToEnable(4) ~= handles.capLEDsToEnable(4)
+        % Get previous state
+        previousState = get(handles.selectLEDsEnable4,'Value');
+        % Force preview state for this button
+        set(handles.selectLEDsEnable4,'Value',handles.prevLEDsToEnable(4));
+        % Run callback for this LED's button & update handles
+        selectLEDsEnable4_Callback(hObject, eventdata, handles);handles = guidata(hObject);
+        % Reset Value to previous state-so the rest of the callback can do
+        % its thing
+        set(handles.selectLEDsEnable4,'Value',previousState);
+    end
+end
 % Determine whether <1 LED is trying to be set
 if (sum(handles.LEDsToEnable,2) == 1) && (get(handles.selectLEDsEnable4,'value') == 0)
     disp('Error: you cannot disable all LEDs.')
@@ -2171,6 +2390,10 @@ prevQuad = handles.settingsStruct.selectLEDsQuadViewOn;
 handles.settingsStruct.selectLEDsEnable4 = get(handles.selectLEDsEnable4,'value');
 prevLEDsToEnable = handles.LEDsToEnable; % for switching image data around
 handles.LEDsToEnable(4) = handles.settingsStruct.selectLEDsEnable4;
+if handles.settingsStruct.inCapMode == 0
+    handles.settingsStruct.prevLEDsEnable4 = handles.settingsStruct.selectLEDsEnable4;
+    handles.prevLEDsToEnable(4) = handles.settingsStruct.selectLEDsEnable4;
+end
 % Confirm (on command line) the LED change made
 if handles.settingsStruct.selectLEDsEnable4 == 1
     disp([handles.settingsStruct.constLED4CenterWavelength ' LED turned ON.']);
@@ -2496,6 +2719,32 @@ set(handles.LEDQuad4WhiteValueIndicator,'String',[ num2str(round(handles.setting
 guidata(hObject,handles);
 
 
+% CAPTURE LEDs callbacks
+
+% --- Executes on button press in capLEDsEnable1.
+function capLEDsEnable1_Callback(hObject, eventdata, handles)
+handles.settingsStruct.capLEDsEnable1 = get(handles.capLEDsEnable1,'Value');
+handles.capLEDsToEnable(1) = handles.settingsStruct.capLEDsEnable1;
+guidata(hObject,handles);
+
+% --- Executes on button press in capLEDsEnable2.
+function capLEDsEnable2_Callback(hObject, eventdata, handles)
+handles.settingsStruct.capLEDsEnable2 = get(handles.capLEDsEnable2,'Value');
+handles.capLEDsToEnable(2) = handles.settingsStruct.capLEDsEnable2;
+guidata(hObject,handles);
+
+% --- Executes on button press in capLEDsEnable3.
+function capLEDsEnable3_Callback(hObject, eventdata, handles)
+handles.settingsStruct.capLEDsEnable3 = get(handles.capLEDsEnable3,'Value');
+handles.capLEDsToEnable(3) = handles.settingsStruct.capLEDsEnable3;
+guidata(hObject,handles);
+
+% --- Executes on button press in capLEDsEnable4.
+function capLEDsEnable4_Callback(hObject, eventdata, handles)
+handles.settingsStruct.capLEDsEnable4 = get(handles.capLEDsEnable4,'Value');
+handles.capLEDsToEnable(4) = handles.settingsStruct.capLEDsEnable4;
+guidata(hObject,handles);
+
 
 % CLOSING FUNCTION - CLEANS UP CONNECTIONS (very important to get this
 % right)
@@ -2696,3 +2945,17 @@ set(handles.LEDQuad4Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad4,handles
 guidata(hObject,handles);
 
 
+
+
+
+
+% --- Executes on key press with focus on two_color_image_GUI and none of its controls.
+function two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to two_color_image_GUI (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+%disp(eventdata.Modifier)

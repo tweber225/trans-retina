@@ -16,6 +16,8 @@ settingsStruct.capNumFrames = 1; % actually it's the NUMBER of frame SETS (pairs
 settingsStruct.capWarningFlag = 0; % needs to be set to 0 always
 settingsStruct.capAborted = 0; % needs to be set to 0 always
 settingsStruct.capLockSettings = 0; % To lock capture exposure time, bin size, pix clock, gain to those settings used in Preview Mode
+settingsStruct.justFinishedCap = 0; % Flag to fix a bug/situation when user changes preview mode LEDs choices after a capture has completed, but before preview mode has started
+settingsStruct.inCapMode = 0; % another (inelegant) fix to a bug with the capture mode LED choices 
 
 % COMMON SETTINGS
 settingsStruct.commIRMode = 1;
@@ -26,11 +28,19 @@ settingsStruct.commRTHistogram = 1;
 settingsStruct.commStatHistInCenter = 1;
 
 % SELECT LEDS SETTINGS
-settingsStruct.selectLEDsEnable1 = 0; % MAKE SURE THAT AT LEAST ONE LED IS ENABLED BEFORE STARTING
-settingsStruct.selectLEDsEnable2 = 0;
-settingsStruct.selectLEDsEnable3 = 0;
-settingsStruct.selectLEDsEnable4 = 0;
 settingsStruct.selectLEDsShow = 1; % LED channel to show on big image axis, only important if >2 LEDs are selected (Quad-channel view mode is automatically turned on)
+settingsStruct.prevLEDsEnable1 = 1; % MAKE SURE THAT AT LEAST ONE LED IS ENABLED BEFORE STARTING
+settingsStruct.prevLEDsEnable2 = 0;
+settingsStruct.prevLEDsEnable3 = 0;
+settingsStruct.prevLEDsEnable4 = 0;
+settingsStruct.selectLEDsEnable1 = settingsStruct.prevLEDsEnable1; % These are the "current" LEDs enabled, presumably the first action will be preview, so copy preview-enabled LEDs
+settingsStruct.selectLEDsEnable2 = settingsStruct.prevLEDsEnable2;
+settingsStruct.selectLEDsEnable3 = settingsStruct.prevLEDsEnable3;
+settingsStruct.selectLEDsEnable4 = settingsStruct.prevLEDsEnable4;
+settingsStruct.capLEDsEnable1 = 1;
+settingsStruct.capLEDsEnable2 = 1;
+settingsStruct.capLEDsEnable3 = 1;
+settingsStruct.capLEDsEnable4 = 1;
 
 % SAVE SETTINGS
 settingsStruct.saveBaseName = 'subject001';

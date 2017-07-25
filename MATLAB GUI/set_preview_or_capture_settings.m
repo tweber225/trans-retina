@@ -46,6 +46,7 @@ if strcmp(settingType,'preview')
     set(handles.selectLEDsEnable3,'Enable','off');
     set(handles.selectLEDsEnable4,'Enable','off');
     
+    
 elseif strcmp(settingType,'capture')
     
     % CAPTURE SETTINGS
@@ -100,6 +101,10 @@ elseif strcmp(settingType,'capture')
     set(handles.selectLEDsEnable2,'Enable','off');
     set(handles.selectLEDsEnable3,'Enable','off');
     set(handles.selectLEDsEnable4,'Enable','off');
+    set(handles.capLEDsEnable1,'Enable','off');
+    set(handles.capLEDsEnable2,'Enable','off');
+    set(handles.capLEDsEnable3,'Enable','off');
+    set(handles.capLEDsEnable4,'Enable','off');
     set(handles.selectLEDsShow,'Enable','off');
 
 

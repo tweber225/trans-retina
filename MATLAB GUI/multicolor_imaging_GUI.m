@@ -56,6 +56,7 @@ guidata(hObject, handles);
 % START TDW EDIT
 % Load the default program settings
 handles.settingsStruct = load_default_program_settings;
+handles.inputExpNumbers = '-'; %To track numpad key strokes
 
 % Make digital channels to send enable signal to Arduino with correct
 % configuration of LEDs
@@ -3104,8 +3105,29 @@ switch eventdata.Key
                 end
             end
         end
-    % Preview Exposure Time
-    % Capture Exposure Time
+    % Preview & Capture Exposure Time
+    case {'numpad0','numpad1','numpad2','numpad3','numpad4','numpad5','numpad6','numpad7','numpad8','numpad9'}
+        numNumpad = eventdata.Key(7);
+        if strcmp(handles.inputExpNumbers,'-')
+            handles.inputExpNumbers = numNumpad;
+            set(handles.prevExpTime,'String', handles.inputExpNumbers);
+        else
+            handles.inputExpNumbers = [handles.inputExpNumbers numNumpad];
+            set(handles.prevExpTime,'String', handles.inputExpNumbers);
+        end
+        guidata(hObject,handles);
+    case 'return'
+        if ~strcmp(handles.inputExpNumbers,'-') % if it's not unused
+            % take the temp number string, convert to double
+            expNum = str2double(handles.inputExpNumbers);
+            if expNum <1, expNum = 1; end
+            if expNum > handles.settingsStruct.constMaxExpTimeMs, expNum = handles.settingsStruct.constMaxExpTimeMs; end
+            % set the new exposure time, and run callback
+            set(handles.prevExpTime,'String',num2str(expNum));
+            handles.inputExpNumbers = '-'; % blanking the key tracker variable for next use
+            prevExpTime_Callback(hObject, eventdata, handles)
+        end
+            
 end
 %disp(eventdata.Key)
 

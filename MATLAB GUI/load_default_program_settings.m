@@ -61,6 +61,7 @@ settingsStruct.TMTimestampMode = 'BinaryAndAscii'; %  options: 'No Stamp', 'Bina
 
 % CONSTANTS
 settingsStruct.constCameraBits = 14;
+settingsStruct.constMaxExpTimeMs = 3000; % 3 seconds
 settingsStruct.constNumPixWidth = 1392;
 settingsStruct.constNumPixHeight = 1040;
 settingsStruct.constLED1CenterWavelength = '850nm';

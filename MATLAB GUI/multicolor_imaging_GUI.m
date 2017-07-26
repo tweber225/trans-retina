@@ -2526,11 +2526,11 @@ if handles.settingsStruct.selectLEDsQuadViewOn == 1
             handles.LEDQuad4WhiteValueIndicator.Visible = 'on';
             set(handles.imgHandLEDQuad4,'CData',ones(size(handles.imageMask,1),'uint16')); % show blank frame
             blankLims = [0, (2^(handles.settingsStruct.constCameraBits)-1)];
-            set(handles.LEDQuad1Ax,'CLim',blankLims);
-            handles.settingsStruct.blackLevelLEDQuad1= blankLims(1);
-            handles.settingsStruct.whiteLevelLEDQuad1 = blankLims(2);
-            set(handles.LEDQuad1BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad1))]);
-            set(handles.LEDQuad1WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad1))]);
+            set(handles.LEDQuad4Ax,'CLim',blankLims);
+            handles.settingsStruct.blackLevelLEDQuad4= blankLims(1);
+            handles.settingsStruct.whiteLevelLEDQuad4 = blankLims(2);
+            set(handles.LEDQuad4BlackValueIndicator,'String',[ num2str(round(handles.settingsStruct.blackLevelLEDQuad4))]);
+            set(handles.LEDQuad4WhiteValueIndicator,'String',[ num2str(round(handles.settingsStruct.whiteLevelLEDQuad4))]);
         else
             handles.imgHandLEDQuad4.Visible = 'off';
             handles.LEDQuad4DisplayedValues.Visible = 'off';

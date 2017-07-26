@@ -39,12 +39,13 @@ elseif strcmp(settingType,'capture')
     set(handles.selectLEDsEnable2,'Enable','on');
     set(handles.selectLEDsEnable3,'Enable','on');
     set(handles.selectLEDsEnable4,'Enable','on');
-    set(handles.capLEDsEnable1,'Enable','on');
-    set(handles.capLEDsEnable2,'Enable','on');
-    set(handles.capLEDsEnable3,'Enable','on');
-    set(handles.capLEDsEnable4,'Enable','on');
-    set(handles.selectLEDsShow,'Enable','on');
-    
+    if handles.settingsStruct.selectLEDsLockCap == 0
+        set(handles.capLEDsEnable1,'Enable','on');
+        set(handles.capLEDsEnable2,'Enable','on');
+        set(handles.capLEDsEnable3,'Enable','on');
+        set(handles.capLEDsEnable4,'Enable','on');
+        set(handles.selectLEDsShow,'Enable','on');
+    end
     
     set(handles.capStartButton,'Value',0);
     set(handles.capStartButton,'String','Start Capture');

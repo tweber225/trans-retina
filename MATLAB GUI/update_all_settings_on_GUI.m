@@ -13,6 +13,7 @@ set(handles.capBinSize,'Value',handles.settingsStruct.capBinSize);
 set(handles.capPixClock,'Value',handles.settingsStruct.capPixClock);
 set(handles.capGain,'Value',handles.settingsStruct.capGain);
 set(handles.capNumFrames,'String',handles.settingsStruct.capNumFrames);
+set(handles.capLockSettings,'Value',handles.settingsStruct.capLockSettings);
 
 % COMMON SETTINGS
 set(handles.commIRMode,'Value',handles.settingsStruct.commIRMode);
@@ -60,6 +61,7 @@ if sum(handles.LEDsToEnable,2) == 0
     handles.LEDsToEnable(1) = 1;
     handles.settingsStruct.selectLEDsEnable1 = 1;
 end
+set(handles.selectLEDsLockCap,'Value',handles.settingsStruct.selectLEDsLockCap);
 
 % SAVE SETTINGS
 set(handles.saveBaseName,'String',handles.settingsStruct.saveBaseName);

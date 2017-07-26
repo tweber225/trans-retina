@@ -15,7 +15,7 @@ settingsStruct.capGain = 1; % Note: 1=1.00, 2=0.67ADU/e-
 settingsStruct.capNumFrames = 1; % actually it's the NUMBER of frame SETS (pairs, trios, etc.)
 settingsStruct.capWarningFlag = 0; % needs to be set to 0 always
 settingsStruct.capAborted = 0; % needs to be set to 0 always
-settingsStruct.capLockSettings = 0; % To lock capture exposure time, bin size, pix clock, gain to those settings used in Preview Mode
+settingsStruct.capLockSettings = 1; % To lock capture exposure time, bin size, pix clock, gain to those settings used in Preview Mode
 settingsStruct.justFinishedCap = 0; % Flag to fix a bug/situation when user changes preview mode LEDs choices after a capture has completed, but before preview mode has started
 settingsStruct.inCapMode = 0; % another (inelegant) fix to a bug with the capture mode LED choices 
 
@@ -41,6 +41,7 @@ settingsStruct.capLEDsEnable1 = 1;
 settingsStruct.capLEDsEnable2 = 1;
 settingsStruct.capLEDsEnable3 = 1;
 settingsStruct.capLEDsEnable4 = 1;
+settingsStruct.selectLEDsLockCap = 1;
 
 % SAVE SETTINGS
 settingsStruct.saveBaseName = 'subject001';

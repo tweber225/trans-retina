@@ -78,8 +78,6 @@ handles.vidObj.LoggingMode = 'memory';
 
 % Update GUI settings, set up default camera parameters
 handles = update_all_settings_on_GUI(handles);
-selectLEDsLockCap_Callback(hObject, eventdata, handles); handles = guidata(hObject); % run callback for lock capture LED choices
-capLockSettings_Callback(hObject, eventdata, handles); handles = guidata(hObject); % run callback for lock capture LED choices
 handles.srcObj = set_all_camera_settings(handles.srcObj,handles.settingsStruct);
 
 % Update Handles for GUI data tracking
@@ -1474,9 +1472,8 @@ if handles.settingsStruct.inCapMode == 0
     % If the capture mode LED choices are locked to preview mode, then
     % switch capture mode settings, gui values
     if handles.settingsStruct.selectLEDsLockCap == 1
-        handles.settingsStruct.capLEDsEnable1 = handles.settingsStruct.selectLEDsEnable1;
-        handles.capLEDsToEnable(1) = handles.prevLEDsToEnable(1);
-        set(handles.capLEDsEnable1,'Value',handles.settingsStruct.capLEDsEnable1);
+        set(handles.capL
+        
     end
 end
 % Confirm (on command line) the LED change made
@@ -1785,13 +1782,6 @@ handles.LEDsToEnable(2) = handles.settingsStruct.selectLEDsEnable2;
 if handles.settingsStruct.inCapMode == 0
     handles.settingsStruct.prevLEDsEnable2 = handles.settingsStruct.selectLEDsEnable2;
     handles.prevLEDsToEnable(2) = handles.settingsStruct.selectLEDsEnable2;
-    % If the capture mode LED choices are locked to preview mode, then
-    % switch capture mode settings, gui values
-    if handles.settingsStruct.selectLEDsLockCap == 1
-        handles.settingsStruct.capLEDsEnable2 = handles.settingsStruct.selectLEDsEnable2;
-        handles.capLEDsToEnable(2) = handles.prevLEDsToEnable(2);
-        set(handles.capLEDsEnable2,'Value',handles.settingsStruct.capLEDsEnable2);
-    end
 end
 % Confirm (on command line) the LED change made
 if handles.settingsStruct.selectLEDsEnable2== 1
@@ -2099,13 +2089,6 @@ handles.LEDsToEnable(3) = handles.settingsStruct.selectLEDsEnable3;
 if handles.settingsStruct.inCapMode == 0
     handles.settingsStruct.prevLEDsEnable3 = handles.settingsStruct.selectLEDsEnable3;
     handles.prevLEDsToEnable(3) = handles.settingsStruct.selectLEDsEnable3;
-    % If the capture mode LED choices are locked to preview mode, then
-    % switch capture mode settings, gui values
-    if handles.settingsStruct.selectLEDsLockCap == 1
-        handles.settingsStruct.capLEDsEnable3 = handles.settingsStruct.selectLEDsEnable3;
-        handles.capLEDsToEnable(3) = handles.prevLEDsToEnable(3);
-        set(handles.capLEDsEnable3,'Value',handles.settingsStruct.capLEDsEnable3);
-    end
 end
 % Confirm (on command line) the LED change made
 if handles.settingsStruct.selectLEDsEnable3 == 1
@@ -2413,13 +2396,6 @@ handles.LEDsToEnable(4) = handles.settingsStruct.selectLEDsEnable4;
 if handles.settingsStruct.inCapMode == 0
     handles.settingsStruct.prevLEDsEnable4 = handles.settingsStruct.selectLEDsEnable4;
     handles.prevLEDsToEnable(4) = handles.settingsStruct.selectLEDsEnable4;
-    % If the capture mode LED choices are locked to preview mode, then
-    % switch capture mode settings, gui values
-    if handles.settingsStruct.selectLEDsLockCap == 1
-        handles.settingsStruct.capLEDsEnable4 = handles.settingsStruct.selectLEDsEnable4;
-        handles.capLEDsToEnable(4) = handles.prevLEDsToEnable(4);
-        set(handles.capLEDsEnable4,'Value',handles.settingsStruct.capLEDsEnable4);
-    end
 end
 % Confirm (on command line) the LED change made
 if handles.settingsStruct.selectLEDsEnable4 == 1

@@ -2973,9 +2973,6 @@ guidata(hObject,handles);
 
 
 
-
-
-
 % --- Executes on key press with focus on two_color_image_GUI and none of its controls.
 function two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
 % hObject    handle to two_color_image_GUI (see GCBO)
@@ -2985,8 +2982,132 @@ function two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
 
-%disp(eventdata.Modifier)
-
+switch eventdata.Key
+    case 'p' % Preview button
+        if get(handles.prevStartButton,'Value') == 0
+            set(handles.prevStartButton,'Value',1);
+            prevStartButton_Callback(hObject, eventdata, handles);
+        else
+            set(handles.prevStartButton,'Value',0);
+            prevStartButton_Callback(hObject, eventdata, handles);
+        end
+    case 'c' % Capture button
+        if get(handles.capStartButton,'Value') == 0
+            set(handles.capStartButton,'Value',1);
+            capStartButton_Callback(hObject, eventdata, handles);
+        else
+            set(handles.capStartButton,'Value',0);
+            capStartButton_Callback(hObject, eventdata, handles);
+        end
+    % Preview & capture LED channels 1-4
+    case '1'
+        if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
+            if get(handles.capLEDsEnable1,'Value') == 0
+                if strcmp(handles.capLEDsEnable1.Enable,'on')
+                    set(handles.capLEDsEnable1,'Value',1)
+                    capLEDsEnable1_Callback(hObject, eventdata, handles);
+                end
+            else
+                if strcmp(handles.capLEDsEnable1.Enable,'on')
+                    set(handles.capLEDsEnable1,'Value',0)
+                    capLEDsEnable1_Callback(hObject, eventdata, handles);
+                end
+            end
+        else
+            if get(handles.selectLEDsEnable1,'Value') == 0
+                if strcmp(handles.selectLEDsEnable1.Enable,'on')
+                    set(handles.selectLEDsEnable1,'Value',1);
+                    selectLEDsEnable1_Callback(hObject, eventdata, handles);
+                end
+            else
+                if strcmp(handles.selectLEDsEnable1.Enable,'on')
+                    set(handles.selectLEDsEnable1,'Value',0)
+                    selectLEDsEnable1_Callback(hObject, eventdata, handles);
+                end
+            end
+        end
+    case '2'
+        if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
+            if get(handles.capLEDsEnable2,'Value') == 0
+                if strcmp(handles.capLEDsEnable2.Enable,'on')
+                    set(handles.capLEDsEnable2,'Value',1)
+                    capLEDsEnable2_Callback(hObject, eventdata, handles);
+                end
+            else
+                if strcmp(handles.capLEDsEnable2.Enable,'on')
+                    set(handles.capLEDsEnable2,'Value',0)
+                    capLEDsEnable2_Callback(hObject, eventdata, handles);
+                end
+            end
+        else
+            if get(handles.selectLEDsEnable2,'Value') == 0
+                if strcmp(handles.selectLEDsEnable2.Enable,'on')
+                    set(handles.selectLEDsEnable2,'Value',1);
+                    selectLEDsEnable2_Callback(hObject, eventdata, handles);
+                end
+            else
+                if strcmp(handles.selectLEDsEnable2.Enable,'on')
+                    set(handles.selectLEDsEnable2,'Value',0)
+                    selectLEDsEnable2_Callback(hObject, eventdata, handles);
+                end
+            end
+        end
+    case '3'
+        if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
+            if get(handles.capLEDsEnable3,'Value') == 0
+                if strcmp(handles.capLEDsEnable3.Enable,'on')
+                    set(handles.capLEDsEnable3,'Value',1)
+                    capLEDsEnable3_Callback(hObject, eventdata, handles);
+                end
+            else
+                if strcmp(handles.capLEDsEnable3.Enable,'on')
+                    set(handles.capLEDsEnable3,'Value',0)
+                    capLEDsEnable3_Callback(hObject, eventdata, handles);
+                end
+            end
+        else
+            if get(handles.selectLEDsEnable3,'Value') == 0
+                if strcmp(handles.selectLEDsEnable3.Enable,'on')
+                    set(handles.selectLEDsEnable3,'Value',1);
+                    selectLEDsEnable3_Callback(hObject, eventdata, handles);
+                end
+            else
+                if strcmp(handles.selectLEDsEnable3.Enable,'on')
+                    set(handles.selectLEDsEnable3,'Value',0)
+                    selectLEDsEnable3_Callback(hObject, eventdata, handles);
+                end
+            end
+        end
+    case '4'
+        if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
+            if get(handles.capLEDsEnable4,'Value') == 0
+                if strcmp(handles.capLEDsEnable4.Enable,'on')
+                    set(handles.capLEDsEnable4,'Value',1)
+                    capLEDsEnable4_Callback(hObject, eventdata, handles);
+                end
+            else
+                if strcmp(handles.capLEDsEnable4.Enable,'on')
+                    set(handles.capLEDsEnable4,'Value',0')
+                    capLEDsEnable4_Callback(hObject, eventdata, handles);
+                end
+            end
+        else
+            if get(handles.selectLEDsEnable4,'Value') == 0
+                if strcmp(handles.selectLEDsEnable4.Enable,'on')
+                    set(handles.selectLEDsEnable4,'Value',1);
+                    selectLEDsEnable4_Callback(hObject, eventdata, handles);
+                end
+            else
+                if strcmp(handles.selectLEDsEnable4.Enable,'on')
+                    set(handles.selectLEDsEnable4,'Value',0)
+                    selectLEDsEnable4_Callback(hObject, eventdata, handles);
+                end
+            end
+        end
+    % Preview Exposure Time
+    % Capture Exposure Time
+end
+%disp(eventdata.Key)
 
 % --- Executes on button press in selectLEDsLockCap.
 function selectLEDsLockCap_Callback(hObject, eventdata, handles)
@@ -3016,9 +3137,5 @@ else
     set(handles.capLEDsEnable4,'Enable','on');
 end
 guidata(hObject,handles);
-
-
-
-
 
 

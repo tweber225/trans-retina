@@ -78,6 +78,8 @@ handles.vidObj.LoggingMode = 'memory';
 
 % Update GUI settings, set up default camera parameters
 handles = update_all_settings_on_GUI(handles);
+selectLEDsLockCap_Callback(hObject, eventdata, handles); handles = guidata(hObject); % run callback for lock capture LED choices
+capLockSettings_Callback(hObject, eventdata, handles); handles = guidata(hObject); % run callback for lock capture LED choices
 handles.srcObj = set_all_camera_settings(handles.srcObj,handles.settingsStruct);
 
 % Update Handles for GUI data tracking
@@ -1472,8 +1474,9 @@ if handles.settingsStruct.inCapMode == 0
     % If the capture mode LED choices are locked to preview mode, then
     % switch capture mode settings, gui values
     if handles.settingsStruct.selectLEDsLockCap == 1
-        set(handles.capL
-        
+        handles.settingsStruct.capLEDsEnable1 = handles.settingsStruct.selectLEDsEnable1;
+        handles.capLEDsToEnable(1) = handles.prevLEDsToEnable(1);
+        set(handles.capLEDsEnable1,'Value',handles.settingsStruct.capLEDsEnable1);
     end
 end
 % Confirm (on command line) the LED change made
@@ -1782,6 +1785,13 @@ handles.LEDsToEnable(2) = handles.settingsStruct.selectLEDsEnable2;
 if handles.settingsStruct.inCapMode == 0
     handles.settingsStruct.prevLEDsEnable2 = handles.settingsStruct.selectLEDsEnable2;
     handles.prevLEDsToEnable(2) = handles.settingsStruct.selectLEDsEnable2;
+    % If the capture mode LED choices are locked to preview mode, then
+    % switch capture mode settings, gui values
+    if handles.settingsStruct.selectLEDsLockCap == 1
+        handles.settingsStruct.capLEDsEnable2 = handles.settingsStruct.selectLEDsEnable2;
+        handles.capLEDsToEnable(2) = handles.prevLEDsToEnable(2);
+        set(handles.capLEDsEnable2,'Value',handles.settingsStruct.capLEDsEnable2);
+    end
 end
 % Confirm (on command line) the LED change made
 if handles.settingsStruct.selectLEDsEnable2== 1
@@ -2089,6 +2099,13 @@ handles.LEDsToEnable(3) = handles.settingsStruct.selectLEDsEnable3;
 if handles.settingsStruct.inCapMode == 0
     handles.settingsStruct.prevLEDsEnable3 = handles.settingsStruct.selectLEDsEnable3;
     handles.prevLEDsToEnable(3) = handles.settingsStruct.selectLEDsEnable3;
+    % If the capture mode LED choices are locked to preview mode, then
+    % switch capture mode settings, gui values
+    if handles.settingsStruct.selectLEDsLockCap == 1
+        handles.settingsStruct.capLEDsEnable3 = handles.settingsStruct.selectLEDsEnable3;
+        handles.capLEDsToEnable(3) = handles.prevLEDsToEnable(3);
+        set(handles.capLEDsEnable3,'Value',handles.settingsStruct.capLEDsEnable3);
+    end
 end
 % Confirm (on command line) the LED change made
 if handles.settingsStruct.selectLEDsEnable3 == 1
@@ -2396,6 +2413,13 @@ handles.LEDsToEnable(4) = handles.settingsStruct.selectLEDsEnable4;
 if handles.settingsStruct.inCapMode == 0
     handles.settingsStruct.prevLEDsEnable4 = handles.settingsStruct.selectLEDsEnable4;
     handles.prevLEDsToEnable(4) = handles.settingsStruct.selectLEDsEnable4;
+    % If the capture mode LED choices are locked to preview mode, then
+    % switch capture mode settings, gui values
+    if handles.settingsStruct.selectLEDsLockCap == 1
+        handles.settingsStruct.capLEDsEnable4 = handles.settingsStruct.selectLEDsEnable4;
+        handles.capLEDsToEnable(4) = handles.prevLEDsToEnable(4);
+        set(handles.capLEDsEnable4,'Value',handles.settingsStruct.capLEDsEnable4);
+    end
 end
 % Confirm (on command line) the LED change made
 if handles.settingsStruct.selectLEDsEnable4 == 1
@@ -2949,9 +2973,6 @@ guidata(hObject,handles);
 
 
 
-
-
-
 % --- Executes on key press with focus on two_color_image_GUI and none of its controls.
 function two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
 % hObject    handle to two_color_image_GUI (see GCBO)
@@ -2961,8 +2982,105 @@ function two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
 
-%disp(eventdata.Modifier)
-
+switch eventdata.Key
+    case 'p' % Preview button
+        if get(handles.prevStartButton,'Value') == 0
+            set(handles.prevStartButton,'Value',1);
+            prevStartButton_Callback(hObject, eventdata, handles);
+        else
+            set(handles.prevStartButton,'Value',0);
+            prevStartButton_Callback(hObject, eventdata, handles);
+        end
+    case 'c' % Capture button
+        if get(handles.capStartButton,'Value') == 0
+            set(handles.capStartButton,'Value',1);
+            capStartButton_Callback(hObject, eventdata, handles);
+        else
+            set(handles.capStartButton,'Value',0);
+            capStartButton_Callback(hObject, eventdata, handles);
+        end
+    % Preview & capture LED channels 1-4
+    case '1'
+        if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
+            if get(handles.capLEDsEnable1,'Value') == 0
+                if strcmp(handles.capLEDsEnable1.Enable,'on')
+                    set(handles.capLEDsEnable1,'Value',1)
+                    capLEDsEnable1_Callback(hObject, eventdata, handles);
+                end
+            else
+                if strcmp(handles.capLEDsEnable1.Enable,'on')
+                    set(handles.capLEDsEnable1,'Value',0)
+                    capLEDsEnable1_Callback(hObject, eventdata, handles);
+                end
+            end
+        else
+            if get(handles.selectLEDsEnable1,'Value') == 0
+                set(handles.selectLEDsEnable1,'Value',1);
+                selectLEDsEnable1_Callback(hObject, eventdata, handles);
+            else
+                set(handles.selectLEDsEnable1,'Value',0)
+                selectLEDsEnable1_Callback(hObject, eventdata, handles);
+            end
+        end
+    case '2'
+        if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
+            if get(handles.capLEDsEnable2,'Value') == 0
+                set(handles.capLEDsEnable2,'Value',1)
+                capLEDsEnable2_Callback(hObject, eventdata, handles);
+            else
+                set(handles.capLEDsEnable2,'Value',0)
+                capLEDsEnable2_Callback(hObject, eventdata, handles);
+            end
+        else
+            if get(handles.selectLEDsEnable2,'Value') == 0
+                set(handles.selectLEDsEnable2,'Value',1);
+                selectLEDsEnable2_Callback(hObject, eventdata, handles);
+            else
+                set(handles.selectLEDsEnable2,'Value',0)
+                selectLEDsEnable2_Callback(hObject, eventdata, handles);
+            end
+        end
+    case '3'
+        if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
+            if get(handles.capLEDsEnable3,'Value') == 0
+                set(handles.capLEDsEnable3,'Value',1)
+                capLEDsEnable3_Callback(hObject, eventdata, handles);
+            else
+                set(handles.capLEDsEnable3,'Value',0)
+                capLEDsEnable3_Callback(hObject, eventdata, handles);
+            end
+        else
+            if get(handles.selectLEDsEnable3,'Value') == 0
+                set(handles.selectLEDsEnable3,'Value',1);
+                selectLEDsEnable3_Callback(hObject, eventdata, handles);
+            else
+                set(handles.selectLEDsEnable3,'Value',0)
+                selectLEDsEnable3_Callback(hObject, eventdata, handles);
+            end
+        end
+    case '4'
+        if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
+            if get(handles.capLEDsEnable4,'Value') == 0
+                set(handles.capLEDsEnable4,'Value',1)
+                capLEDsEnable4_Callback(hObject, eventdata, handles);
+            else
+                set(handles.capLEDsEnable4,'Value',0')
+                capLEDsEnable4_Callback(hObject, eventdata, handles);
+            end
+        else
+            if get(handles.selectLEDsEnable4,'Value') == 0
+                set(handles.selectLEDsEnable4,'Value',1);
+                selectLEDsEnable4_Callback(hObject, eventdata, handles);
+            else
+                set(handles.selectLEDsEnable4,'Value',0)
+                selectLEDsEnable4_Callback(hObject, eventdata, handles);
+            end
+        end
+    % Preview Exposure Time
+    % Capture Exposure Time
+end
+%disp(eventdata.Key)
+%guidata(hObject,handles);
 
 % --- Executes on button press in selectLEDsLockCap.
 function selectLEDsLockCap_Callback(hObject, eventdata, handles)
@@ -2992,9 +3110,5 @@ else
     set(handles.capLEDsEnable4,'Enable','on');
 end
 guidata(hObject,handles);
-
-
-
-
 
 

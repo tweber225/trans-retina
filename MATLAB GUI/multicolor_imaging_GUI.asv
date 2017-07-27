@@ -22,7 +22,7 @@ function varargout = multicolor_imaging_GUI(varargin)
 
 % Edit the above text to modify the response to help multicolor_imaging_GUI
 
-% Last Modified by GUIDE v2.5 26-Jul-2017 11:03:02
+% Last Modified by GUIDE v2.5 27-Jul-2017 14:04:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,6 +57,8 @@ guidata(hObject, handles);
 % Load the default program settings
 handles.settingsStruct = load_default_program_settings;
 handles.inputExpNumbers = '-'; %To track numpad key strokes
+handles.capInputExpNumbers = '-';
+handles.shiftHit = 0; % tracks whether the shift key has been hit
 
 % Make digital channels to send enable signal to Arduino with correct
 % configuration of LEDs
@@ -2973,6 +2975,35 @@ set(handles.LEDQuad4Ax,'CLim',[handles.settingsStruct.blackLevelLEDQuad4,handles
 guidata(hObject,handles);
 
 
+% --- Executes on button press in selectLEDsLockCap.
+function selectLEDsLockCap_Callback(hObject, eventdata, handles)
+handles.settingsStruct.selectLEDsLockCap = get(handles.selectLEDsLockCap,'Value');
+if handles.settingsStruct.selectLEDsLockCap == 1
+    % if pressed on, then unenable all the capture mode selections
+    set(handles.capLEDsEnable1,'Enable','off');
+    set(handles.capLEDsEnable2,'Enable','off');
+    set(handles.capLEDsEnable3,'Enable','off');
+    set(handles.capLEDsEnable4,'Enable','off');
+    % also copy all the preview mode choices to capture mode's settings,
+    % which will be un-enabled
+    handles.settingsStruct.capLEDsEnable1 = handles.settingsStruct.prevLEDsEnable1;
+    handles.settingsStruct.capLEDsEnable2 = handles.settingsStruct.prevLEDsEnable2;
+    handles.settingsStruct.capLEDsEnable3 = handles.settingsStruct.prevLEDsEnable3;
+    handles.settingsStruct.capLEDsEnable4 = handles.settingsStruct.prevLEDsEnable4;
+    handles.capLEDsToEnable = handles.prevLEDsToEnable;
+    set(handles.capLEDsEnable1,'Value',handles.settingsStruct.capLEDsEnable1);
+    set(handles.capLEDsEnable2,'Value',handles.settingsStruct.capLEDsEnable2);
+    set(handles.capLEDsEnable3,'Value',handles.settingsStruct.capLEDsEnable3);
+    set(handles.capLEDsEnable4,'Value',handles.settingsStruct.capLEDsEnable4);
+else 
+    % if pressed off, then enable all the capture mode selections
+    set(handles.capLEDsEnable1,'Enable','on');
+    set(handles.capLEDsEnable2,'Enable','on');
+    set(handles.capLEDsEnable3,'Enable','on');
+    set(handles.capLEDsEnable4,'Enable','on');
+end
+guidata(hObject,handles);
+
 
 % --- Executes on key press with focus on two_color_image_GUI and none of its controls.
 function two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
@@ -3105,55 +3136,217 @@ switch eventdata.Key
                 end
             end
         end
+    case 'shift'
+        handles.shiftHit = 1;
+        guidata(hObject,handles);
     % Preview & Capture Exposure Time
     case {'numpad0','numpad1','numpad2','numpad3','numpad4','numpad5','numpad6','numpad7','numpad8','numpad9'}
         numNumpad = eventdata.Key(7);
-        if strcmp(handles.inputExpNumbers,'-')
-            handles.inputExpNumbers = numNumpad;
-            set(handles.prevExpTime,'String', handles.inputExpNumbers);
+        if handles.shiftHit == 1
+            if strcmp(handles.capInputExpNumbers,'-')
+                if strcmp(get(handles.capExpTime,'Enable'),'on')
+                    handles.capInputExpNumbers = numNumpad;
+                    set(handles.capExpTime,'String', handles.capInputExpNumbers);
+                end
+            else
+                if strcmp(get(handles.capExpTime,'Enable'),'on')
+                    handles.capInputExpNumbers = [handles.capInputExpNumbers numNumpad];
+                    set(handles.capExpTime,'String', handles.capInputExpNumbers);
+                end
+            end
         else
-            handles.inputExpNumbers = [handles.inputExpNumbers numNumpad];
-            set(handles.prevExpTime,'String', handles.inputExpNumbers);
+            if strcmp(handles.inputExpNumbers,'-')
+                handles.inputExpNumbers = numNumpad;
+                set(handles.prevExpTime,'String', handles.inputExpNumbers);
+            else
+                handles.inputExpNumbers = [handles.inputExpNumbers numNumpad];
+                set(handles.prevExpTime,'String', handles.inputExpNumbers);
+            end
         end
         guidata(hObject,handles);
-    case 'return'
-        if ~strcmp(handles.inputExpNumbers,'-') % if it's not unused
-            % take the temp number string, convert to double
-            expNum = str2double(handles.inputExpNumbers);
-            if expNum <1, expNum = 1; end;
-                expN
+    case 'return' % actually set this value that was entered
+        if handles.shiftHit == 1
+            if ~strcmp(handles.capInputExpNumbers,'-') % if it's not unused
+                % take the temp number string, convert to double
+                expNum = str2double(handles.capInputExpNumbers);
+                if expNum <1, expNum = 1; end
+                if expNum > handles.settingsStruct.constMaxExpTimeMs, expNum = handles.settingsStruct.constMaxExpTimeMs; end
+                % set the new exposure time, and run callback
+                set(handles.capExpTime,'String',num2str(expNum));
+                handles.capInputExpNumbers = '-'; % blanking the key tracker variable for next use
+                handles.shiftHit = 0;
+                capExpTime_Callback(hObject, eventdata, handles)
+            end
+        else
+            if ~strcmp(handles.inputExpNumbers,'-') % if it's not unused
+                % take the temp number string, convert to double
+                expNum = str2double(handles.inputExpNumbers);
+                if expNum <1, expNum = 1; end
+                if expNum > handles.settingsStruct.constMaxExpTimeMs, expNum = handles.settingsStruct.constMaxExpTimeMs; end
+                % set the new exposure time, and run callback
+                set(handles.prevExpTime,'String',num2str(expNum));
+                handles.inputExpNumbers = '-'; % blanking the key tracker variable for next use
+                handles.shiftHit = 0;
+                prevExpTime_Callback(hObject, eventdata, handles);
+            end
         end
+    case 'rightarrow'
+        if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
+            if strcmp(get(handles.capExpTime,'Enable'),'on'); %If allowed.. 
+                % get old exposure time
+                oldExp = str2double(get(handles.capExpTime,'String'));
+                newExp = oldExp + handles.settingsStruct.constExpIncrementMs;
+                % Check number
+                if newExp < 1, newExp = 1; end
+                if newExp > handles.settingsStruct.constMaxExpTimeMs, newExp = handles.settingsStruct.constMaxExpTimeMs; end
+                % set it in exposure box and run callback
+                set(handles.capExpTime,'String',num2str(newExp));
+                capExpTime_Callback(hObject, eventdata, handles);
+            end
+        else
+            % get old exposure time
+            oldExp = str2double(get(handles.prevExpTime,'String'));
+            newExp = oldExp + handles.settingsStruct.constExpIncrementMs;
+            % Check number
+            if newExp < 1, newExp = 1; end
+            if newExp > handles.settingsStruct.constMaxExpTimeMs, newExp = handles.settingsStruct.constMaxExpTimeMs; end
+            % Set it in exposure box and run callback
+            set(handles.prevExpTime,'String',num2str(newExp));
+            prevExpTime_Callback(hObject, eventdata, handles);
+        end
+    case 'leftarrow'
+        if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
+            if strcmp(get(handles.capExpTime,'Enable'),'on'); %If allowed.. 
+                % get old exposure time
+                oldExp = str2double(get(handles.capExpTime,'String'));
+                newExp = oldExp - handles.settingsStruct.constExpIncrementMs;
+                % Check number
+                if newExp < 1, newExp = 1; end
+                if newExp > handles.settingsStruct.constMaxExpTimeMs, newExp = handles.settingsStruct.constMaxExpTimeMs; end
+                % set it in exposure box and run callback
+                set(handles.capExpTime,'String',num2str(newExp));
+                capExpTime_Callback(hObject, eventdata, handles);
+            end
+        else
+            % get old exposure time
+            oldExp = str2double(get(handles.prevExpTime,'String'));
+            newExp = oldExp - handles.settingsStruct.constExpIncrementMs;
+            % Check number
+            if newExp < 1, newExp = 1; end
+            if newExp > handles.settingsStruct.constMaxExpTimeMs, newExp = handles.settingsStruct.constMaxExpTimeMs; end
+            % Set it in exposure box and run callback
+            set(handles.prevExpTime,'String',num2str(newExp));
+            prevExpTime_Callback(hObject, eventdata, handles);
+        end
+    case 'a' % to autoscale levels
+        commAutoScale_Callback(hObject, eventdata, handles);
+        
+    case 'r' % reset levels
+        commResetLevels_Callback(hObject, eventdata, handles)
             
 end
+% next line for debugging
 %disp(eventdata.Key)
 
-% --- Executes on button press in selectLEDsLockCap.
-function selectLEDsLockCap_Callback(hObject, eventdata, handles)
-handles.settingsStruct.selectLEDsLockCap = get(handles.selectLEDsLockCap,'Value');
-if handles.settingsStruct.selectLEDsLockCap == 1
-    % if pressed on, then unenable all the capture mode selections
-    set(handles.capLEDsEnable1,'Enable','off');
-    set(handles.capLEDsEnable2,'Enable','off');
-    set(handles.capLEDsEnable3,'Enable','off');
-    set(handles.capLEDsEnable4,'Enable','off');
-    % also copy all the preview mode choices to capture mode's settings,
-    % which will be un-enabled
-    handles.settingsStruct.capLEDsEnable1 = handles.settingsStruct.prevLEDsEnable1;
-    handles.settingsStruct.capLEDsEnable2 = handles.settingsStruct.prevLEDsEnable2;
-    handles.settingsStruct.capLEDsEnable3 = handles.settingsStruct.prevLEDsEnable3;
-    handles.settingsStruct.capLEDsEnable4 = handles.settingsStruct.prevLEDsEnable4;
-    handles.capLEDsToEnable = handles.prevLEDsToEnable;
-    set(handles.capLEDsEnable1,'Value',handles.settingsStruct.capLEDsEnable1);
-    set(handles.capLEDsEnable2,'Value',handles.settingsStruct.capLEDsEnable2);
-    set(handles.capLEDsEnable3,'Value',handles.settingsStruct.capLEDsEnable3);
-    set(handles.capLEDsEnable4,'Value',handles.settingsStruct.capLEDsEnable4);
-else 
-    % if pressed off, then enable all the capture mode selections
-    set(handles.capLEDsEnable1,'Enable','on');
-    set(handles.capLEDsEnable2,'Enable','on');
-    set(handles.capLEDsEnable3,'Enable','on');
-    set(handles.capLEDsEnable4,'Enable','on');
-end
-guidata(hObject,handles);
 
 
+
+
+
+% All the following are shells to run the key press callback above (just
+% for different buttons in "focus")
+function prevStartButton_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function capStartButton_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function prevBinSize_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function prevPixClock_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function prevGain_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function capBinSize_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function capPixClock_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function capGain_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function saveSettings_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function saveFrameTimes_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function capLockSettings_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function commIRMode_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function commAutoScale_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function commResetLevels_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function commRTStats_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function commRTHistogram_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function commStatHistInCenter_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function selectLEDsShow_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function selectLEDsLockCap_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+
+% --- Executes on key press with focus on selectLEDsEnable1 and none of its controls.
+function selectLEDsEnable1_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+
+% --- Executes on key press with focus on selectLEDsEnable2 and none of its controls.
+function selectLEDsEnable2_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+
+% --- Executes on key press with focus on selectLEDsEnable3 and none of its controls.
+function selectLEDsEnable3_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+
+% --- Executes on key press with focus on selectLEDsEnable4 and none of its controls.
+function selectLEDsEnable4_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+
+% --- Executes on key press with focus on capLEDsEnable1 and none of its controls.
+function capLEDsEnable1_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+% --- Executes on key press with focus on capLEDsEnable2 and none of its controls.
+function capLEDsEnable2_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+
+% --- Executes on key press with focus on capLEDsEnable3 and none of its controls.
+function capLEDsEnable3_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+
+% --- Executes on key press with focus on capLEDsEnable4 and none of its controls.
+function capLEDsEnable4_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)

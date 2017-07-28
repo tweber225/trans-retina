@@ -58,6 +58,8 @@ guidata(hObject, handles);
 handles.settingsStruct = load_default_program_settings;
 handles.inputExpNumbers = '-'; %To track numpad key strokes
 handles.capInputExpNumbers = '-';
+handles.enteringFilename = 0;
+handles.filenameChars = '';
 handles.shiftHit = 0; % tracks whether the shift key has been hit
 
 % Make digital channels to send enable signal to Arduino with correct
@@ -915,6 +917,7 @@ end
 
 function saveBaseName_Callback(hObject, eventdata, handles)
 handles.settingsStruct.saveBaseName = get(handles.saveBaseName,'String');
+disp(['Base filename set to: ' handles.settingsStruct.saveBaseName]);
 guidata(hObject, handles);
 
 
@@ -3016,123 +3019,165 @@ function two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
 
 switch eventdata.Key
     case 'p' % Preview button
-        if get(handles.prevStartButton,'Value') == 0
-            set(handles.prevStartButton,'Value',1);
-            prevStartButton_Callback(hObject, eventdata, handles);
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);
+            end
         else
-            set(handles.prevStartButton,'Value',0);
-            prevStartButton_Callback(hObject, eventdata, handles);
+            if get(handles.prevStartButton,'Value') == 0
+                set(handles.prevStartButton,'Value',1);
+                prevStartButton_Callback(hObject, eventdata, handles);
+            else
+                set(handles.prevStartButton,'Value',0);
+                prevStartButton_Callback(hObject, eventdata, handles);
+            end
         end
     case 'c' % Capture button
-        if get(handles.capStartButton,'Value') == 0
-            set(handles.capStartButton,'Value',1);
-            capStartButton_Callback(hObject, eventdata, handles);
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);
+            end
         else
-            set(handles.capStartButton,'Value',0);
-            capStartButton_Callback(hObject, eventdata, handles);
+            if get(handles.capStartButton,'Value') == 0
+                set(handles.capStartButton,'Value',1);
+                capStartButton_Callback(hObject, eventdata, handles);
+            else
+                set(handles.capStartButton,'Value',0);
+                capStartButton_Callback(hObject, eventdata, handles);
+            end
         end
     % Preview & capture LED channels 1-4
     case '1'
-        if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
-            if get(handles.capLEDsEnable1,'Value') == 0
-                if strcmp(handles.capLEDsEnable1.Enable,'on')
-                    set(handles.capLEDsEnable1,'Value',1)
-                    capLEDsEnable1_Callback(hObject, eventdata, handles);
-                end
-            else
-                if strcmp(handles.capLEDsEnable1.Enable,'on')
-                    set(handles.capLEDsEnable1,'Value',0)
-                    capLEDsEnable1_Callback(hObject, eventdata, handles);
-                end
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);
             end
         else
-            if get(handles.selectLEDsEnable1,'Value') == 0
-                if strcmp(handles.selectLEDsEnable1.Enable,'on')
-                    set(handles.selectLEDsEnable1,'Value',1);
-                    selectLEDsEnable1_Callback(hObject, eventdata, handles);
+            if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
+                if get(handles.capLEDsEnable1,'Value') == 0
+                    if strcmp(handles.capLEDsEnable1.Enable,'on')
+                        set(handles.capLEDsEnable1,'Value',1)
+                        capLEDsEnable1_Callback(hObject, eventdata, handles);
+                    end
+                else
+                    if strcmp(handles.capLEDsEnable1.Enable,'on')
+                        set(handles.capLEDsEnable1,'Value',0)
+                        capLEDsEnable1_Callback(hObject, eventdata, handles);
+                    end
                 end
             else
-                if strcmp(handles.selectLEDsEnable1.Enable,'on')
-                    set(handles.selectLEDsEnable1,'Value',0)
-                    selectLEDsEnable1_Callback(hObject, eventdata, handles);
+                if get(handles.selectLEDsEnable1,'Value') == 0
+                    if strcmp(handles.selectLEDsEnable1.Enable,'on')
+                        set(handles.selectLEDsEnable1,'Value',1);
+                        selectLEDsEnable1_Callback(hObject, eventdata, handles);
+                    end
+                else
+                    if strcmp(handles.selectLEDsEnable1.Enable,'on')
+                        set(handles.selectLEDsEnable1,'Value',0)
+                        selectLEDsEnable1_Callback(hObject, eventdata, handles);
+                    end
                 end
             end
         end
     case '2'
-        if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
-            if get(handles.capLEDsEnable2,'Value') == 0
-                if strcmp(handles.capLEDsEnable2.Enable,'on')
-                    set(handles.capLEDsEnable2,'Value',1)
-                    capLEDsEnable2_Callback(hObject, eventdata, handles);
-                end
-            else
-                if strcmp(handles.capLEDsEnable2.Enable,'on')
-                    set(handles.capLEDsEnable2,'Value',0)
-                    capLEDsEnable2_Callback(hObject, eventdata, handles);
-                end
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);
             end
         else
-            if get(handles.selectLEDsEnable2,'Value') == 0
-                if strcmp(handles.selectLEDsEnable2.Enable,'on')
-                    set(handles.selectLEDsEnable2,'Value',1);
-                    selectLEDsEnable2_Callback(hObject, eventdata, handles);
+            if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
+                if get(handles.capLEDsEnable2,'Value') == 0
+                    if strcmp(handles.capLEDsEnable2.Enable,'on')
+                        set(handles.capLEDsEnable2,'Value',1)
+                        capLEDsEnable2_Callback(hObject, eventdata, handles);
+                    end
+                else
+                    if strcmp(handles.capLEDsEnable2.Enable,'on')
+                        set(handles.capLEDsEnable2,'Value',0)
+                        capLEDsEnable2_Callback(hObject, eventdata, handles);
+                    end
                 end
             else
-                if strcmp(handles.selectLEDsEnable2.Enable,'on')
-                    set(handles.selectLEDsEnable2,'Value',0)
-                    selectLEDsEnable2_Callback(hObject, eventdata, handles);
+                if get(handles.selectLEDsEnable2,'Value') == 0
+                    if strcmp(handles.selectLEDsEnable2.Enable,'on')
+                        set(handles.selectLEDsEnable2,'Value',1);
+                        selectLEDsEnable2_Callback(hObject, eventdata, handles);
+                    end
+                else
+                    if strcmp(handles.selectLEDsEnable2.Enable,'on')
+                        set(handles.selectLEDsEnable2,'Value',0)
+                        selectLEDsEnable2_Callback(hObject, eventdata, handles);
+                    end
                 end
             end
         end
     case '3'
-        if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
-            if get(handles.capLEDsEnable3,'Value') == 0
-                if strcmp(handles.capLEDsEnable3.Enable,'on')
-                    set(handles.capLEDsEnable3,'Value',1)
-                    capLEDsEnable3_Callback(hObject, eventdata, handles);
-                end
-            else
-                if strcmp(handles.capLEDsEnable3.Enable,'on')
-                    set(handles.capLEDsEnable3,'Value',0)
-                    capLEDsEnable3_Callback(hObject, eventdata, handles);
-                end
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);
             end
         else
-            if get(handles.selectLEDsEnable3,'Value') == 0
-                if strcmp(handles.selectLEDsEnable3.Enable,'on')
-                    set(handles.selectLEDsEnable3,'Value',1);
-                    selectLEDsEnable3_Callback(hObject, eventdata, handles);
+            if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
+                if get(handles.capLEDsEnable3,'Value') == 0
+                    if strcmp(handles.capLEDsEnable3.Enable,'on')
+                        set(handles.capLEDsEnable3,'Value',1)
+                        capLEDsEnable3_Callback(hObject, eventdata, handles);
+                    end
+                else
+                    if strcmp(handles.capLEDsEnable3.Enable,'on')
+                        set(handles.capLEDsEnable3,'Value',0)
+                        capLEDsEnable3_Callback(hObject, eventdata, handles);
+                    end
                 end
             else
-                if strcmp(handles.selectLEDsEnable3.Enable,'on')
-                    set(handles.selectLEDsEnable3,'Value',0)
-                    selectLEDsEnable3_Callback(hObject, eventdata, handles);
+                if get(handles.selectLEDsEnable3,'Value') == 0
+                    if strcmp(handles.selectLEDsEnable3.Enable,'on')
+                        set(handles.selectLEDsEnable3,'Value',1);
+                        selectLEDsEnable3_Callback(hObject, eventdata, handles);
+                    end
+                else
+                    if strcmp(handles.selectLEDsEnable3.Enable,'on')
+                        set(handles.selectLEDsEnable3,'Value',0)
+                        selectLEDsEnable3_Callback(hObject, eventdata, handles);
+                    end
                 end
             end
         end
     case '4'
-        if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
-            if get(handles.capLEDsEnable4,'Value') == 0
-                if strcmp(handles.capLEDsEnable4.Enable,'on')
-                    set(handles.capLEDsEnable4,'Value',1)
-                    capLEDsEnable4_Callback(hObject, eventdata, handles);
-                end
-            else
-                if strcmp(handles.capLEDsEnable4.Enable,'on')
-                    set(handles.capLEDsEnable4,'Value',0')
-                    capLEDsEnable4_Callback(hObject, eventdata, handles);
-                end
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);
             end
         else
-            if get(handles.selectLEDsEnable4,'Value') == 0
-                if strcmp(handles.selectLEDsEnable4.Enable,'on')
-                    set(handles.selectLEDsEnable4,'Value',1);
-                    selectLEDsEnable4_Callback(hObject, eventdata, handles);
+            if (~isempty(eventdata.Modifier)) && strcmp(eventdata.Modifier,'shift') % if the shift key is held down during press
+                if get(handles.capLEDsEnable4,'Value') == 0
+                    if strcmp(handles.capLEDsEnable4.Enable,'on')
+                        set(handles.capLEDsEnable4,'Value',1)
+                        capLEDsEnable4_Callback(hObject, eventdata, handles);
+                    end
+                else
+                    if strcmp(handles.capLEDsEnable4.Enable,'on')
+                        set(handles.capLEDsEnable4,'Value',0')
+                        capLEDsEnable4_Callback(hObject, eventdata, handles);
+                    end
                 end
             else
-                if strcmp(handles.selectLEDsEnable4.Enable,'on')
-                    set(handles.selectLEDsEnable4,'Value',0)
-                    selectLEDsEnable4_Callback(hObject, eventdata, handles);
+                if get(handles.selectLEDsEnable4,'Value') == 0
+                    if strcmp(handles.selectLEDsEnable4.Enable,'on')
+                        set(handles.selectLEDsEnable4,'Value',1);
+                        selectLEDsEnable4_Callback(hObject, eventdata, handles);
+                    end
+                else
+                    if strcmp(handles.selectLEDsEnable4.Enable,'on')
+                        set(handles.selectLEDsEnable4,'Value',0)
+                        selectLEDsEnable4_Callback(hObject, eventdata, handles);
+                    end
                 end
             end
         end
@@ -3164,30 +3209,36 @@ switch eventdata.Key
             end
         end
         guidata(hObject,handles);
-    case 'return' % actually set this value that was entered
-        if handles.shiftHit == 1
-            if ~strcmp(handles.capInputExpNumbers,'-') % if it's not unused
-                % take the temp number string, convert to double
-                expNum = str2double(handles.capInputExpNumbers);
-                if expNum <1, expNum = 1; end
-                if expNum > handles.settingsStruct.constMaxExpTimeMs, expNum = handles.settingsStruct.constMaxExpTimeMs; end
-                % set the new exposure time, and run callback
-                set(handles.capExpTime,'String',num2str(expNum));
-                handles.capInputExpNumbers = '-'; % blanking the key tracker variable for next use
-                handles.shiftHit = 0;
-                capExpTime_Callback(hObject, eventdata, handles)
-            end
+    case 'return' % actually set this value/subject name that was entered
+        if handles.enteringFilename == 1
+            handles.enteringFilename = 0;
+            handles.filenameChars = '';
+            saveBaseName_Callback(hObject, eventdata, handles)
         else
-            if ~strcmp(handles.inputExpNumbers,'-') % if it's not unused
-                % take the temp number string, convert to double
-                expNum = str2double(handles.inputExpNumbers);
-                if expNum <1, expNum = 1; end
-                if expNum > handles.settingsStruct.constMaxExpTimeMs, expNum = handles.settingsStruct.constMaxExpTimeMs; end
-                % set the new exposure time, and run callback
-                set(handles.prevExpTime,'String',num2str(expNum));
-                handles.inputExpNumbers = '-'; % blanking the key tracker variable for next use
-                handles.shiftHit = 0;
-                prevExpTime_Callback(hObject, eventdata, handles);
+            if handles.shiftHit == 1
+                if ~strcmp(handles.capInputExpNumbers,'-') % if it's not unused
+                    % take the temp number string, convert to double
+                    expNum = str2double(handles.capInputExpNumbers);
+                    if expNum <1, expNum = 1; end
+                    if expNum > handles.settingsStruct.constMaxExpTimeMs, expNum = handles.settingsStruct.constMaxExpTimeMs; end
+                    % set the new exposure time, and run callback
+                    set(handles.capExpTime,'String',num2str(expNum));
+                    handles.capInputExpNumbers = '-'; % blanking the key tracker variable for next use
+                    handles.shiftHit = 0;
+                    capExpTime_Callback(hObject, eventdata, handles)
+                end
+            else
+                if ~strcmp(handles.inputExpNumbers,'-') % if it's not unused
+                    % take the temp number string, convert to double
+                    expNum = str2double(handles.inputExpNumbers);
+                    if expNum <1, expNum = 1; end
+                    if expNum > handles.settingsStruct.constMaxExpTimeMs, expNum = handles.settingsStruct.constMaxExpTimeMs; end
+                    % set the new exposure time, and run callback
+                    set(handles.prevExpTime,'String',num2str(expNum));
+                    handles.inputExpNumbers = '-'; % blanking the key tracker variable for next use
+                    handles.shiftHit = 0;
+                    prevExpTime_Callback(hObject, eventdata, handles);
+                end
             end
         end
     case 'rightarrow'
@@ -3239,21 +3290,95 @@ switch eventdata.Key
             prevExpTime_Callback(hObject, eventdata, handles);
         end
     case 'a' % to autoscale levels
-        commAutoScale_Callback(hObject, eventdata, handles);
-        
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);
+            end
+        else
+            commAutoScale_Callback(hObject, eventdata, handles);
+        end
     case 'r' % reset levels
-        commResetLevels_Callback(hObject, eventdata, handles);
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);
+            end
+        else
+            commResetLevels_Callback(hObject, eventdata, handles);
+        end
         
     case 'l' % lock LEDs
-        oldVal = get(handles.selectLEDsLockCap,'Value');
-        set(handles.selectLEDsLockCap,'Value',~oldVal);
-        selectLEDsLockCap_Callback(hObject, eventdata, handles);
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);
+            end
+        else
+            oldVal = get(handles.selectLEDsLockCap,'Value');
+            set(handles.selectLEDsLockCap,'Value',~oldVal);
+            selectLEDsLockCap_Callback(hObject, eventdata, handles);
+        end
         
     case 's' % lock capture settings (to preview)
-        oldVal = get(handles.capLockSettings,'Value');
-        set(handles.capLockSettings,'Value',~oldVal);
-        capLockSettings_Callback(hObject, eventdata, handles);
-            
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);
+            end
+        else
+            oldVal = get(handles.capLockSettings,'Value');
+            set(handles.capLockSettings,'Value',~oldVal);
+            capLockSettings_Callback(hObject, eventdata, handles);
+        end
+        
+    case 'h' % Real-time Histograms button
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);
+            end
+        else
+            oldVal = get(handles.commRTStats,'Value');
+            set(handles.commRTStats,'Value',~oldVal);
+            commRTStats_Callback(hObject, eventdata, handles);
+        end
+        
+    case 'm' % Real time Statistics button
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);guidata(hObject,handles);
+            end
+        else
+            oldVal = get(handles.commRTHistogram,'Value');
+            set(handles.commRTHistogram,'Value',~oldVal);
+            commRTHistogram_Callback(hObject, eventdata, handles);
+        end
+        
+    case 'n' % Changing the subject name
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);guidata(hObject,handles);
+            end
+        else
+            handles.enteringFilename = 1;
+            guidata(hObject,handles);    
+        end
+        
+    case {'5','6','7','8','9','0','hyphen','q','w','e','t','y','u','i','o','d','f','g','j','k','z','x','v','b'}
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                if strcmp(eventdata.Key,'hyphen')
+                    eventdata.Key = '-';
+                end
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);
+                guidata(hObject,handles);   
+            end
+        end
+        
 end
 % next line for debugging
 %disp(eventdata.Key)

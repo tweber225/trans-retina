@@ -28,7 +28,7 @@ shift+1,2,3,4 = Toggle capture mode LED channels 1-4
 
 numpad keys = Type in preview mode exposure time (then hit enter)
 
-shift+numpad keys = Type in capture mode exposure time (then hit enter)
+tap shift+numpad keys = Type in capture mode exposure time (then hit enter)
 
 right/left arrow = Increment/decrement preview mode exposure time
 
@@ -41,6 +41,8 @@ r = Reset gray levels to full range (0 to 2^cam bits - 1) in image axes
 l = Lock capture mode LED choices to preview mode's choices
 
 s = Lock capture mode camera settings to preview mode's settings
+
+tap n+alphabet & number keys = change the file base name (then hit enter)
 
 
 

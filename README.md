@@ -44,11 +44,15 @@ s = Lock capture mode camera settings to preview mode's settings
 
 tap n+alphabet & number keys = change the file base name (then hit enter)
 
+h = Toggle realtime histograms
+
+m = Toggle realtime image statistics
+
+f = Toggle realtime image flattening (on Preview Mode and the first LED channel only)
+
 
 
 
 Features to add to GUI:
-
--Useful: real-time image level flattening
 
 -Low priority: limit on number of frames for capture mode (to avoid over allocating memory)

@@ -269,7 +269,8 @@ else
 end
 if handles.settingsStruct.commStatHistInCenter == 1
     selectRad = 0.5*pixDim*handles.settingsStruct.analysisSelectCenterRadPercent;
-    [x, y] = meshgrid(1:pixDim, 1:pixDim);
+    scaledYOffset = round(handles.settingsStruct.constYOffset*pixDim/520);
+    [x, y] = meshgrid(1:pixDim, (1+scaledYOffset):(pixDim+scaledYOffset));
     handles.imageMask = uint16((x-.5*pixDim-1).^2+(y-.5*pixDim-1).^2 <= selectRad^2).*imageMaskMask;
 else
     handles.imageMask = ones(pixDim,'uint16').*imageMaskMask;

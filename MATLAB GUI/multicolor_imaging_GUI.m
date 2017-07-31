@@ -22,7 +22,7 @@ function varargout = multicolor_imaging_GUI(varargin)
 
 % Edit the above text to modify the response to help multicolor_imaging_GUI
 
-% Last Modified by GUIDE v2.5 27-Jul-2017 14:04:43
+% Last Modified by GUIDE v2.5 31-Jul-2017 14:22:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -592,11 +592,23 @@ if get(handles.capStartButton,'Value') == 1
     
     fileName = [datestr(now,'yymmdd') '_' handles.settingsStruct.saveBaseName '_capture' sprintf('%.3d',handles.settingsStruct.saveCapNum)];
     dateAndCapDir = [dateDir filesep fileName];
-    if exist(dateAndCapDir,'dir')
-        disp('WARNING: OVERWRITING DATA');
-    else
-        mkdir(dateAndCapDir);
+    while exist(dateAndCapDir,'dir') % WHILE Loop to make sure that you've selected something that won't overwrite before saving this data
+        disp('WARNING: POTENTIAL OVERWRITE DETECTED');
+        % prompt user to make a new subject name
+        prompt = {'Enter new subject name:'};
+        dlg_title = 'Overwrite detection';
+        num_lines = 1;
+        defaultans = {'subject00'};
+        newSaveBaseName = inputdlg(prompt,dlg_title,num_lines,defaultans);
+        % update the appropriate settings and input boxes
+        set(handles.saveBaseName,'String',newSaveBaseName{1});
+        handles.settingsStruct.saveBaseName = newSaveBaseName{1};
+        saveBaseName_Callback(hObject, eventdata, handles);
+        % Make the new save directory
+        fileName = [datestr(now,'yymmdd') '_' handles.settingsStruct.saveBaseName '_capture' sprintf('%.3d',handles.settingsStruct.saveCapNum)];
+        dateAndCapDir = [dateDir filesep fileName];
     end
+    mkdir(dateAndCapDir);
     
     % Save data in tiff stacks (one for each LED channel)
     LEDOptions = {handles.settingsStruct.constLED1CenterWavelength,handles.settingsStruct.constLED2CenterWavelength,handles.settingsStruct.constLED3CenterWavelength,handles.settingsStruct.constLED4CenterWavelength};
@@ -705,6 +717,11 @@ if get(handles.prevStartButton,'Value') == 1
         handles = reset_GUI_displays_update_resolution(handles,handles.settingsStruct.derivePrevNumPixPerDim);
     end
     
+    % Make a filter kernel for potential real-time image flattening (for
+    % focus finding especially)
+    kernelWidth = handles.settingsStruct.derivePrevNumPixPerDim*handles.settingsStruct.analysisFilterKernelWidth;
+    filterKernel = fspecial('gaussian',round(kernelWidth.*[1 1]),.5*kernelWidth);
+        
     % Set up camera for preview with the latest settings &gray out settings
     % that should not be changed
     handles = set_preview_or_capture_settings(handles,'preview');
@@ -783,13 +800,28 @@ if get(handles.prevStartButton,'Value') == 1
                 
                 % Show one of these (specified in select LEDs panel) in
                 % large LED1Ax frame
-                set(handles.imgHandLED1, 'CData', croppedFrames(:,:,:,bigFrameToShow));
+                if handles.settingsStruct.RTFlattening == 1
+                    maxCamVal = 2^handles.settingsStruct.constCameraBits - 1;
+                    set(handles.imgHandLED1, 'CData', uint16(realtime_image_flattening(double(croppedFrames(:,:,:,bigFrameToShow)),double(handles.imageMask),filterKernel,maxCamVal)));
+                else
+                    set(handles.imgHandLED1, 'CData', croppedFrames(:,:,:,bigFrameToShow));
+                end
                 
             else % if not in quad mode, we can just put the frames into each standard axis
                 if numLEDsEnabled == 1
-                    set(handles.imgHandLED1, 'CData', croppedFrames(:,:,:,1));
+                    if handles.settingsStruct.RTFlattening == 1
+                        maxCamVal = 2^handles.settingsStruct.constCameraBits - 1;
+                        set(handles.imgHandLED1, 'CData', uint16(realtime_image_flattening(double(croppedFrames(:,:,:,1)),double(handles.imageMask),filterKernel,maxCamVal)));
+                    else
+                        set(handles.imgHandLED1, 'CData', croppedFrames(:,:,:,1));
+                    end
                 else
-                    set(handles.imgHandLED1, 'CData', croppedFrames(:,:,:,1));
+                    if handles.settingsStruct.RTFlattening == 1
+                        maxCamVal = 2^handles.settingsStruct.constCameraBits - 1;
+                        set(handles.imgHandLED1, 'CData', uint16(realtime_image_flattening(double(croppedFrames(:,:,:,1)),double(handles.imageMask),filterKernel,maxCamVal)));
+                    else
+                        set(handles.imgHandLED1, 'CData', croppedFrames(:,:,:,1));
+                    end
                     set(handles.imgHandLED2, 'CData', croppedFrames(:,:,:,2));
                 end
             end
@@ -1354,34 +1386,36 @@ function saveFrameTimes_Callback(hObject, eventdata, handles)
 handles.settingsStruct.saveFrameTimes = get(handles.saveFrameTimes,'Value');
 guidata(hObject,handles);
 
-% --- Executes on button press in commStatHistInCenter.
-function commStatHistInCenter_Callback(hObject, eventdata, handles)
-handles.settingsStruct.commStatHistInCenter = get(handles.commStatHistInCenter,'Value');
-
-% Update image mask
-pixDim = handles.settingsStruct.numPixPerDim;
-if handles.settingsStruct.analysisReduceNumPixels == 1
-    imageMaskMask = mod(bsxfun(@plus,uint16(1:pixDim),uint16((1:pixDim)')),2);
-else
-    imageMaskMask = ones(pixDim,'uint16');
-end
-if handles.settingsStruct.commStatHistInCenter == 1
-    selectRad = 0.5*pixDim*handles.settingsStruct.analysisSelectCenterRadPercent;
-    [x, y] = meshgrid(1:pixDim, 1:pixDim);
-    handles.imageMask = uint16((x-.5*pixDim-1).^2+(y-.5*pixDim-1).^2 <= selectRad^2).*imageMaskMask;
-else
-    handles.imageMask = ones(pixDim,'uint16').*imageMaskMask;
-end
-
-% if de-selected then disable the ascii timestamps because that will mess
-% up the thresholding
-if handles.settingsStruct.commStatHistInCenter == 0
-    handles.settingsStruct.TMTimestampMode = 'No Stamp';
-    handles.srcObj.TMTimestampMode = 'No Stamp';
-end
-
+% --- Executes on button press in RTFlattening.
+function RTFlattening_Callback(hObject, eventdata, handles)
+handles.settingsStruct.RTFlattening = get(handles.RTFlattening,'Value');
 guidata(hObject,handles);
 
+% % Update image mask [[NOTE ALL OF THIS HAS BEEN RETIRED BC STAT/HIST IN
+% CENTER IS NOW ON BY DEFAULT AND NOT ADJUSTABLE DURING IMAGING]]
+% pixDim = handles.settingsStruct.numPixPerDim;
+% if handles.settingsStruct.analysisReduceNumPixels == 1
+%     imageMaskMask = mod(bsxfun(@plus,uint16(1:pixDim),uint16((1:pixDim)')),2);
+% else
+%     imageMaskMask = ones(pixDim,'uint16');
+% end
+% if handles.settingsStruct.commStatHistInCenter == 1
+%     selectRad = 0.5*pixDim*handles.settingsStruct.analysisSelectCenterRadPercent;
+%     scaledYOffset = round(handles.settingsStruct.constYOffset*pixDim/520);
+%     [x, y] = meshgrid(1:pixDim, (1+scaledYOffset):(pixDim+scaledYOffset));
+%     handles.imageMask = uint16((x-.5*pixDim-1).^2+(y-.5*pixDim-1).^2 <= selectRad^2).*imageMaskMask;
+% else
+%     handles.imageMask = ones(pixDim,'uint16').*imageMaskMask;
+% end
+% 
+% % if de-selected then disable the ascii timestamps because that will mess
+% % up the thresholding
+% if handles.settingsStruct.commStatHistInCenter == 0
+%     handles.settingsStruct.TMTimestampMode = 'No Stamp';
+%     handles.srcObj.TMTimestampMode = 'No Stamp';
+% end
+% 
+% guidata(hObject,handles);
 
 
 % --- Executes on button press in selectLEDsEnable1. -- NOTE: this button
@@ -3332,7 +3366,7 @@ switch eventdata.Key
             capLockSettings_Callback(hObject, eventdata, handles);
         end
         
-    case 'h' % Real-time Histograms button
+    case 'm' % Real-time stats button
         if handles.enteringFilename == 1
             if strcmp(get(handles.saveBaseName,'Enable'),'on')
                 handles.filenameChars = [handles.filenameChars eventdata.Key];
@@ -3344,7 +3378,7 @@ switch eventdata.Key
             commRTStats_Callback(hObject, eventdata, handles);
         end
         
-    case 'm' % Real time Statistics button
+    case 'h' % Real time histogram button
         if handles.enteringFilename == 1
             if strcmp(get(handles.saveBaseName,'Enable'),'on')
                 handles.filenameChars = [handles.filenameChars eventdata.Key];
@@ -3367,7 +3401,19 @@ switch eventdata.Key
             guidata(hObject,handles);    
         end
         
-    case {'5','6','7','8','9','0','hyphen','q','w','e','t','y','u','i','o','d','f','g','j','k','z','x','v','b'}
+    case 'f' % Toggling realtime image flattening
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);guidata(hObject,handles);
+            end
+        else
+            oldVal = get(handles.RTFlattening,'Value');
+            set(handles.RTFlattening,'Value',~oldVal);
+            RTFlattening_Callback(hObject, eventdata, handles);
+        end
+        
+    case {'5','6','7','8','9','0','hyphen','q','w','e','t','y','u','i','o','d','g','j','k','z','x','v','b'}
         if handles.enteringFilename == 1
             if strcmp(get(handles.saveBaseName,'Enable'),'on')
                 if strcmp(eventdata.Key,'hyphen')
@@ -3438,7 +3484,7 @@ two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
 function commRTHistogram_KeyPressFcn(hObject, eventdata, handles)
 two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
 
-function commStatHistInCenter_KeyPressFcn(hObject, eventdata, handles)
+function RTFlattening_KeyPressFcn(hObject, eventdata, handles)
 two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
 
 function selectLEDsShow_KeyPressFcn(hObject, eventdata, handles)

@@ -21,7 +21,7 @@ set(handles.commAutoScale,'Value',handles.settingsStruct.commAutoScale);
 set(handles.commXShift,'String',handles.settingsStruct.commXShift);
 set(handles.commRTStats,'Value',handles.settingsStruct.commRTStats);
 set(handles.commRTHistogram,'Value',handles.settingsStruct.commRTHistogram);
-set(handles.commStatHistInCenter,'Value',handles.settingsStruct.commStatHistInCenter);
+set(handles.RTFlattening,'Value',handles.settingsStruct.RTFlattening);
 
 % SELECT LEDS SETTINGS
 set(handles.selectLEDsEnable1,'Value',handles.settingsStruct.prevLEDsEnable1);

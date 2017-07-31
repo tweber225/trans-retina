@@ -31,7 +31,6 @@ elseif strcmp(settingType,'capture')
     set(handles.commXShift,'Enable','on');
     set(handles.commRTStats,'Enable','on');
     set(handles.commRTHistogram,'Enable','on');
-    set(handles.commStatHistInCenter,'Enable','on');
     set(handles.saveBaseName,'Enable','on');
     set(handles.saveSettings,'Enable','on');
     set(handles.saveFrameTimes,'Enable','on');

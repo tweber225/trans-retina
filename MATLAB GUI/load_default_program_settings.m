@@ -2,7 +2,7 @@ function settingsStruct = load_default_program_settings()
 % Separate function that returns the default settings in a structure
 
 % PREVIEW SETTINGS
-settingsStruct.prevExpTime = 80; % in ms
+settingsStruct.prevExpTime = 40; % in ms
 settingsStruct.prevBinSize = 2; % Note: 1=1x1, 2=2x2, 3=4x4pixels
 settingsStruct.prevPixClock = 2; % Note: 1=12, 2=24MS/s
 settingsStruct.prevGain = 1; % Note: 1=1.00, 2=0.67ADU/e-
@@ -22,15 +22,16 @@ settingsStruct.inCapMode = 0; % another (inelegant) fix to a bug with the captur
 % COMMON SETTINGS
 settingsStruct.commIRMode = 1;
 settingsStruct.commAutoScale = 0;
-settingsStruct.commXShift = 107;
+settingsStruct.commXShift = 105;
 settingsStruct.commRTStats = 1;
 settingsStruct.commRTHistogram = 1;
-settingsStruct.commStatHistInCenter = 1;
+settingsStruct.commStatHistInCenter = 1; % MUST KEEP 1 in order for several settings to continue working
+settingsStruct.RTFlattening = 0; % Not REALLY a "common" setting since it only applies to Preview mode, but the button is found along with other "Common Settings"
 
 % SELECT LEDS SETTINGS
 settingsStruct.selectLEDsShow = 1; % LED channel to show on big image axis, only important if >2 LEDs are selected (Quad-channel view mode is automatically turned on)
 settingsStruct.prevLEDsEnable1 = 1; % MAKE SURE THAT AT LEAST ONE LED IS ENABLED BEFORE STARTING
-settingsStruct.prevLEDsEnable2 = 0;
+settingsStruct.prevLEDsEnable2 = 1;
 settingsStruct.prevLEDsEnable3 = 0;
 settingsStruct.prevLEDsEnable4 = 0;
 settingsStruct.selectLEDsEnable1 = settingsStruct.prevLEDsEnable1; % These are the "current" LEDs enabled, presumably the first action will be preview, so copy preview-enabled LEDs
@@ -69,6 +70,7 @@ settingsStruct.constLED1CenterWavelength = '850nm';
 settingsStruct.constLED2CenterWavelength = '780nm';
 settingsStruct.constLED3CenterWavelength = '730nm';
 settingsStruct.constLED4CenterWavelength = '660nm';
+settingsStruct.constYOffset = 6;
 
 % DERIVED SETTINGS/PARAMETERS (some useful settings that are dependent on
 % settings above)
@@ -96,9 +98,11 @@ else
 end
 
 % ANALYSIS SETTINGS
-settingsStruct.analysisSelectCenterRadPercent = 0.9;
+settingsStruct.analysisSelectCenterRadPercent = 0.96;
 settingsStruct.analysisAutoScaleHighQuantile = 0.995;
 settingsStruct.analysisAutoScaleLowQuantile = 0.005;
 settingsStruct.analysisHistogramBins = 128;
 settingsStruct.analysisReduceNumPixels = 0;
+settingsStruct.analysisFilterKernelWidth = .06; % 0-1 fraction of width to use for flattening kernel low pass
+
 

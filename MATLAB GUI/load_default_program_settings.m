@@ -27,6 +27,7 @@ settingsStruct.commRTStats = 1;
 settingsStruct.commRTHistogram = 1;
 settingsStruct.commStatHistInCenter = 1; % MUST KEEP 1 in order for several settings to continue working
 settingsStruct.RTFlattening = 0; % Not REALLY a "common" setting since it only applies to Preview mode, but the button is found along with other "Common Settings"
+settingsStruct.fixationTarget = 0; % A little LED mounted outside the fundus camera
 
 % SELECT LEDS SETTINGS
 settingsStruct.selectLEDsShow = 1; % LED channel to show on big image axis, only important if >2 LEDs are selected (Quad-channel view mode is automatically turned on)

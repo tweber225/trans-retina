@@ -22,7 +22,7 @@ function varargout = multicolor_imaging_GUI(varargin)
 
 % Edit the above text to modify the response to help multicolor_imaging_GUI
 
-% Last Modified by GUIDE v2.5 31-Jul-2017 14:22:52
+% Last Modified by GUIDE v2.5 08-Aug-2017 11:48:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -69,9 +69,10 @@ handles.capLEDsToEnable = [handles.settingsStruct.capLEDsEnable1 handles.setting
 handles.LEDsToEnable = [handles.settingsStruct.selectLEDsEnable1 handles.settingsStruct.selectLEDsEnable2 handles.settingsStruct.selectLEDsEnable3 handles.settingsStruct.selectLEDsEnable4];
 disp('Starting DAQ System')
 handles.NIDaqSession = daq.createSession('ni');
-addDigitalChannel(handles.NIDaqSession,'dev1','Port0/Line0:4','OutputOnly');
+addDigitalChannel(handles.NIDaqSession,'dev1','Port0/Line0:5','OutputOnly');
 % Make sure the port is set to low so we can trigger the Aruindo later
-outputSingleScan(handles.NIDaqSession,[0 handles.LEDsToEnable]);
+handles.digitalOutputScan = [0 handles.LEDsToEnable handles.settingsStruct.fixationTarget];
+outputSingleScan(handles.NIDaqSession,handles.digitalOutputScan);
 
 % Open the camera adapters
 disp('Starting Camera')
@@ -370,7 +371,8 @@ if get(handles.capStartButton,'Value') == 1
         
     % Output TTL HIGH to Arduino to signal the start of an acquisition and
     % arm the arduino's toggling
-    outputSingleScan(handles.NIDaqSession,[1 handles.LEDsToEnable]);
+    handles.digitalOutputScan = [1 handles.LEDsToEnable handles.settingsStruct.fixationTarget];
+    outputSingleScan(handles.NIDaqSession,handles.digitalOutputScan);
     numLEDsEnabled = sum(handles.LEDsToEnable,2);
 
     disp('Starting Capture')      
@@ -645,7 +647,8 @@ if get(handles.capStartButton,'Value') == 1
     
     % Send TTL low signal to Arduino to signal the acquisition has finished
     % so it can reset its toggle
-    outputSingleScan(handles.NIDaqSession,[0 handles.LEDsToEnable]);
+    handles.digitalOutputScan = [0 handles.LEDsToEnable handles.settingsStruct.fixationTarget];
+    outputSingleScan(handles.NIDaqSession,handles.digitalOutputScan);
     
     % Reset warning flag and aborted flag
     handles.settingStruct.capWarningFlag = 0;
@@ -706,7 +709,8 @@ if get(handles.prevStartButton,'Value') == 1
     
     % Output TTL HIGH to Arduino to signal the start of an acquisition and
     % indicate active LEDs
-    outputSingleScan(handles.NIDaqSession,[1 handles.LEDsToEnable]);
+    handles.digitalOutputScan = [1 handles.LEDsToEnable handles.settingsStruct.fixationTarget];
+    outputSingleScan(handles.NIDaqSession,handles.digitalOutputScan);
     
     disp('Starting Preview')      
     % Check whether the current image data displayed on GUI matches the
@@ -918,7 +922,8 @@ if get(handles.prevStartButton,'Value') == 1
     
     % Send TTL LOW to Arduino to signal end of this acquisition event and
     % reset its LED toggle
-    outputSingleScan(handles.NIDaqSession,[0 handles.LEDsToEnable]);
+    handles.digitalOutputScan = [1 handles.LEDsToEnable handles.settingsStruct.fixationTarget];
+    outputSingleScan(handles.NIDaqSession, handles.digitalOutputScan);
     
     guidata(hObject, handles);
 else
@@ -3041,6 +3046,16 @@ else
 end
 guidata(hObject,handles);
 
+% --- Executes on button press in fixationTarget.
+function fixationTarget_Callback(hObject, eventdata, handles)
+% Set the new value
+handles.settingsStruct.fixationTarget = get(handles.fixationTarget,'Value');
+% Toggle fixation target LED
+handles.digitalOutputScan(6) = handles.settingsStruct.fixationTarget;
+outputSingleScan(handles.NIDaqSession,handles.digitalOutputScan);
+% Send along GUI data
+guidata(hObject,handles);
+
 
 % --- Executes on key press with focus on two_color_image_GUI and none of its controls.
 function two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
@@ -3413,7 +3428,19 @@ switch eventdata.Key
             RTFlattening_Callback(hObject, eventdata, handles);
         end
         
-    case {'5','6','7','8','9','0','hyphen','q','w','e','t','y','u','i','o','d','g','j','k','z','x','v','b'}
+        case 't' % Toggling fixation target
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);guidata(hObject,handles);
+            end
+        else
+            oldVal = get(handles.fixationTarget,'Value');
+            set(handles.fixationTarget,'Value',~oldVal);
+            fixationTarget_Callback(hObject, eventdata, handles);
+        end
+        
+    case {'5','6','7','8','9','0','hyphen','q','w','e','y','u','i','o','d','g','j','k','z','x','v','b'}
         if handles.enteringFilename == 1
             if strcmp(get(handles.saveBaseName,'Enable'),'on')
                 if strcmp(eventdata.Key,'hyphen')
@@ -3516,3 +3543,7 @@ two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
 
 function capLEDsEnable4_KeyPressFcn(hObject, eventdata, handles)
 two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+
+function fixationTarget_KeyPressFcn(hObject, eventdata, handles)
+two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
+

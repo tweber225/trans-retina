@@ -22,6 +22,7 @@ set(handles.commXShift,'String',handles.settingsStruct.commXShift);
 set(handles.commRTStats,'Value',handles.settingsStruct.commRTStats);
 set(handles.commRTHistogram,'Value',handles.settingsStruct.commRTHistogram);
 set(handles.RTFlattening,'Value',handles.settingsStruct.RTFlattening);
+set(handles.fixationTarget,'Value',handles.settingsStruct.fixationTarget);
 
 % SELECT LEDS SETTINGS
 set(handles.selectLEDsEnable1,'Value',handles.settingsStruct.prevLEDsEnable1);

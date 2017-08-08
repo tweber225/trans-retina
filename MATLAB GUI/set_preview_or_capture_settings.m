@@ -92,7 +92,8 @@ elseif strcmp(settingType,'capture')
     set(handles.commAutoScale,'Enable','off');
     set(handles.commXShift,'Enable','off');
     set(handles.commRTStats,'Enable','off');
-    set(handles.commRTHistogram,'Enable','off');
+    set(handles.commRTHistogram,'Enable','off');    set(handles.fixationTarget,'Enable','off');
+
     set(handles.saveBaseName,'Enable','off');
     set(handles.saveSettings,'Enable','off');
     set(handles.saveFrameTimes,'Enable','off');
@@ -105,7 +106,6 @@ elseif strcmp(settingType,'capture')
     set(handles.capLEDsEnable3,'Enable','off');
     set(handles.capLEDsEnable4,'Enable','off');
     set(handles.selectLEDsShow,'Enable','off');
-
 
     % Change the start button's string
     set(handles.capStartButton,'String','Abort');

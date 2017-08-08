@@ -1,6 +1,6 @@
 function varargout = multicolor_imaging_GUI(varargin)
 % MULTICOLOR_IMAGING_GUI MATLAB code for multicolor_imaging_GUI.fig
-%      MULTICOLOR_IMAGING_GUI, by itself, creates a new MULTICOLOR_IMAGING_GUI or raises the existing
+%      MULTICOLOR_IMAGING_GUI, by itself, creates a new MULTICOLOR_IMAGING_GUI or raisest the existing
 %      singleton*.
 %
 %      H = MULTICOLOR_IMAGING_GUI returns the handle to a new MULTICOLOR_IMAGING_GUI or the handle to

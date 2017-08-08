@@ -50,6 +50,8 @@ m = Toggle realtime image statistics
 
 f = Toggle realtime image flattening (on Preview Mode and the first LED channel only)
 
+t = Toggle external fixation target LED
+
 
 
 

@@ -45,6 +45,7 @@ elseif strcmp(settingType,'capture')
         set(handles.capLEDsEnable4,'Enable','on');
         set(handles.selectLEDsShow,'Enable','on');
     end
+    set(handles.fixationTarget,'Enable','on');
     
     set(handles.capStartButton,'Value',0);
     set(handles.capStartButton,'String','Start Capture');

@@ -685,7 +685,9 @@ end
 % --- Executes on button press in prevStartButton.
 function prevStartButton_Callback(hObject, eventdata, handles)
 if get(handles.prevStartButton,'Value') == 1
-    % Insure the right LEDs are selected for this preview
+    % Insure the right LEDs are selected for this preview (i.e. if we
+    % just finished a capture with different LED channels selected, then
+    % change the image axes displayed)
     if handles.settingsStruct.justFinishedCap == 1
         handles.settingsStruct.justFinishedCap = 0; % turn off this flag here or else it will affect callback fcns below
         if handles.prevLEDsToEnable(1) ~= handles.capLEDsToEnable(1)
@@ -3041,17 +3043,54 @@ if handles.settingsStruct.selectLEDsLockCap == 1
     set(handles.capLEDsEnable2,'Enable','off');
     set(handles.capLEDsEnable3,'Enable','off');
     set(handles.capLEDsEnable4,'Enable','off');
-    % also copy all the preview mode choices to capture mode's settings,
-    % which will be un-enabled
+    
+    % If capture mode was just run, we need to change axes displays
+    if handles.settingsStruct.justFinishedCap == 1
+        handles.settingsStruct.justFinishedCap = 0; % turn off this flag here or else it will affect callback fcns below
+
+        if handles.prevLEDsToEnable(1) ~= handles.capLEDsToEnable(1)
+            % Force current preview state on this button
+            set(handles.selectLEDsEnable1,'Value',handles.prevLEDsToEnable(1));
+            % Run callback for this LED's button
+            selectLEDsEnable1_Callback(hObject, eventdata, handles)
+            handles = guidata(hObject);
+        end
+        if handles.prevLEDsToEnable(2) ~= handles.capLEDsToEnable(2)
+            % Force capture state for this button to capture state
+            set(handles.selectLEDsEnable2,'Value',handles.prevLEDsToEnable(2));
+            % Run callback for this LED's button
+            selectLEDsEnable2_Callback(hObject, eventdata, handles)
+            handles = guidata(hObject);
+        end
+        if handles.prevLEDsToEnable(3) ~= handles.capLEDsToEnable(3)
+            % Force capture state for this button to capture state
+            set(handles.selectLEDsEnable3,'Value',handles.prevLEDsToEnable(3));
+            % Run callback for this LED's button
+            selectLEDsEnable3_Callback(hObject, eventdata, handles)
+            handles = guidata(hObject);
+        end
+        if handles.prevLEDsToEnable(4) ~= handles.capLEDsToEnable(4)
+            % Force capture state for this button to capture state
+            set(handles.selectLEDsEnable4,'Value',handles.prevLEDsToEnable(4));
+            % Run callback for this LED's button
+            selectLEDsEnable4_Callback(hObject, eventdata, handles)
+            handles = guidata(hObject);
+        end
+
+    end
+     
+    % Get preview LED settings and over-ride capture LED settings with these 
     handles.settingsStruct.capLEDsEnable1 = handles.settingsStruct.prevLEDsEnable1;
     handles.settingsStruct.capLEDsEnable2 = handles.settingsStruct.prevLEDsEnable2;
     handles.settingsStruct.capLEDsEnable3 = handles.settingsStruct.prevLEDsEnable3;
     handles.settingsStruct.capLEDsEnable4 = handles.settingsStruct.prevLEDsEnable4;
-    handles.capLEDsToEnable = handles.prevLEDsToEnable;
+
     set(handles.capLEDsEnable1,'Value',handles.settingsStruct.capLEDsEnable1);
     set(handles.capLEDsEnable2,'Value',handles.settingsStruct.capLEDsEnable2);
     set(handles.capLEDsEnable3,'Value',handles.settingsStruct.capLEDsEnable3);
     set(handles.capLEDsEnable4,'Value',handles.settingsStruct.capLEDsEnable4);
+    
+    handles.capLEDsToEnable = handles.prevLEDsToEnable;
 else 
     % if pressed off, then enable all the capture mode selections
     set(handles.capLEDsEnable1,'Enable','on');
@@ -3060,6 +3099,7 @@ else
     set(handles.capLEDsEnable4,'Enable','on');
 end
 guidata(hObject,handles);
+
 
 % --- Executes on button press in fixationTarget.
 function fixationTarget_Callback(hObject, eventdata, handles)

@@ -55,12 +55,13 @@ guidata(hObject, handles);
 
 % START TDW EDIT
 % Load the default program settings
-handles.settingsStruct = load_default_program_settings;
-handles.inputExpNumbers = '-'; %To track numpad key strokes
+handles.settingsStruct = load_default_program_settings; % This script defines all the variables in the master settings structure "settingsStruct"
+handles.inputExpNumbers = '-'; % Next few lines, to track numpad/keypad key strokes
 handles.capInputExpNumbers = '-';
 handles.enteringFilename = 0;
 handles.filenameChars = '';
 handles.shiftHit = 0; % tracks whether the shift key has been hit
+handles.previewOn = 0; % tracks whether preview mode is on
 
 % Make digital channels to send enable signal to Arduino with correct
 % configuration of LEDs
@@ -333,6 +334,11 @@ end
 % --- Executes on button press in capStartButton.
 function capStartButton_Callback(hObject, eventdata, handles)
 if get(handles.capStartButton,'Value') == 1
+    % Turn off (or make sure it's off) the Preview Mode Button (this will
+    % set in motion the end of preview mode, which should be complete when
+    % handles.previewOn switches from 1 to 0)
+    set(handles.prevStartButton,'Value',0);
+    % Set some tracker to indicate we're in capture mode now
     handles.settingsStruct.inCapMode = 1;
     % Get LEDs to use for capture mode, switch axes view modes
     if handles.prevLEDsToEnable(1) ~= handles.capLEDsToEnable(1)
@@ -368,7 +374,12 @@ if get(handles.capStartButton,'Value') == 1
     set(handles.selectLEDsEnable3,'Value',handles.prevLEDsToEnable(3));
     set(handles.selectLEDsEnable2,'Value',handles.prevLEDsToEnable(2));
     set(handles.selectLEDsEnable1,'Value',handles.prevLEDsToEnable(1));
-        
+    
+    % At this point we must wait until preview mode has finished
+    while handles.previewOn == 1
+        % Nothing!
+    end
+    
     % Output TTL HIGH to Arduino to signal the start of an acquisition and
     % arm the arduino's toggling
     handles.digitalOutputScan = [1 handles.LEDsToEnable handles.settingsStruct.fixationTarget];
@@ -707,6 +718,9 @@ if get(handles.prevStartButton,'Value') == 1
         end
     end
     
+    % Formally set a tracker to track the preview mode
+    handles.previewOn = 1;guidata(hObject,handles);
+    
     % Output TTL HIGH to Arduino to signal the start of an acquisition and
     % indicate active LEDs
     handles.digitalOutputScan = [1 handles.LEDsToEnable handles.settingsStruct.fixationTarget];
@@ -741,7 +755,7 @@ if get(handles.prevStartButton,'Value') == 1
     
     guidata(hObject,handles);
      
-    while get(handles.prevStartButton,'Value') == 1 % While the toggle button is DOWN
+    while (get(handles.prevStartButton,'Value') == 1) % While the toggle button is DOWN
         % Get current GUI UI data (for update-able properties)
         handles = guidata(hObject);
         
@@ -924,6 +938,7 @@ if get(handles.prevStartButton,'Value') == 1
     % reset its LED toggle
     handles.digitalOutputScan = [1 handles.LEDsToEnable handles.settingsStruct.fixationTarget];
     outputSingleScan(handles.NIDaqSession, handles.digitalOutputScan);
+    handles.previewOn = 0;
     
     guidata(hObject, handles);
 else

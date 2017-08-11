@@ -3501,7 +3501,48 @@ switch eventdata.Key
             fixationTarget_Callback(hObject, eventdata, handles);
         end
         
-    case {'5','6','7','8','9','0','hyphen','q','w','e','y','u','i','o','d','g','j','k','z','x','v','b'}
+        case 'o' % Turn on preview mode with just the first channel selected
+        if handles.enteringFilename == 1
+            if strcmp(get(handles.saveBaseName,'Enable'),'on')
+                handles.filenameChars = [handles.filenameChars eventdata.Key];
+                set(handles.saveBaseName,'String',handles.filenameChars);guidata(hObject,handles);
+            end
+        else
+            % If the preview mode button has already been pressed, then
+            % don't do anything
+            if get(handles.prevStartButton,'Value') == 1
+                % nada
+            else
+                % Cycle through each LED channel and set to desired values and
+                % run callbacks (desired is 1st LED channel only)
+                if handles.prevLEDsToEnable(1) ~= 1
+                    set(handles.selectLEDsEnable1,'Value',1);
+                    selectLEDsEnable1_Callback(hObject, eventdata, handles);
+                    handles = guidata(hObject);
+                end
+                if handles.prevLEDsToEnable(2) ~= 0
+                    set(handles.selectLEDsEnable2,'Value',0);
+                    selectLEDsEnable2_Callback(hObject, eventdata, handles);
+                    handles = guidata(hObject);
+                end
+                if handles.prevLEDsToEnable(3) ~= 0
+                    set(handles.selectLEDsEnable3,'Value',0);
+                    selectLEDsEnable3_Callback(hObject, eventdata, handles);
+                    handles = guidata(hObject);
+                end
+                if handles.prevLEDsToEnable(4) ~= 0
+                    set(handles.selectLEDsEnable4,'Value',0);
+                    selectLEDsEnable4_Callback(hObject, eventdata, handles);
+                    handles = guidata(hObject);
+                end
+
+                % Initial a preview
+                set(handles.prevStartButton,'Value',1)
+                prevStartButton_Callback(hObject, eventdata, handles);
+            end
+        end
+        
+    case {'5','6','7','8','9','0','hyphen','q','w','e','y','u','i','d','g','j','k','z','x','v','b'}
         if handles.enteringFilename == 1
             if strcmp(get(handles.saveBaseName,'Enable'),'on')
                 if strcmp(eventdata.Key,'hyphen')

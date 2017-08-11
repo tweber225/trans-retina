@@ -52,6 +52,7 @@ f = Toggle realtime image flattening (on Preview Mode and the first LED channel 
 
 t = Toggle external fixation target LED
 
+o (not zero) = Start a preview with only the first LED channel
 
 
 

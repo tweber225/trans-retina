@@ -62,6 +62,7 @@ handles.enteringFilename = 0;
 handles.filenameChars = '';
 handles.shiftHit = 0; % tracks whether the shift key has been hit
 handles.requestCapture = 0; % tracks whether preview has been interrupted and a capture is requested
+handles.needToAutoScaleImage = 0; % Tracks whether we should autoscale the image levels on next frame update
 
 % Make digital channels to send enable signal to Arduino with correct
 % configuration of LEDs
@@ -929,6 +930,13 @@ if get(handles.prevStartButton,'Value') == 1
             % Update Frame Sets Per Second Indicator
             set(handles.prevFPSIndicator,'String',[num2str(1/(timeDataNow(1)-timeDataLastPair),4) ' fsps']); % calculate FPS
             
+            % Autoscale frames if the flag is up for it
+            if handles.needToAutoScaleImage == 1
+                commAutoScale_Callback(hObject, eventdata, handles);
+                handles = guidata(hObject);
+                handles.needToAutoScaleImage = 0;guidata(hObject, handles)
+            end
+            
             drawnow; % Must drawnow to show new frame data
             timeDataLastPair = timeDataNow(1); % Record this set's time for next Frame Sets Per Second calculation
         end
@@ -1417,6 +1425,7 @@ guidata(hObject,handles);
 % --- Executes on button press in RTFlattening.
 function RTFlattening_Callback(hObject, eventdata, handles)
 handles.settingsStruct.RTFlattening = get(handles.RTFlattening,'Value');
+handles.needToAutoScaleImage = 1; % To trip an autoscale right after first frame set
 guidata(hObject,handles);
 
 % % Update image mask [[NOTE ALL OF THIS HAS BEEN RETIRED BC STAT/HIST IN

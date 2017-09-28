@@ -1,0 +1,19 @@
+% TRANS-RETINA/ACQUISITION/UTILITY_AND_SETTINGS_CODE/CAM_SETTINGS_PROFILES/DCC3240N.M
+% Timothy D. Weber, BU Biomicroscopy Lab, 28 Sept. 2017
+% Purpose: Profile with the default settings for the Thorlabs CMOS USB3.0
+%   Camera, model DCC3240N (1280x1024, 1/8" sensor 5.3um, square pixels,
+%   10-bit, 60fps, NIR-enhanced)
+
+% Camera constants
+camConstStruct.maxPixX = 1280;
+camConstStruct.maxPixY = 1024;
+camConstStruct.pixBitDepth = 10;
+camConstStruct.shutterMode = 'global';
+
+% Default camera settings, note: these will be imported for preview mode
+% and capture mode
+camSetStruct.pixClock = 86e6; % pixels read / sec
+camSetStruct.expTime = 25e3; % in usec
+
+camSetStruct.binSize = 1; % can only bin square (i.e 1x1 or 2x2, etc)
+

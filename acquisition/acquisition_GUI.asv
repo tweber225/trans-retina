@@ -1,35 +1,35 @@
-function varargout = multicolor_imaging_GUI(varargin)
-% MULTICOLOR_IMAGING_GUI MATLAB code for multicolor_imaging_GUI.fig
-%      MULTICOLOR_IMAGING_GUI, by itself, creates a new MULTICOLOR_IMAGING_GUI or raisest the existing
+function varargout = acquisition_GUI(varargin)
+% ACQUISITION_GUI MATLAB code for acquisition_GUI.fig
+%      ACQUISITION_GUI, by itself, creates a new ACQUISITION_GUI or raises the existing
 %      singleton*.
 %
-%      H = MULTICOLOR_IMAGING_GUI returns the handle to a new MULTICOLOR_IMAGING_GUI or the handle to
+%      H = ACQUISITION_GUI returns the handle to a new ACQUISITION_GUI or the handle to
 %      the existing singleton*.
 %
-%      MULTICOLOR_IMAGING_GUI('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in MULTICOLOR_IMAGING_GUI.M with the given input arguments.
+%      ACQUISITION_GUI('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in ACQUISITION_GUI.M with the given input arguments.
 %
-%      MULTICOLOR_IMAGING_GUI('Property','Value',...) creates a new MULTICOLOR_IMAGING_GUI or raises the
+%      ACQUISITION_GUI('Property','Value',...) creates a new ACQUISITION_GUI or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before multicolor_imaging_GUI_OpeningFcn gets called.  An
+%      applied to the GUI before acquisition_GUI_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to multicolor_imaging_GUI_OpeningFcn via varargin.
+%      stop.  All inputs are passed to acquisition_GUI_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help multicolor_imaging_GUI
+% Edit the above text to modify the response to help acquisition_GUI
 
-% Last Modified by GUIDE v2.5 08-Aug-2017 11:48:39
+% Last Modified by GUIDE v2.5 28-Sep-2017 13:50:54
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @multicolor_imaging_GUI_OpeningFcn, ...
-                   'gui_OutputFcn',  @multicolor_imaging_GUI_OutputFcn, ...
+                   'gui_OpeningFcn', @acquisition_GUI_OpeningFcn, ...
+                   'gui_OutputFcn',  @acquisition_GUI_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -44,16 +44,20 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before multicolor_imaging_GUI is made visible.
-function multicolor_imaging_GUI_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before acquisition_GUI is made visible.
+function acquisition_GUI_OpeningFcn(hObject, eventdata, handles, varargin)
 
-% Choose default command line output for multicolor_imaging_GUI
+% TDW: MATLAB requires the next two lines of code to setup command line
+% output, don't edit or remove ...
+% Choose default command line output for acquisition_GUI
 handles.output = hObject;
-
-% Update handles structure- not sure why this is needed here? won't hurt
+% Update handles structure
 guidata(hObject, handles);
 
-% START TDW EDIT
+% TDW: Here onward, we're free to edit!
+% Add subfolders to path to enable functions
+addpath('callback_code','file_IO','utility_and_settings_code','cam_code_compiled');
+
 % Load the default program settings
 handles.settingsStruct = load_default_program_settings; % This script defines all the variables in the master settings structure "settingsStruct"
 handles.inputExpNumbers = '-'; % Next few lines, to track numpad/keypad key strokes
@@ -73,7 +77,7 @@ disp('Starting DAQ System')
 handles.NIDaqSession = daq.createSession('ni');
 addDigitalChannel(handles.NIDaqSession,'dev1','Port0/Line0:5','OutputOnly');
 % Make sure the port is set to low so we can trigger the Aruindo later
-handles.digitalOutputScan = [0 handles.LEDsToEnable handles.settingsStruct.fixationTarget];
+handles.digitalOutputScan = [0 handles.LEDsToEnable handles.settingsStruct.commFixTarget];
 outputSingleScan(handles.NIDaqSession,handles.digitalOutputScan);
 
 % Open the camera adapters
@@ -106,7 +110,7 @@ guidata(hObject, handles);
 
 
 % UNNEEDED --- Outputs from this function are returned to the command line.
-function varargout = multicolor_imaging_GUI_OutputFcn(hObject, eventdata, handles) 
+function varargout = acquisition_GUI_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -380,7 +384,7 @@ if get(handles.capStartButton,'Value') == 1
 
         % Output TTL HIGH to Arduino to signal the start of an acquisition and
         % arm the arduino's toggling
-        handles.digitalOutputScan = [1 handles.LEDsToEnable handles.settingsStruct.fixationTarget];
+        handles.digitalOutputScan = [1 handles.LEDsToEnable handles.settingsStruct.commFixTarget];
         outputSingleScan(handles.NIDaqSession,handles.digitalOutputScan);
         numLEDsEnabled = sum(handles.LEDsToEnable,2);
 
@@ -656,7 +660,7 @@ if get(handles.capStartButton,'Value') == 1
 
         % Send TTL low signal to Arduino to signal the acquisition has finished
         % so it can reset its toggle
-        handles.digitalOutputScan = [0 handles.LEDsToEnable handles.settingsStruct.fixationTarget];
+        handles.digitalOutputScan = [0 handles.LEDsToEnable handles.settingsStruct.commFixTarget];
         outputSingleScan(handles.NIDaqSession,handles.digitalOutputScan);
 
         % Reset warning flag, aborted, and requested capture flags
@@ -727,7 +731,7 @@ if get(handles.prevStartButton,'Value') == 1
        
     % Output TTL HIGH to Arduino to signal the start of an acquisition and
     % indicate active LEDs
-    handles.digitalOutputScan = [1 handles.LEDsToEnable handles.settingsStruct.fixationTarget];
+    handles.digitalOutputScan = [1 handles.LEDsToEnable handles.settingsStruct.commFixTarget];
     outputSingleScan(handles.NIDaqSession,handles.digitalOutputScan);
     
     disp('Starting Preview')      
@@ -822,7 +826,7 @@ if get(handles.prevStartButton,'Value') == 1
                 
                 % Show one of these (specified in select LEDs panel) in
                 % large LED1Ax frame
-                if handles.settingsStruct.RTFlattening == 1
+                if handles.settingsStruct.commRTFlattening == 1
                     maxCamVal = 2^handles.settingsStruct.constCameraBits - 1;
                     set(handles.imgHandLED1, 'CData', uint16(realtime_image_flattening(double(croppedFrames(:,:,:,bigFrameToShow)),double(handles.imageMask),filterKernel,maxCamVal)));
                 else
@@ -831,14 +835,14 @@ if get(handles.prevStartButton,'Value') == 1
                 
             else % if not in quad mode, we can just put the frames into each standard axis
                 if numLEDsEnabled == 1
-                    if handles.settingsStruct.RTFlattening == 1
+                    if handles.settingsStruct.commRTFlattening == 1
                         maxCamVal = 2^handles.settingsStruct.constCameraBits - 1;
                         set(handles.imgHandLED1, 'CData', uint16(realtime_image_flattening(double(croppedFrames(:,:,:,1)),double(handles.imageMask),filterKernel,maxCamVal)));
                     else
                         set(handles.imgHandLED1, 'CData', croppedFrames(:,:,:,1));
                     end
                 else
-                    if handles.settingsStruct.RTFlattening == 1
+                    if handles.settingsStruct.commRTFlattening == 1
                         maxCamVal = 2^handles.settingsStruct.constCameraBits - 1;
                         set(handles.imgHandLED1, 'CData', uint16(realtime_image_flattening(double(croppedFrames(:,:,:,1)),double(handles.imageMask),filterKernel,maxCamVal)));
                     else
@@ -948,7 +952,7 @@ if get(handles.prevStartButton,'Value') == 1
     
     % Send TTL LOW to Arduino to signal end of this acquisition event and
     % reset its LED toggle
-    handles.digitalOutputScan = [1 handles.LEDsToEnable handles.settingsStruct.fixationTarget];
+    handles.digitalOutputScan = [1 handles.LEDsToEnable handles.settingsStruct.commFixTarget];
     outputSingleScan(handles.NIDaqSession, handles.digitalOutputScan);
     
     if handles.requestCapture == 1
@@ -1424,7 +1428,7 @@ guidata(hObject,handles);
 
 % --- Executes on button press in RTFlattening.
 function RTFlattening_Callback(hObject, eventdata, handles)
-handles.settingsStruct.RTFlattening = get(handles.RTFlattening,'Value');
+handles.settingsStruct.commRTFlattening = get(handles.RTFlattening,'Value');
 handles.needToAutoScaleImage = 1; % To trip an autoscale right after first frame set
 guidata(hObject,handles);
 
@@ -1436,7 +1440,7 @@ guidata(hObject,handles);
 % else
 %     imageMaskMask = ones(pixDim,'uint16');
 % end
-% if handles.settingsStruct.commStatHistInCenter == 1
+% if handles.settingsStruct.RTCalcsInCenter == 1
 %     selectRad = 0.5*pixDim*handles.settingsStruct.analysisSelectCenterRadPercent;
 %     scaledYOffset = round(handles.settingsStruct.constYOffset*pixDim/520);
 %     [x, y] = meshgrid(1:pixDim, (1+scaledYOffset):(pixDim+scaledYOffset));
@@ -1447,7 +1451,7 @@ guidata(hObject,handles);
 % 
 % % if de-selected then disable the ascii timestamps because that will mess
 % % up the thresholding
-% if handles.settingsStruct.commStatHistInCenter == 0
+% if handles.settingsStruct.RTCalcsInCenter == 0
 %     handles.settingsStruct.TMTimestampMode = 'No Stamp';
 %     handles.srcObj.TMTimestampMode = 'No Stamp';
 % end
@@ -2853,8 +2857,8 @@ guidata(hObject,handles);
 % CLOSING FUNCTION - CLEANS UP CONNECTIONS (very important to get this
 % right)
 % --- Executes when user attempts to close the GUI.
-function two_color_image_GUI_CloseRequestFcn(hObject, eventdata, handles)
-% hObject    handle to multicolor_imaging_GUI (see GCBO)
+function acquisition_GUI_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to acquisition_GUI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -3116,20 +3120,20 @@ end
 guidata(hObject,handles);
 
 
-% --- Executes on button press in fixationTarget.
-function fixationTarget_Callback(hObject, eventdata, handles)
+% --- Executes on button press in commFixTarget.
+function commFixTarget_Callback(hObject, eventdata, handles)
 % Set the new value
-handles.settingsStruct.fixationTarget = get(handles.fixationTarget,'Value');
+handles.settingsStruct.commFixTarget = get(handles.commFixTarget,'Value');
 % Toggle fixation target LED
-handles.digitalOutputScan(6) = handles.settingsStruct.fixationTarget;
+handles.digitalOutputScan(6) = handles.settingsStruct.commFixTarget;
 outputSingleScan(handles.NIDaqSession,handles.digitalOutputScan);
 % Send along GUI data
 guidata(hObject,handles);
 
 
-% --- Executes on key press with focus on two_color_image_GUI and none of its controls.
-function two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
-% hObject    handle to two_color_image_GUI (see GCBO)
+% --- Executes on key press with focus on acquisition_GUI and none of its controls.
+function acquisition_GUI_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to acquisition_GUI (see GCBO)
 % eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
 %	Key: name of the key that was pressed, in lower case
 %	Character: character interpretation of the key(s) that was pressed
@@ -3505,8 +3509,8 @@ switch eventdata.Key
                 set(handles.saveBaseName,'String',handles.filenameChars);guidata(hObject,handles);
             end
         else
-            oldVal = get(handles.fixationTarget,'Value');
-            set(handles.fixationTarget,'Value',~oldVal);
+            oldVal = get(handles.commFixTarget,'Value');
+            set(handles.commFixTarget,'Value',~oldVal);
             fixationTarget_Callback(hObject, eventdata, handles);
         end
         
@@ -3655,6 +3659,6 @@ two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
 function capLEDsEnable4_KeyPressFcn(hObject, eventdata, handles)
 two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
 
-function fixationTarget_KeyPressFcn(hObject, eventdata, handles)
+function commFixTarget_KeyPressFcn(hObject, eventdata, handles)
 two_color_image_GUI_KeyPressFcn(hObject, eventdata, handles)
 

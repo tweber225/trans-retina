@@ -15,6 +15,7 @@ camConstStruct.pixBitDepth = 10;
 camConstStruct.shutterMode = 'global';
 camConstStruct.GPIOExpOutput = 1;
 camConstStruct.expIncrementMs = 1; % in ms (note 60fps is 16.67ms period)
+camConstStruct.internalModelNumber = 'SC1280G12N';
 
 % Default camera settings, note: these will be imported for preview mode
 % and capture mode

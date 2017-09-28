@@ -58,27 +58,9 @@ guidata(hObject, handles);
 % Add subfolders to path to enable functions
 addpath('callback_code','file_IO','utility_and_settings_code','cam_code_compiled');
 
-% Load the default program settings
-handles.settingsStruct = load_default_program_settings; % This script defines all the variables in the master settings structure "settingsStruct"
-handles.inputExpNumbers = '-'; % Next few lines, to track numpad/keypad key strokes
-handles.capInputExpNumbers = '-';
-handles.enteringFilename = 0;
-handles.filenameChars = '';
-handles.shiftHit = 0; % tracks whether the shift key has been hit
-handles.requestCapture = 0; % tracks whether preview has been interrupted and a capture is requested
-handles.needToAutoScaleImage = 0; % Tracks whether we should autoscale the image levels on next frame update
+% Call opening function codes from script in utility_and_settings_code/
+open_function_code;
 
-% Make digital channels to send enable signal to Arduino with correct
-% configuration of LEDs
-handles.prevLEDsToEnable = [handles.settingsStruct.prevLEDsEnable1 handles.settingsStruct.prevLEDsEnable2 handles.settingsStruct.prevLEDsEnable3 handles.settingsStruct.prevLEDsEnable4];
-handles.capLEDsToEnable = [handles.settingsStruct.capLEDsEnable1 handles.settingsStruct.capLEDsEnable2 handles.settingsStruct.capLEDsEnable3 handles.settingsStruct.capLEDsEnable4];
-handles.LEDsToEnable = [handles.settingsStruct.selectLEDsEnable1 handles.settingsStruct.selectLEDsEnable2 handles.settingsStruct.selectLEDsEnable3 handles.settingsStruct.selectLEDsEnable4];
-disp('Starting DAQ System')
-handles.NIDaqSession = daq.createSession('ni');
-addDigitalChannel(handles.NIDaqSession,'dev1','Port0/Line0:5','OutputOnly');
-% Make sure the port is set to low so we can trigger the Aruindo later
-handles.digitalOutputScan = [0 handles.LEDsToEnable handles.settingsStruct.commFixTarget];
-outputSingleScan(handles.NIDaqSession,handles.digitalOutputScan);
 
 % Open the camera adapters
 disp('Starting Camera')
@@ -199,7 +181,7 @@ end
 function prevExpTime_Callback(hObject, eventdata, handles)
 newExpTime = str2double(get(handles.prevExpTime,'String'));
 % Update this in the settings structure
-handles.settingsStruct.prevExpTime = newExpTime;
+handles.GUISetStruct.prevExpTime = newExpTime;
 % Also update camera source object with new exposure time. Do this because
 % it will automatically update the exposure time, so it can be changed
 % mid-preview.
@@ -2768,12 +2750,12 @@ if handles.settingsStruct.capLockSettings == 1
     set(handles.capPixClock,'Enable','off');
     set(handles.capGain,'Enable','off');
     % set the corresponding value from Preview mode's setting
-    set(handles.capExpTime,'String',num2str(handles.settingsStruct.prevExpTime));
+    set(handles.capExpTime,'String',num2str(handles.GUISetStruct.prevExpTime));
     set(handles.capBinSize,'Value',handles.settingsStruct.prevBinSize);
     set(handles.capPixClock,'Value',handles.settingsStruct.prevPixClock);
     set(handles.capGain,'Value',handles.settingsStruct.prevGain);
     % Over-write capture mode's settingsStruct values
-    handles.settingsStruct.capExpTime= handles.settingsStruct.prevExpTime;
+    handles.settingsStruct.capExpTime= handles.GUISetStruct.prevExpTime;
     handles.settingsStruct.capBinSize= handles.settingsStruct.prevBinSize;
     handles.settingsStruct.capPixClock= handles.settingsStruct.prevPixClock;
     handles.settingsStruct.capGain= handles.settingsStruct.prevGain;

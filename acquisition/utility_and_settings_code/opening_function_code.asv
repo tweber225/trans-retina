@@ -20,11 +20,16 @@ disp('Starting DAQ System')
 handles.NIDaqSession = daq.createSession('ni');
 addDigitalChannel(handles.NIDaqSession,DAQSetupStruct.deviceName,DAQSetupStruct.portAndLines,'OutputOnly');
 % Make sure the first output is set to low (=0) so we can trigger the Aruindo later
-handles.tempFlagsStruct.digitalOutputScan = [0 handles.tempFlagsStruct.LEDsToEnable handles.GUISetStruct.commFixTarget];
+handles.digitalOutputScan = [0 handles.tempFlagsStruct.LEDsToEnable handles.GUISetStruct.commFixTarget];
 outputSingleScan(handles.NIDaqSession,handles.digitalOutputScan);
 
-% Open up and initialize camera
-disp('Starting Camera ...')
+% Open the camera adapters
+disp('Starting Camera')
+handles.vidObj = videoinput('pcocameraadaptor', 0); % vid input object
+handles.srcObj = getselectedsource(handles.vidObj); % adapter source
+
+%Set logging to memory
+handles.vidObj.LoggingMode = 'memory';
 
 % Update GUI settings, set up default camera parameters
 handles = update_all_settings_on_GUI(handles);

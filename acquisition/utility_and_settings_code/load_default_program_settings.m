@@ -1,4 +1,4 @@
-function [camConstStruct, camSetStruct, LEDsSetStruct, GUISetStruct, tempFlagsStruct, analysisSetStruct] = load_default_program_settings()
+function [camConstStruct, camSetStruct, LEDsSetStruct, DAQSetupStruct, GUISetStruct, tempFlagsStruct, analysisSetStruct] = load_default_program_settings()
 % TRANS-RETINA/ACQUISITION/UTILITY_AND_SETTINGS_CODE/LOAD_DEFAULT_PROGRAM_SETTINGS.M
 % Timothy D. Weber, BU Biomicroscopy Lab, 28 Sept. 2017
 % Purpose: to load default program and camera parameter settings and
@@ -19,6 +19,11 @@ ledConfigName = 'four_LEDs'; %<-edit here for new LED configuration
 run(['settings_profiles' filesep ledConfigName '.m']);
 % Now there's a structure called LEDConfigStruct, which this function does
 % not need to pass, since all the info is saved into the GUI fields
+
+% DAQ DIGITAL PIN CONFIGURATION (works the same as LED CONFIGURATION)
+daqConfigName = 'DAQ_setup'; %<-edit here for new DAQ configuration
+run(['settings_profiles' filesep daqConfigName '.m']);
+% Now there's a structure called DAQSetupStruct
 
 % GUI SETTINGS
 % -Preview Mode Settings tab (use default camera settings)
@@ -97,6 +102,25 @@ LEDsSetStruct.LED4Enable = GUISetStruct.prevLEDsEnable4;
 % save)
 tempFlagsStruct.justFinishedCap = 0; % Flag to fix a bug/situation when user changes preview mode LEDs choices after a capture has completed, but before preview mode has started
 tempFlagsStruct.inCapMode = 0; % another (inelegant) fix to a bug with the capture mode LED choices 
+tempFlagsStruct.inputExpNumbers = '-'; % Next few lines, to track numpad/keypad key strokes
+tempFlagsStruct.capInputExpNumbers = '-';
+tempFlagsStruct.enteringFilename = 0;
+tempFlagsStruct.filenameChars = '';
+tempFlagsStruct.shiftHit = 0; % tracks whether the shift key has been hit
+tempFlagsStruct.requestCapture = 0; % tracks whether preview has been interrupted and a capture is requested
+tempFlagsStruct.needToAutoScaleImage = 0; % Tracks whether we should autoscale the image levels on next frame update
+tempFlagsStruct.prevLEDsToEnable = [GUISetStruct.prevLEDsEnable1;
+    GUISetStruct.prevLEDsEnable2;
+    GUISetStruct.prevLEDsEnable3; 
+    GUISetStruct.prevLEDsEnable4];
+tempFlagsStruct.capLEDsToEnable = [GUISetStruct.capLEDsEnable1;
+    GUISetStruct.capLEDsEnable2;
+    GUISetStruct.capLEDsEnable3; 
+    GUISetStruct.capLEDsEnable4];
+tempFlagsStruct.LEDsToEnable = [LEDsSetStruct.LED1Enable;
+    LEDsSetStruct.LED2Enable;
+    LEDsSetStruct.LED3Enable; 
+    LEDsSetStruct.LED4Enable];
 
 
 % DERIVED SETTINGS/PARAMETERS (some useful settings that are dependent on
@@ -113,6 +137,7 @@ if sum([LEDsSetStruct.LED1Enable,LEDsSetStruct.LED2Enable,LEDsSetStruct.LED3Enab
 else
     GUISetStruct.selectLEDsQuadViewOn = 0;
 end
+
 
 % ANALYSIS SETTINGS STRUCTURE
 analysisSetStruct.analysisSelectCenterRadPercent = 0.95; % percentage of the image height to use as AOI circle diameter to compute RT calcs

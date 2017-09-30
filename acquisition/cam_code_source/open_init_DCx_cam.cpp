@@ -5,9 +5,10 @@ using namespace std;
 
 #define SEPARATOR "============================================================"
 
-
 // in MATLAB calling this should look like:
-// [camHandle, modelNum, prevFrameStruct, capFrameStruct] = open_init_DCx_cam();
+// hCam = open_init_DCx_cam(bitDepth);
+
+// This function initializes the camera, sets display mode to DiB, sets monochrome bit depth 
 
 
 // CUSTOM ERROR FUNCTION TO EXIT CAMERA BEFORE CLOSING THE PROGRAM (SO THE CAMERA DOESN'T GET TIED UP)
@@ -26,9 +27,15 @@ void mexFunction(int nlhs, mxArray *plhs[],int nrhs, const mxArray *prhs[] )
     int bitDepth;
     INT numCameras, camIdx, pixelBitDepthFormat;
     UC480_CAMERA_LIST *cameraList;   // List of connected cameras
-    HCAM hCam = 0;       // Handle to camera, choosing first available, errors outs if more than 1 connected
     SENSORINFO Sensor;
-
+    
+    // Check left hand argument (right is checked later)
+    if (nlhs !=1)
+        ExitError("Need to designate a single variable for camera handle");
+    
+    // initialize camera handle
+    plhs[0] = mxCreateNumericMatrix(1, 1, mxINT32_CLASS,mxREAL); 
+    HCAM *phCam  = (HCAM *)mxGetPr(plhs[0]); 
     
     mexPrintf("Checking for connected DCx cameras ...\n");mexEvalString("drawnow;");
 
@@ -67,10 +74,13 @@ void mexFunction(int nlhs, mxArray *plhs[],int nrhs, const mxArray *prhs[] )
         ExitError("Too many cameras connected, disconnect leaving just one for imaging");
     
     // Get bit depth
-    if (nrhs && mxIsScalar(prhs[0]) && mxGetScalar(prhs[0])>=8)
+    if (nrhs && mxIsScalar(prhs[0])) {
         bitDepth = (INT)mxGetScalar(prhs[0]);
+    } else {
+        ExitError("Pixel depth argument error");
+    }
     if (bitDepth<8 || bitDepth>16)
-        ExitError("Please enter a valid monochrome bit depth between 8 and 16");
+        ExitError("Must input a valid pixel bit depth (monochrome) between 8 and 16");
     if (bitDepth == 8) {
         pixelBitDepthFormat = IS_CM_MONO8;
     } else if (bitDepth>8 && bitDepth<=12) {
@@ -83,8 +93,9 @@ void mexFunction(int nlhs, mxArray *plhs[],int nrhs, const mxArray *prhs[] )
     
     // Initialize camera; set to monochrome, 12-bit; set to bitmap mode; set software triggering
     mexPrintf("Initializing camera ...\n");mexEvalString("drawnow;");
-    if (is_InitCamera(&hCam, NULL) != IS_SUCCESS)
+    if (is_InitCamera(phCam,NULL) != IS_SUCCESS)
         ExitError("Could not initialize camera");
+    HCAM hCam=*phCam;
     mexPrintf("Setting colormode to monochrome, %d-bit ...\n",bitDepth);mexEvalString("drawnow;");
     if (is_SetColorMode(hCam, pixelBitDepthFormat) != IS_SUCCESS)
         ExitError("Could not set camera bit depth", hCam);
@@ -110,9 +121,6 @@ void mexFunction(int nlhs, mxArray *plhs[],int nrhs, const mxArray *prhs[] )
         SEPARATOR);
     mexEvalString("drawnow;");
         
-    // Release camera
-    is_ExitCamera(hCam);
-    mexPrintf("\n%s\n%35s\n%s\n\n", SEPARATOR, "C O M P L E T E", SEPARATOR);mexEvalString("drawnow;");
- 
+    
     return;   
 }

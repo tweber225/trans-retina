@@ -13,3 +13,4 @@ mex('-v','set_gain_boost_DCx_cam.cpp',includeDir,libDir,libFile);
 mex('-v','set_ext_trig_DCx_cam.cpp',includeDir,libDir,libFile);
 mex('-v','set_black_DCx_cam.cpp',includeDir,libDir,libFile);
 mex('-v','set_shutter_mode_DCx_cam.cpp',includeDir,libDir,libFile);
+mex('-v','set_flash_output_DCx_cam.cpp',includeDir,libDir,libFile);

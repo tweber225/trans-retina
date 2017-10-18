@@ -73,7 +73,7 @@ void mexFunction(int nlhs, mxArray *plhs[],int nrhs, const mxArray *prhs[] )
     if (numCameras>1)
         ExitError("Too many cameras connected, disconnect leaving just one for imaging");
     
-    // Get bit depth
+    // Gather desired bit depth
     if (nrhs && mxIsScalar(prhs[0])) {
         bitDepth = (INT)mxGetScalar(prhs[0]);
     } else {

@@ -1,4 +1,4 @@
-function [regStack xShift yShift thetaShift] = register_single_color_fundus(unregStack,latUpSample,rotUpSample)
+function [regStack, xShift, yShift, upsampledRotEst] = register_single_color_fundus(unregStack, latUpSample, rotUpSample)
 % ANALYSIS/REGISTER_SINGLE_COLOR_FUNDUS Function to register a series of
 % fundus images from a single color channel. Uses upsampled phase
 % correlations to detect lateral and rotational image shifts. The degree of
@@ -10,6 +10,11 @@ function [regStack xShift yShift thetaShift] = register_single_color_fundus(unre
 % Part 2 of standard image processing pipeline
 % Timothy D. Weber
 % Biomicroscopy Lab, BU 2017
+regStack = 1;
+xShift = 1;
+yShift = 1;
+
+
 tic
 % INITIAL PARAMETERS
 [xPix, yPix, numFrames] = size(unregStack);
@@ -62,6 +67,7 @@ for frameIdx = 2:numFrames
     % its circumference (correction for unequal interpolated sampling)
     xPowSpec = rotFFTFirstFrame.*conj(rotFFTFrame)./abs(rotFFTFirstFrame.*conj(rotFFTFrame));
     xCorr = ifft(xPowSpec,[],2);
+    imagesc(abs(xCorr));drawnow;
     [~, rotCoarseEst] = max(sum(xCorr.*weightMat,1)./sum(weightMat,1));
     
     % With the coarse estimate of the rotation, we can formulate a more

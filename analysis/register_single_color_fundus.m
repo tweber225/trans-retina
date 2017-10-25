@@ -32,7 +32,10 @@ FFT2UnregStack = fftshift(FFT2UnregStack,2); % and fftshift dimensions 1 and 2
 % estimate the rotation by a weighted average of these realizations.
 
 % Make indices of coordinates
-anglesRad = deg2rad(0:(360/numInitialAngles):(360/numInitialAngles)*(numInitialAngles-1));
+startAngle = (360/numInitialAngles)/2;
+anglePitch = (360/numInitialAngles);
+endAngle = 360;
+anglesRad = deg2rad(startAngle:anglePitch:endAngle);
 radii = 1:floor(0.5*(imgDiam-1));
 [polCoordsTheta, polCoordsR] = meshgrid(anglesRad,radii);
 [cartNormalCoordsX, cartNormalCoordsY] = meshgrid((-(xPix-1)/2):((xPix-1)/2),(-(yPix-1)/2):((yPix-1)/2));
@@ -67,18 +70,21 @@ for frameIdx = 2:numFrames
     % its circumference (correction for unequal interpolated sampling)
     xPowSpec = rotFFTFirstFrame.*conj(rotFFTFrame)./abs(rotFFTFirstFrame.*conj(rotFFTFrame));
     xCorr = ifft(xPowSpec,[],2);
-    imagesc(abs(xCorr));drawnow;
-    [~, rotCoarseEst] = max(sum(xCorr.*weightMat,1)./sum(weightMat,1));
-    rotCoarseEst = rotCoarseEst-1; % Minus one because finding a max at the first element would mean no shift
+    
+    %imagesc(real(xCorr));drawnow;
+    
+    [~, rotCoarseEst] = max(real(sum(xCorr.*weightMat,1)./sum(weightMat,1)));
+    rotCoarseEst = rotCoarseEst-1; % Minus one because finding a max at the first  element would mean no shift
     
     % With the coarse estimate of the rotation, we can formulate a more
     % precise (inverse) DFT matrix just around this estimate on the
     % cross-power spectrum (not the whole frequency space, since we can be
     % sure the max of the cross-correlation will not be anywhere else)
-    freqsToUseFineGrid = floor((rotCoarseEst-2)*rotUpSample):ceil((rotCoarseEst+2)*rotUpSample);
+    freqsToUseFineGrid = (floor((rotCoarseEst-2)*rotUpSample):ceil((rotCoarseEst+2)*rotUpSample))';
+    freqsInNeighborhood = length(freqsToUseFineGrid);
     phaseIdxLeft = 0:(numInitialAngles/2-1);
     phaseIdxRight = (totalUpSampleFreqs-(numInitialAngles/2)):(totalUpSampleFreqs-1);
-    phaseFreqIdxMat = freqsToUseFineGrid'*[phaseIdxLeft, phaseIdxRight];
+    phaseFreqIdxMat = freqsToUseFineGrid*[phaseIdxLeft, phaseIdxRight];
     
     % Note the awkard amount of transposes is so that we can set up the DFT
     % matrix in the conventional configuration (i.e. wikipedia's)
@@ -86,14 +92,15 @@ for frameIdx = 2:numFrames
     
     % Compute the upsampled DFT in the neighborhood of coarse estimate
     upsampledXCorr = (targetedDFTMat*(xPowSpec)')';
-    
+
     % weight by the circumference of each circular track
-    upsampledWeightMat = repmat(radii',[1 size(freqsToUseFineGrid,2)]);
+    upsampledWeightMat = repmat(radii',[1 freqsInNeighborhood]);
     [~, maxIdx] = max(sum(upsampledXCorr.*upsampledWeightMat,1));
     upsampledRotEst(frameIdx) = 360*freqsToUseFineGrid(maxIdx)/totalUpSampleFreqs;
+    
+    imagesc(real(upsampledXCorr));drawnow;
+    %plot(sum(real(stackedUpsampledXCorr.*upsampledWeightMat)));drawnow;
 end
-
-
 
 toc
 

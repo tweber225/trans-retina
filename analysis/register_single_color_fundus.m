@@ -63,6 +63,7 @@ for frameIdx = 2:numFrames
     xPowSpec = rotFFTFirstFrame.*conj(rotFFTFrame)./abs(rotFFTFirstFrame.*conj(rotFFTFrame));
     xCorr = ifft(xPowSpec,[],2);
     [~, rotCoarseEst] = max(sum(xCorr.*weightMat,1)./sum(weightMat,1));
+    rotCoarseEst = rotCoarseEst-1; % Minus one because finding a max at the first element would mean no shift
     
     % With the coarse estimate of the rotation, we can formulate a more
     % precise (inverse) DFT matrix just around this estimate on the

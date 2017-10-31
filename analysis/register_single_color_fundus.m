@@ -1,4 +1,5 @@
 function [regStack, xShift, yShift, rotEst] = register_single_color_fundus(unregStack,latUpsample,rotUpsample)
+
 % ANALYSIS/REGISTER_SINGLE_COLOR_FUNDUS Function to register a series of
 % fundus images from a single color channel. Uses upsampled phase
 % correlations to detect lateral and rotational image shifts. The degree of
@@ -90,7 +91,7 @@ for frameIdx = 2:numFrames
     
     % Compute the upsampled DFT in the neighborhood of coarse estimate
     upsampledXCorr = (targetedDFTMat*(xPowSpec)')';
-    
+
     % weight by the circumference of each circular track
     upsampledWeightMat = repmat(radii',[1 size(freqsToUse,2)]);
     [~, maxIdx] = max(real(sum(upsampledXCorr.*upsampledWeightMat,1)));
@@ -116,7 +117,6 @@ for frameIdx = 2:numFrames
     transCoarseEstX = (transCoarseEstX-1);
     transCoarseEstY = (transCoarseEstY-1);
     disp([transCoarseEstX transCoarseEstY])
-
     
     totalUpsampleFreqsX = xPix*latUpsample;
     totalUpsampleFreqsY = yPix*latUpsample;

@@ -156,21 +156,14 @@ end
 maxXShift = max(abs(xShift));
 maxYShift = max(abs(yShift));
 angleShift = sqrt((xPix/2)^2+(yPix/2)^2)*sin(pi/4+deg2rad(max(abs(rotEst))))-xPix/2;
-xRoom = ceil(maxXShift+angleShift)+1;
-yRoom = ceil(maxYShift+angleShift)+1;
+xRoom = ceil(maxXShift+angleShift);
+yRoom = ceil(maxYShift+angleShift);
 padUnregStack = padarray(unregStack,[yRoom xRoom],0,'both');
-regStack = zeros(size(padUnregStack));
 
 for frameIdx = 1:numFrames
     % First rotate
-    rotFrame = imrotate(padUnregStack(:,:,frameIdx),-rotEst(frameIdx),'crop','bilinear');
-    intShiftX = ceil(xShift(frameIdx));
-    intShiftY = ceil(yShift(frameIdx));
-    subShiftX = intShiftX - xShift(frameIdx);
-    subShiftY = intShiftY - yShift(frameIdx);
-    rotIntShift = circshift(rotFrame,[-intShiftY -intShiftX]);
-    regStack(:,:,frameIdx) = conv2(conv2(rotIntShift,[(1-subShiftX), subShiftX],'same'),[(1-subShiftY);subShiftY],'same');
-    imagesc(regStack(:,:,frameIdx));drawnow;pause(.05);
+    rotFrame = imrotate(padUnregStack(:,;,frameIdx),-rotEst(frameId),'crop','bilinear');
+    regStack(:,:,frameIdx) = rotFrame
 end
 
 toc

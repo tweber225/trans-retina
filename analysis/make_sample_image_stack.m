@@ -1,9 +1,9 @@
 % Quick script to make a stack of sample images
 % Translates, rotates, and varies the whole image intensity
 clear all;
-numFrames = 25;
+numFrames = 256;
 baseImg = double(imread('cameraman.tif'));
-rotList = (9 + 1*randn(numFrames,1)); % degrees to randomly translate
+rotList = (7 + 1*randn(numFrames,1)); % degrees to randomly translate
 transList = 1*randn(numFrames,2);  % pixels x,y to randomly translate
 intensityList = 1+0.1*randn(numFrames,1); % factor to multiply original image values by
 noiseStd = 256*.01;

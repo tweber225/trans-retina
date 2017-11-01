@@ -1,5 +1,4 @@
 function [regStack, xShift, yShift, rotEst] = register_single_color_fundus(unregStack,latUpsample,rotUpsample)
-
 % ANALYSIS/REGISTER_SINGLE_COLOR_FUNDUS Function to register a series of
 % fundus images from a single color channel. Uses upsampled phase
 % correlations to detect lateral and rotational image shifts. The degree of
@@ -99,8 +98,7 @@ for frameIdx = 2:numFrames
     
     % Rotate frame by detected ammount
     rotFrame = imrotate(unregStack(:,:,frameIdx),-rotEst(frameIdx),'crop','bilinear');
-    
-    
+        
     % LATERAL REGISTRATION
     % The same idea as before--determine a rough estimate of the lateral
     % displacement from a phase correlation, then determine sub-pixel
@@ -114,9 +112,16 @@ for frameIdx = 2:numFrames
     % Get the max in both x and y
     [~, transCoarseEstX] = max(max(real(xCorr),[],1));
     [~, transCoarseEstY] = max(max(real(xCorr),[],2));
-    transCoarseEstX = (transCoarseEstX-1);
-    transCoarseEstY = (transCoarseEstY-1);
-    disp([transCoarseEstX transCoarseEstY])
+    if transCoarseEstX >= xPix/2
+        transCoarseEstX = abs(transCoarseEstX-xPix)+1;
+    else
+        transCoarseEstX = -transCoarseEstX+1;
+    end
+    if transCoarseEstY >= yPix/2
+        transCoarseEstY = abs(transCoarseEstY-yPix)+1;
+    else
+        transCoarseEstY = -transCoarseEstY+1;
+    end
     
     totalUpsampleFreqsX = xPix*latUpsample;
     totalUpsampleFreqsY = yPix*latUpsample;
@@ -135,15 +140,17 @@ for frameIdx = 2:numFrames
     
     % Multiply to get DFT-ed cross-correlation
     upsampledXCorr = (omegaFactor(phaseFreqIdxMatY,totalUpsampleFreqsY)*(xPowSpec))*omegaFactor(phaseFreqIdxMatX,totalUpsampleFreqsX);
+    imagesc(real(upsampledXCorr));drawnow
     
-    imagesc(real(upsampledXCorr));drawnow;pause(.1)
-
-    % Find new max
+    % Find new max, rescale to units of pixels
     [~, maxIdxX] = max(max(real(upsampledXCorr),[],1)); 
     [~, maxIdxY] = max(max(real(upsampledXCorr),[],2));
     
     xShift(frameIdx) = xPix*freqsToUseX(maxIdxX)/totalUpsampleFreqsX;
     yShift(frameIdx) = yPix*freqsToUseY(maxIdxY)/totalUpsampleFreqsY;
+    
+    % Translate back to complete the registration
+
 end
 
 toc

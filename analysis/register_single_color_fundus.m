@@ -96,15 +96,15 @@ for frameIdx = 2:numFrames
     [~, maxIdx] = max(real(sum(upsampledXCorr.*upsampledWeightMat,1)));
     rotEst(frameIdx) = mod(360*freqsToUse(maxIdx)/totalUpsampleFreqs+180,360)-180;
     
-    % Rotate frame by detected ammount
-    rotFrame = imrotate(unregStack(:,:,frameIdx),-rotEst(frameIdx),'crop','bilinear');
-        
+    
     % LATERAL REGISTRATION
     % The same idea as before--determine a rough estimate of the lateral
     % displacement from a phase correlation, then determine sub-pixel
     % registration from upsampled DFT just around that location
-    FFT2RotFrame = fftshift(fft2(rotFrame));
     
+    % Rotate FFT2 frame by detected ammount
+    rotFrame = imrotate(unregStack(:,:,frameIdx),-rotEst(frameIdx),'crop','bilinear');
+    FFT2RotFrame = fftshift(fft2(rotFrame));
     % calculate cross power spectrum and cross correlation
     xPowSpec = ifftshift(FFT2FirstFrame.*conj(FFT2RotFrame)./abs(FFT2FirstFrame.*conj(FFT2RotFrame)));
     xCorr = ifft2(xPowSpec);

@@ -30,6 +30,12 @@ templateImageSc = (templateImage-min(templateImage(:)))./(max(templateImage(:))-
 
 % Crop interactively
 [~,rLims] = imcrop(templateImageSc);
+% Make even number of pixels per dimension and square
+rLims(3) = round(rLims(3)/2)*2;
+rLims(4) = round(rLims(4)/2)*2;
+minDim = min(rLims(3),rLims(4));
+rLims(3) = minDim;
+rLims(4) = minDim;
 x1 = round(rLims(1));
 x2 = round(rLims(1)+rLims(3));
 y1 = round(rLims(2));

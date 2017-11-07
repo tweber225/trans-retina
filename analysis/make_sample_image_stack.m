@@ -3,10 +3,10 @@
 clear all;
 numFrames = 512;
 baseImg = double(imread('cameraman.tif'));
-rotList = (7 + 2*randn(numFrames,1)); % degrees to randomly translate
-transList = 3*randn(numFrames,2);  % pixels x,y to randomly translate
+rotList = 0*(7.5689 + 2*randn(numFrames,1)); % degrees to randomly translate
+transList = 0*[sin(.2*(1:numFrames)'), cos(.1*(1:numFrames)')] + 4*randn(numFrames,2);  % pixels x,y to randomly translate
 intensityList = 1+0.1*randn(numFrames,1); % factor to multiply original image values by
-noiseStd = 256*.05;
+noiseStd = 256*.02;
 
 % Loop through and transform frames
 maxShift = ceil(max(abs(transList)));
@@ -14,7 +14,7 @@ padBaseImg = padarray(baseImg,maxShift,0);
 unregStack = zeros(size(padBaseImg,1),size(padBaseImg,2),numFrames);
 padBaseImgSize = size(padBaseImg);
 
-for frameIdx = 2:numFrames
+for frameIdx = 1:numFrames
     padRotImg = imrotate(padBaseImg,rotList(frameIdx),'crop','bilinear');
     frameTForm = affine2d([1 0 0; 0 1 0; transList(frameIdx,1) transList(frameIdx,2) 1]);
     unregStack(:,:,frameIdx) = intensityList(frameIdx)*imwarp(padRotImg,frameTForm,'OutputView',imref2d(padBaseImgSize));

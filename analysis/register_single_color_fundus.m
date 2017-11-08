@@ -1,4 +1,4 @@
-function [regStack, xShift, yShift, rotEst] = register_single_color_fundus(unregUncroppedStack,latUpsample,rotUpsample,flatFraction)
+function [regStack, xShift, yShift, rotEst] = register_single_color_fundus(unregUncroppedStack,rotUpsample,latUpsample,flatFraction)
 % ANALYSIS/REGISTER_SINGLE_COLOR_FUNDUS 
 % Function to register a series of fundus images from a single color
 % channel. Uses upsampled phase correlations to detect lateral and
@@ -61,7 +61,7 @@ magMean = mean(abs(FFT2UnregStack),3);
 startAngle = 0;
 anglePitch = 180/numInitialAngles;
 anglesRad = deg2rad(startAngle:anglePitch:(180-anglePitch));
-radii = 2:floor(0.5*(imgDiam-1));
+radii = 1:floor(0.5*(imgDiam-1));
 [polCoordsTheta, polCoordsR] = meshgrid(anglesRad,radii);
 [cartNormalCoordsX, cartNormalCoordsY] = meshgrid((-xPix/2):(xPix/2-1),(-yPix/2):(yPix/2-1));
 [cartWarpCoordsX, cartWarpCoordsY] = pol2cart(polCoordsTheta,polCoordsR);
@@ -72,7 +72,8 @@ avgRad = mean(warpedMagMean,2);
 % half of the OTF
 avgMagOutOfBand = mean(avgRad(round(end/2):end));
 stdMagOutOfBand = std(avgRad(round(end/2):end));
-maxRadiiOTF = 2*floor(max((avgRad>(avgMagOutOfBand + 10*stdMagOutOfBand)).*radii')/2)+1; % force odd, 50 is a arbitrary factor
+maxRadiiOTF = round(max((avgRad>(avgMagOutOfBand + 16*stdMagOutOfBand)).*radii'));
+maxRadiiForRotReg = 2*floor(maxRadiiOTF/2)+1; % Force to odd interger
 
 % Make a binary pattern to use to block out out-of-band components
 bandBinMask = ((cartNormalCoordsX.^2 + cartNormalCoordsY.^2) < (maxRadiiOTF^2));
@@ -90,7 +91,7 @@ numInitialAngles = 2*round((maxRadiiOTF*pi)/2); % new number of initial angles
 startAngle = 0;
 anglePitch = 180/numInitialAngles;
 anglesRad = deg2rad(startAngle:anglePitch:(180-anglePitch));
-radii = 2:maxRadiiOTF;
+radii = 2:maxRadiiForRotReg; % Note that we consider only frequencies "rings" within the OTF support
 [polCoordsTheta, polCoordsR] = meshgrid(anglesRad,radii);
 [cartNormalCoordsX, cartNormalCoordsY] = meshgrid((-xPix/2):(xPix/2-1),(-yPix/2):(yPix/2-1));
 [cartWarpCoordsX, cartWarpCoordsY] = pol2cart(polCoordsTheta,polCoordsR);
@@ -104,6 +105,9 @@ totalUpsampleFreqs = numInitialAngles*rotUpsample;
 
 % Create weighting matrix for rotational realizations
 weightMat = repmat(radii',[1 numInitialAngles]);
+
+% Allocate rotational registration variable
+rotEst = zeros(numFrames,1);
 
 % Allocate lateral registration variables
 FFT2FirstFrame = FFT2UnregStack(:,:,1);
@@ -133,7 +137,7 @@ for frameIdx = 2:numFrames
     % its circumference (correction for unequal interpolated sampling)
     xPowSpec = rotFFTFirstFrame.*conj(rotFFTFrame)./(abs(rotFFTFirstFrame.*conj(rotFFTFrame)));
     xCorr = ifft(xPowSpec,[],2);
-    [~, rotCoarseEst] = max(real(sum(xCorr.*weightMat,1)./sum(weightMat,1)));
+    [~, rotCoarseEst] = max(real(sum(xCorr.*weightMat,1)));
     rotCoarseEst = rotCoarseEst-1; % Minus one because finding a max at the first element would mean no shift
     
     % With the coarse estimate of the rotation, we can formulate a more
@@ -156,7 +160,7 @@ for frameIdx = 2:numFrames
     upsampledWeightMat = repmat(radii',[1 size(freqsToUse,2)]);
     [~, maxIdx] = max(real(sum(upsampledXCorr.*upsampledWeightMat,1)));
     rotEst(frameIdx) = 180*freqsToUse(maxIdx)/totalUpsampleFreqs;
-
+    imagesc(fftshift(real(xCorr.*weightMat),2));drawnow;
     
     % LATERAL REGISTRATION
     % The same idea as before--determine a rough estimate of the lateral

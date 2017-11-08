@@ -21,4 +21,4 @@ rawStack = load_single_color_fundus(1);
 
 
 %% REGISTRATION
-[regStack, dx, dy, dtheta] = register_single_color_fundus(rawStack,512,128,.025);
+[regStack, dX, dY, dTheta] = register_single_color_fundus(rawStack,512,8,.025);

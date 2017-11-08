@@ -20,10 +20,8 @@ probCutOff = 1e-12;
 %% LOAD DATA
 rawStack = load_single_color_fundus(1);
 
-
 %% HOTPIXEL CORRECTION
 [hotPixFreeStack, hPixX, hPixY] = hot_pixel_correction(rawStack,medFiltRad,probCutOff);
-
 
 %% REGISTRATION
 [regStack, dX, dY, dTheta] = register_single_color_fundus(rawStack,512,8,.025);

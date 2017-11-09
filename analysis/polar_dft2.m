@@ -1,4 +1,4 @@
-function polFFT2 = polar_fft2(inputStack,thetaList,rhoList)
+function polDFT2 = polar_dft2(inputStack,thetaList,rhoList)
 % Get pixel numbers
 [numYPix,numXPix,numFrames] = size(inputStack);
 omegaFactor = @(idx,N) exp(-2*pi*1j*idx/N);
@@ -21,13 +21,13 @@ apodInputStack = inputStack.*repmat(circAperture,[1 1 numFrames]);
 [kX,kY] = pol2cart(thetaGrid,rhoGrid);
 
 % Make output matrix
-polFFT2 = zeros(numTheta,numRho,numFrames);
+polFFT2 = zeros(numRho,numTheta,numFrames);
 
 parfor thetaIdx = 1:numTheta % Possibly useful to parallelize this
     disp(['Working on theta ' num2str(thetaIdx) ' of ' num2str(numTheta)]);
     for rhoIdx = 1:numRho
         % Generate spatial frequency map
-        argMap = xGrid*kX(rhoIdx,thetaIdx) + yGrid*kY(thetaIdx,rhoIdx);
-        polFFT2(thetaIdx,rhoIdx,:) = sum(sum(apodInputStack.*repmat(omegaFactor(argMap,numXPix),[1 1 numFrames]),1),2);
+        argMap = xGrid*kX(rhoIdx,thetaIdx) + yGrid*kY(rhoIdx,thetaIdx);
+        polFFT2(rhoIdx,thetaIdx,:) = sum(sum(apodInputStack.*repmat(omegaFactor(argMap,numXPix),[1 1 numFrames]),1),2);
     end
 end

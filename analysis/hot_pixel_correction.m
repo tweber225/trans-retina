@@ -6,6 +6,7 @@ function [corrImgStk, hPixX, hPixY] = hot_pixel_correction(rawImgStk,medFiltRad,
 % differentiate them from accurate pixels. 2D linear interpolation is used
 % to calculate a replacement value for the pixel at that location.
 
+disp('CORRECTING HOT PIXELS')
 % Determine size of input image stack
 [numYPix, numXPix, numFrames] = size(rawImgStk);
 

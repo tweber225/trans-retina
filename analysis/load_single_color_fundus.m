@@ -9,6 +9,7 @@ function rawStack = load_single_color_fundus(useUI,dirName,fileName)
 % Timothy D. Weber
 % Biomicroscopy Lab, BU 2017
 
+disp('OPENING DATA')
 % Get filename and directory if using the MATLAB UI, or check validity of
 % manually-input directory and filenames
 if useUI == 1

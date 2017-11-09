@@ -62,8 +62,7 @@ avgRad = mean(warpedMagMean,2);
 % half of the OTF
 avgMagOutOfBand = mean(avgRad(round(end/2):end));
 stdMagOutOfBand = std(avgRad(round(end/2):end));
-maxRadiiOTF = round(max((avgRad>(avgMagOutOfBand + 10*stdMagOutOfBand)).*radii')); % Force odd
-maxRadForRotReg = 2*round((maxRadiiOTF)/2)+1;
+maxRadiiOTF = 2*round(max((avgRad>(avgMagOutOfBand + 10*stdMagOutOfBand)).*radii')/2)+1; % Force odd
 
 % Make a binary pattern to use to block out out-of-band components (for
 % lateral registration)
@@ -82,13 +81,13 @@ numInitialAngles = 2*round((maxRadiiOTF*pi)/2); % new number of initial angles
 startAngle = 0;
 anglePitch = 180/numInitialAngles;
 anglesRad = deg2rad(startAngle:anglePitch:(180-anglePitch));
-radii = 4:maxRadForRotReg;
+radii = 2:maxRadiiOTF;
 [polCoordsTheta, polCoordsR] = meshgrid(anglesRad,radii);
-[cartNormalCoordsX,cartNormalCoordsY] = meshgrid((-xPix/2):(xPix/2-1),(-yPix/2):(yPix/2-1));
-[cartWarpCoordsX,cartWarpCoordsY] = pol2cart(polCoordsTheta,polCoordsR);
+[cartNormalCoordsX, cartNormalCoordsY] = meshgrid((-xPix/2):(xPix/2-1),(-yPix/2):(yPix/2-1));
+[cartWarpCoordsX, cartWarpCoordsY] = pol2cart(polCoordsTheta,polCoordsR);
 
 % Warp and rotationally-Fourier transform the first frame
-warpedFirstFrame = interp2(cartNormalCoordsX, cartNormalCoordsY, abs(FFT2UnregStack(:,:,1)), cartWarpCoordsX, cartWarpCoordsY,'cubic');
+warpedFirstFrame = interp2(cartNormalCoordsX, cartNormalCoordsY, abs(FFT2UnregStack(:,:,1)), cartWarpCoordsX, cartWarpCoordsY);
 rotFFTFirstFrame = fft(warpedFirstFrame,[],2);
 
 % Calculate DFT matrix parameters for upsampled phase-correlation
@@ -109,11 +108,14 @@ yShift = zeros(numFrames,1);
 omegaFactor = @(idx,N) exp(-2*pi*1j*idx/N);
 
 % Loop through frames
+disp('Beginning upsampled rotational and lateral shift detection...')
+percentsVect = [10 20 30 40 50 60 70 80 90 100];
+percentFrames = round(numFrames*percentsVect/100);
 
 for frameIdx = 2:numFrames
     % Interpolate along circular tracks around the center of the image, to
     % make warped image
-    warpedFrame = interp2(cartNormalCoordsX, cartNormalCoordsY, abs(FFT2UnregStack(:,:,frameIdx)), cartWarpCoordsX, cartWarpCoordsY,'cubic');
+    warpedFrame = interp2(cartNormalCoordsX, cartNormalCoordsY, abs(FFT2UnregStack(:,:,frameIdx)), cartWarpCoordsX, cartWarpCoordsY);
     
     % 1D FFT along the rotational axis
     rotFFTFrame = fft(warpedFrame,[],2);
@@ -130,7 +132,7 @@ for frameIdx = 2:numFrames
     % precise (inverse) DFT matrix just around this estimate on the
     % cross-power spectrum (not the whole frequency space, since we can be
     % sure the max of the cross-correlation will not be anywhere else)
-    freqsToUse = floor((rotCoarseEst-3)*rotUpsample):ceil((rotCoarseEst+3)*rotUpsample);
+    freqsToUse = floor((rotCoarseEst-1.25)*rotUpsample):ceil((rotCoarseEst+1.25)*rotUpsample);
     phaseIdxLeft = 0:(numInitialAngles/2-1);
     phaseIdxRight = (totalUpsampleFreqs-(numInitialAngles/2)):(totalUpsampleFreqs-1);
     phaseFreqIdxMat = freqsToUse'*[phaseIdxLeft, phaseIdxRight];
@@ -146,9 +148,7 @@ for frameIdx = 2:numFrames
     upsampledWeightMat = repmat(radii',[1 size(freqsToUse,2)]);
     [~, maxIdx] = max(real(sum(upsampledXCorr.*upsampledWeightMat,1)));
     rotEst(frameIdx) = 180*freqsToUse(maxIdx)/totalUpsampleFreqs;
-    subplot(3,1,1);imagesc(real(xCorr.*weightMat));
-    subplot(3,1,2);imagesc(angle(xPowSpec));
-    subplot(3,1,3);imagesc(real(upsampledXCorr.*upsampledWeightMat));drawnow;
+    imagesc(real(upsampledXCorr.*upsampledWeightMat));drawnow;
 
     
     % LATERAL REGISTRATION
@@ -162,8 +162,7 @@ for frameIdx = 2:numFrames
     % calculate cross power spectrum and cross correlation
     xPowSpec = ifftshift(bandBinMask.*FFT2FirstFrame.*conj(FFT2RotFrame)./abs(FFT2FirstFrame.*conj(FFT2RotFrame)));
     xCorr = ifft2(xPowSpec);
-    %imagesc(fftshift(real(xCorr)));drawnow;
-    
+        
     % Get the max in both x and y
     [~, transCoarseEstX] = max(max(real(xCorr),[],1));
     [~, transCoarseEstY] = max(max(real(xCorr),[],2));

@@ -3,7 +3,7 @@
 % steps, and estimate chromophore density. In order, the steps are:
 %
 % 1. Locate data and load
-% 2. Sweep for hotpixels and correct them
+% 2. Sweep for hotpixels and correct
 % 3. Rotational and translational registration
 % 4. Image flattening
 % 5. Chromophore unmixing
@@ -16,14 +16,42 @@ clear all
 %% PARAMETERS
 medFiltRad = 5; % For hot pixel sweeping
 probCutOff = 1e-12;
+rotUpsample = 1024;
+latUpsample = 16;
+blurRadFrac = .04;
+thresholdMag = 10;
 
-%% LOAD DATA
+%% 1. LOAD DATA
 rawStack = load_single_color_fundus(1);
 
+%% 2. HOTPIXEL CORRECTION
+[hotPixFreeStack,hPixX,hPixY] = hot_pixel_correction(rawStack,medFiltRad,probCutOff);
+clear rawStack % The raw stack won't be used again
 
-%% HOTPIXEL CORRECTION
-[hotPixFreeStack, hPixX, hPixY] = hot_pixel_correction(rawStack,medFiltRad,probCutOff);
+%% 3. REGISTRATION
+% a) Crop to bound the circular field size with a square
+croppedStack = crop_stack(hotPixFreeStack);
+close
+
+% b) Flatten image field
+flatCropStack = flatten_image_field(croppedStack,blurRadFrac);
+clear croppedStack % only the flattened and cropped stack is used after this
+
+% c) Determine OTF support limit
+normOTFCutoff = calculate_OTF_support(flatCropStack,thresholdMag);
+
+% d) Detect rotational movement
+rotList = detect_rot(flatCropStack,normOTFCutoff);
+
+% e) Rotate flattened & cropped stack
+
+% f) Detect translational movement
+transList = detect_trans(flatCropStack,normOTFCutoff);
+
+% g) Transform hot pixel-free stack by the detected translation and
+% rotations
+=transform
 
 
-%% REGISTRATION
-%[regStack, dx, dy, dtheta] = register_single_color_fundus(hotPixFreeStack,512,128,.025);
+[regStack,dX,dY,dTheta] = register_single_color_fundus(hotPixFreeStack,rotUpsample,latUpsample);
+clear hotPixFreeStack

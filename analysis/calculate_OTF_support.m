@@ -10,13 +10,6 @@ disp('Estimating OTF cutoff')
 % Determine stack size
 [xPix, ~, numFrames] = size(inputStack);
 
-% Make a (radially-symmetric) Blackman-Harris window to apodize input
-% images. B-H window is nice since it has very low spectral leakage.
-bhWin = blackman_harris_window(xPix);
-
-% Set everything outside the circle to 0
-inputStack = inputStack.*repmat(bhWin,[1 1 numFrames]);
-
 % FFT2 the whole stack and take magnitude
 magFFT2Stack = abs(fft2(inputStack));
 clear inputStack
@@ -44,7 +37,7 @@ avgRad = mean(warpedMagMean,2);
 
 % Next calculate an average magnitude for frequences in latter half of
 % avgRad--where we presume is just noise!
-noiseBackground = avgRad((end/2):end);
+noiseBackground = avgRad(round(end/2):end);
 meanNoise = mean(noiseBackground);
 stdNoise = std(noiseBackground);
 

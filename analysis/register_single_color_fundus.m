@@ -15,21 +15,10 @@ function [regStack, xShift, yShift, rotEst] = register_single_color_fundus(unreg
 % Biomicroscopy Lab, BU 2017
 
 disp('BEGINNING REGISTRATION')
-%% FLATTEN IMAGE FIELDS
-% To account for uneven illumination
-numFrames = size(unregUncroppedStack,3);
-disp('Flattening image fields')
-unregFlatStack = zeros(size(unregUncroppedStack));
-filtSize = flatFraction*size(unregUncroppedStack,1);
-for frameIdx = 1:numFrames
-    blurFrame = imgaussfilt(unregUncroppedStack(:,:,frameIdx),filtSize);
-    unregFlatStack(:,:,frameIdx) = unregUncroppedStack(:,:,frameIdx)./blurFrame;
-end
+
 
 %% CROP INTERACTIVELY
-disp('Cropping the image field')
-firstFrame = unregFlatStack(:,:,1);
-unregStack = cropSubFxn(firstFrame,unregFlatStack);
+
 
 %% INITIAL PARAMETERS
 [yPix, xPix, numFrames] = size(unregStack);
@@ -44,30 +33,7 @@ for frameIdx = 1:numFrames
 end
 
 %% OTF BANDWIDTH ESTIMATION
-% Get an average magnitude across the whole stack
-magMean = mean(abs(FFT2UnregStack),3);
 
-% Interpolate radially outward from the center of the average mag spectrum
-startAngle = 0;
-anglePitch = 180/numInitialAngles;
-anglesRad = deg2rad(startAngle:anglePitch:(180-anglePitch));
-radii = 1:floor(0.5*(imgDiam-1));
-[polCoordsTheta, polCoordsR] = meshgrid(anglesRad,radii);
-[cartNormalCoordsX, cartNormalCoordsY] = meshgrid((-xPix/2):(xPix/2-1),(-yPix/2):(yPix/2-1));
-[cartWarpCoordsX, cartWarpCoordsY] = pol2cart(polCoordsTheta,polCoordsR);
-warpedMagMean = interp2(cartNormalCoordsX, cartNormalCoordsY, magMean, cartWarpCoordsX, cartWarpCoordsY);
-avgRad = mean(warpedMagMean,2);
-
-% Now we have a line profile of the OTF, calculate a cutoff from the later
-% half of the OTF
-avgMagOutOfBand = mean(avgRad(round(end/2):end));
-stdMagOutOfBand = std(avgRad(round(end/2):end));
-maxRadiiOTF = round(max((avgRad>(avgMagOutOfBand + 10*stdMagOutOfBand)).*radii')); % Force odd
-maxRadForRotReg = 2*round((maxRadiiOTF)/2)+1;
-
-% Make a binary pattern to use to block out out-of-band components (for
-% lateral registration)
-bandBinMask = ((cartNormalCoordsX.^2 + cartNormalCoordsY.^2) < (maxRadiiOTF^2));
 
 %% ROTATIONAL REGISTRATION 
 % The idea here is we have multiple concentric rings of values around the
@@ -135,7 +101,7 @@ for frameIdx = 2:numFrames
     phaseIdxRight = (totalUpsampleFreqs-(numInitialAngles/2)):(totalUpsampleFreqs-1);
     phaseFreqIdxMat = freqsToUse'*[phaseIdxLeft, phaseIdxRight];
     
-    % Note the awkard amount of transposes is so that we can set up the DFT
+    % Note the awkward amount of transposes is so that we can set up the DFT
     % matrix in the conventional configuration (i.e. wikipedia's)
     targetedDFTMat = omegaFactor(phaseFreqIdxMat,totalUpsampleFreqs); % Neglecting normalization factor
     

@@ -52,4 +52,3 @@ transList = detect_trans(flatCropStack,normOTFCutoff,latUpsample);
 % rotations
 registeredStack = transform(hotPixFreeStack,rotList,transList);
 
-

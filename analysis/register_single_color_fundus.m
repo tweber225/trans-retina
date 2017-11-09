@@ -51,7 +51,7 @@ magMean = mean(abs(FFT2UnregStack),3);
 startAngle = 0;
 anglePitch = 180/numInitialAngles;
 anglesRad = deg2rad(startAngle:anglePitch:(180-anglePitch));
-radii = 2:floor(0.5*(imgDiam-1));
+radii = 1:floor(0.5*(imgDiam-1));
 [polCoordsTheta, polCoordsR] = meshgrid(anglesRad,radii);
 [cartNormalCoordsX, cartNormalCoordsY] = meshgrid((-xPix/2):(xPix/2-1),(-yPix/2):(yPix/2-1));
 [cartWarpCoordsX, cartWarpCoordsY] = pol2cart(polCoordsTheta,polCoordsR);
@@ -149,7 +149,6 @@ for frameIdx = 2:numFrames
     subplot(3,1,1);imagesc(real(xCorr.*weightMat));
     subplot(3,1,2);imagesc(angle(xPowSpec));
     subplot(3,1,3);imagesc(real(upsampledXCorr.*upsampledWeightMat));drawnow;
-
     
     % LATERAL REGISTRATION
     % The same idea as before--determine a rough estimate of the lateral
@@ -235,22 +234,5 @@ for frameIdx = 1:numFrames
 end
 
 
-
-%% SUBFUNCTIONS
-% Basic processing relegated to here to improve code interpretability
-function croppedStack = cropSubFxn(firstFrame,uncroppedStack)
-croppingFrame = (firstFrame-min(firstFrame(:)))/(max(firstFrame(:))-min(firstFrame(:)));
-[~,rLims] = imcrop(croppingFrame); % Use MATLAB's UI to find crop area
-% Make even number of pixels per dimension and square
-rLims(3) = round(rLims(3)/2)*2;
-rLims(4) = round(rLims(4)/2)*2;
-minDim = min(rLims(3),rLims(4));
-rLims(3) = minDim;
-rLims(4) = minDim;
-x1 = round(rLims(1));
-x2 = round(rLims(1)+rLims(3))-1;
-y1 = round(rLims(2));
-y2 = round(rLims(2)+rLims(4))-1;
-croppedStack = uncroppedStack(y1:y2,x1:x2,:);
 
 

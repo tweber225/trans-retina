@@ -1,4 +1,4 @@
-function [corrImgStk, hPixX, hPixY] = hot_pixel_correction(rawImgStk,medFiltRad,probCutOff)
+function [corrImgStk, hPixX, hPixY] = hot_pixel_correction(rawImgStk,medFiltRad,probCutOff,showAnalysis)
 % Function that detects, corrects, and reports hot pixels (pixels in an
 % imaging array that are high or low outliers (some leakage voltage
 % affecting the pixel or the pixel is dead, RIP). Usually their locations
@@ -13,7 +13,7 @@ disp('CORRECTING HOT PIXELS')
 % If we have a stack rather than a single frame do a z projection and take
 % the mean value
 if numFrames >1
-    meanStk = mean(rawImgStk,3);
+    meanStk = mean(double(rawImgStk),3);
 else
     meanStk = rawImgStk;
 end
@@ -54,11 +54,9 @@ hPixY = hPixY(hPixY>0);
 
 %% HOT PIXEL CORRECTION
 disp('Correcting detected hot pixels in frames')
-% Change values of hotpixels to NaN
-rawImgStk(repmat(logical(hPixMap),[1 1 numFrames])) = NaN;
 
 % Copy image data for corrected stack
-corrImgStk = rawImgStk;
+corrImgStk = rawImgStk; % 16-bits images
 
 %Make indexing coordinates
 leftIdx = hPixX-1;
@@ -74,8 +72,11 @@ bilinWeights([1 1 3 3],[1 3 1 3]) = 1/sqrt(2);
 for hPixIdx = 1:numHPix
     disp(['Correcting Hot Pixel ' num2str(hPixIdx) ' of ' num2str(numHPix)]);
     for frameIdx = 1:numFrames
+        currFrame = double(rawImgStk(:,:,frameIdx)); % uint16->double
+        % Change values of hotpixels to NaN
+        currFrame(logical(hPixMap)) = NaN;
         % Pull neighboring pixels to hotpixel
-        neighborPix = rawImgStk(topIdx(hPixIdx):bottomIdx(hPixIdx),leftIdx(hPixIdx):rightIdx(hPixIdx),frameIdx); 
+        neighborPix = currFrame(topIdx(hPixIdx):bottomIdx(hPixIdx),leftIdx(hPixIdx):rightIdx(hPixIdx)); 
         % Some pixels in the neighborhood (definitely including the
         % hotpixel itself) will be NaN
         NaNPixs = isnan(neighborPix);
@@ -84,10 +85,18 @@ for hPixIdx = 1:numHPix
         % Modify the weighting matrix to throw out contributions from NaN
         % pixels
         modBilinWeights = bilinWeights.*(~NaNPixs);
-        % Weighted-sum of neighboring pixels (excludes NaN's!)
-        corrImgStk(hPixY(hPixIdx),hPixX(hPixIdx),frameIdx) = sum(neighborPix(:).*modBilinWeights(:))/sum(modBilinWeights(:));
+        % Weighted-sum of neighboring pixels (excludes NaN's!) (Convert
+        % back to uint16)
+        corrImgStk(hPixY(hPixIdx),hPixX(hPixIdx),frameIdx) = uint16(sum(neighborPix(:).*modBilinWeights(:))/sum(modBilinWeights(:)));
     end
 end
 
 
+% Show map of hotpixels (relative the first frame)
+if showAnalysis == 1
+    figure;plot(hPixX,-hPixY,'*');
+    title('Detected Hot Pixels (Relative The First Frame)');
+    ylabel('Y Pixels')
+    xlabel('X Pixels')
+end
 

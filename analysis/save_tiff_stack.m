@@ -1,4 +1,4 @@
-function saveastiff(data, path, options)
+function save_tiff_stack(data, path, options)
 % options.color
 %   : true or FALSE
 %   : If this is true, third dimension should be 3 and the data is saved as a color image.
@@ -224,7 +224,7 @@ tagstruct.SamplesPerPixel = (options.color+1)*(options.color+2)/2;
 tagstruct.RowsPerStrip = height;
 tagstruct.PlanarConfiguration = Tiff.PlanarConfiguration.Chunky;
 
-% Compresstion type : http://en.wikipedia.org/wiki/Tagged_Image_File_Format
+% Compression type : http://en.wikipedia.org/wiki/Tagged_Image_File_Format
 switch lower(options.comp)
     case 'no'
         tagstruct.Compression = Tiff.Compression.None;

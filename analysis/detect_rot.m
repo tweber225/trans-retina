@@ -1,4 +1,4 @@
-function rotList = detect_rot(inputStack,normOTFCutoff,rotUpsample);
+function [rotList,radPowSpec] = detect_rot(inputStack,normOTFCutoff,rotUpsample,showAnalysis,radPowSpecIn)
 % ANALYSIS/DETECT_ROT
 % Detects rotation in the image stack
 % 
@@ -24,7 +24,7 @@ rhoList = 1:maxRho;
 % spectrum is a bit like squaring the signal where the bandwidth is
 % doubled).
 startAngle = 0;
-anglePitch = pi/(sqrt(2)*maxRho*pi);
+anglePitch = pi/(1*sqrt(2)*maxRho*pi);
 endAngle = pi-anglePitch;
 thetaList = startAngle:anglePitch:endAngle;
 numThetas = numel(thetaList);
@@ -35,12 +35,16 @@ upsampleRangeRadius = 1.5;
 mainlobeWidth = 1.4648; % Theoretical mainlobe width (-3dB) for Blackman-Harris window
 
 % Perform a radial (polar) DFT2 and return power spectrum
-radPowSpec = radial_power_FFT2(inputStack,thetaList,rhoList,mainlobeWidth);
+if exist('radPowSpecIn')
+    radPowSpec = radPowSpecIn; % bypass recomputing the radial power spectrum if it's been computed already
+    radPowSpec(:,:,1) = radial_power_FFT2(inputStack(:,:,1),thetaList,rhoList,mainlobeWidth); % Recompute the first frame's rotational power spectrum now with higher SNR
+else
+    radPowSpec = radial_power_FFT2(inputStack,thetaList,rhoList,mainlobeWidth);
+end
 clear inputStack % no longer needed
 
 % Compute Fourier transforms along angular (theta) dimension
 angularFTPowSpec = fft(radPowSpec,[],2);
-clear radPowSpec
 
 % Compute a mask to remove contributions of impossibly-high angular frequencies
 [thetaGr,rhoGr] = meshgrid(thetaList,rhoList);
@@ -53,8 +57,9 @@ rotList = zeros(numFrames,1);
 
 % Loop through frames
 disp('Detecting rotation...');
-percentsVect = 25:25:100;
+percentsVect = 10:10:100;
 percentFrames = round(numFrames*percentsVect/100);
+if showAnalysis == 1,figure;end
 for frameIdx = 2:numFrames
     % Compute the normalized cross-power spectrum between (frame #) 1 and frameIdx
     angularXPowSpec = angularFTPowSpec(:,:,1).*conj(angularFTPowSpec(:,:,frameIdx))./abs(angularFTPowSpec(:,:,1).*conj(angularFTPowSpec(:,:,frameIdx)));
@@ -72,7 +77,6 @@ for frameIdx = 2:numFrames
     % cross-correlation space, since we can be sure the max of the
     % cross-correlation will not be anywhere else)
     freqsToUse = floor((coarseRotEst-upsampleRangeRadius)*rotUpsample):ceil((coarseRotEst+upsampleRangeRadius)*rotUpsample);
-    numFreqsToUse = numel(freqsToUse);
     phaseIdxLeft = 0:(ceil(numThetas/2)-1);
     phaseIdxRight = (equivTotalUpsampleFreqs-floor(numThetas/2)):(equivTotalUpsampleFreqs-1);
     phaseFreqIdxMat = freqsToUse'*[phaseIdxLeft, phaseIdxRight];
@@ -83,8 +87,17 @@ for frameIdx = 2:numFrames
     % matrix in the conventional configuration (i.e. wikipedia's)
     upsampledAngularXCorr = (targetedDFTMat*(angularXPowSpec.*fullMask)')';
     
-    subplot(2,1,1);imagesc(real(upsampledAngularXCorr));
-    subplot(2,1,2);plot(sum(real(upsampledAngularXCorr)));drawnow;
+    if showAnalysis == 1
+        subplot(2,2,1);imagesc(fftshift(angle(angularXPowSpec),2));
+        title('Angular Cross-Pow. Spec. Phase');xlabel('Theta Freq. Axis');ylabel('S.Freq. Vector Length');
+        subplot(2,2,2);imagesc(real(angularXCorr));
+        title('Rotational Cross-Corr.');xlabel('Theta Axis'),ylabel('S.Freq. Vector Length');
+        subplot(2,2,3);imagesc(real(upsampledAngularXCorr));
+        title('Upsampled Cross-Corr.')
+        subplot(2,2,4);plot(sum(real(upsampledAngularXCorr)));
+        title('Summed Upsampled Cross-Corr.s');
+        drawnow;
+    end
     
     [~, maxIdx] = max(sum(real(upsampledAngularXCorr)));
     rotList(frameIdx) = (180/equivTotalUpsampleFreqs)*freqsToUse(maxIdx);
@@ -95,9 +108,13 @@ for frameIdx = 2:numFrames
         disp([num2str(percentsVect(pIdx)) '%']);
     end
 end
-figure;plot(rotList);
-xlabel('Frame #');ylabel('Detected rotation (deg)');
+if showAnalysis == 1,close;end
 
+if showAnalysis == 1
+    figure;plot(rotList);
+    title('Detected Rotation');xlabel('Frame #');ylabel('Detected rotation (deg)');
+    drawnow;
+end
 
 
 

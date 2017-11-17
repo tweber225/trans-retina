@@ -1,4 +1,4 @@
-function transList = detect_trans(inputStack,normOTFCutoff,latUpsample)
+function [transList,numPeaksList,eccentricList] = detect_trans(inputStack,normOTFCutoff,latUpsample,showAnalysis)
 % ANALYSIS/DETECT_TRANS
 % Detects translation (i.e. lateral XY movement) in the image stack.
 % 
@@ -6,11 +6,13 @@ function transList = detect_trans(inputStack,normOTFCutoff,latUpsample)
 % Timothy D. Weber
 % Biomicroscopy Lab, BU 2017
 
+maxThresh = .2; % Fraction of the full frame cross-correlation maximum to use as binary threshold for motion detection
+eccentricThresh = .1;
+
 % Get pixel size
 [xPix,~,numFrames] = size(inputStack);
 
 % Compute upsampling derived parameters
-upsampleRangeRadius = 2;
 totalUpsampleFreqsX = xPix*latUpsample;
 totalUpsampleFreqsY = xPix*latUpsample;
 
@@ -36,22 +38,39 @@ binMask = ifftshift((xGr.^2 + yGr.^2) < maxSpatialFreq^2);
 
 % Allocate space for list of detected translations (x,y)
 transList = zeros(numFrames,2);
+numPeaksList = zeros(numFrames,1);
+eccentricList = -ones(numFrames,1);
 
 % Loop through frames
 disp('Detecting translation...');
 percentsVect = 10:10:100;
 percentFrames = round(numFrames*percentsVect/100);
-for frameIdx = 2:numFrames
+if showAnalysis ==1, figure;end
+for frameIdx = 1:numFrames
     % Compute the normalized cross-power spectrum between (frame #) 1 and frameIdx
     xPowSpec = FTInputStack(:,:,1).*conj(FTInputStack(:,:,frameIdx))./abs(FTInputStack(:,:,1).*conj(FTInputStack(:,:,frameIdx)));
     
     % Inverse transform a masked version to obtain cross correlation
-    xCorr = fftshift(ifft2(xPowSpec.*binMask));
+    xCorr = fftshift(real(ifft2(xPowSpec.*binMask)));
     
     % Coarse estimate of translation from the peak height
-    [~,maxIdxX] = max(max(real(xCorr),[],1),[],2);
-    [~,maxIdxY] = max(max(real(xCorr),[],2),[],1);
+    [maxVal,maxIdxX] = max(max(xCorr,[],1),[],2);
+    [~,maxIdxY] = max(max(xCorr,[],2),[],1);
     coarseTransEst = [maxIdxX,maxIdxY] - floor(xPix/2) - 1;
+    
+    % Check whether there are multiple peaks present-which would indicate
+    % motion during the frame
+    xCorrThresh = xCorr > (maxVal.*maxThresh);
+    connObj = bwconncomp(xCorrThresh,4);
+    numPeaksList(frameIdx) = connObj.NumObjects;
+    
+    % If we don't detect more than one peak in the full frame
+    % cross-correlation, then make
+    if numPeaksList(frameIdx) == 1
+        upsampleRangeRadius = 6;
+    else
+        upsampleRangeRadius = 1.5;
+    end
     
     % With the coarse translation estimate, we can formulate a pair of more
     % precise (inverse) DFT matrices just around the coarse estimate (not
@@ -71,16 +90,51 @@ for frameIdx = 2:numFrames
 
     % Multiply all 3 matrices to get upsampled cross-correlation in
     % neighborhood of the original estimate
-    upsampledXCorr = (omegaFactor(phaseFreqIdxMatY,totalUpsampleFreqsY)*(xPowSpec.*binMask))*omegaFactor(phaseFreqIdxMatX,totalUpsampleFreqsX);
+    upsampledXCorr = real((omegaFactor(phaseFreqIdxMatY,totalUpsampleFreqsY)*(xPowSpec.*binMask))*omegaFactor(phaseFreqIdxMatX,totalUpsampleFreqsX));
 
     % Locate maximum in upsampled x-corr
-    [~, maxIdxX] = max(max(real(upsampledXCorr),[],1),[],2); 
-    [~, maxIdxY] = max(max(real(upsampledXCorr),[],2),[],1);
+    [maxUpsampledVal, maxIdxX] = max(max(upsampledXCorr,[],1),[],2); 
+    [~, maxIdxY] = max(max(upsampledXCorr,[],2),[],1);
     transList(frameIdx,:) = (xPix/totalUpsampleFreqsX)*[freqsToUseX(maxIdxX), freqsToUseY(maxIdxY)];
+    
+    % If just one local peak is identified in the cross-correlation (which
+    % automatically disqualifies it from the "stable" stack), then compute
+    % the main peak's eccentricity
+    if numPeaksList(frameIdx) == 1
+        binPeakMap = upsampledXCorr > (maxUpsampledVal*eccentricThresh);
+        regProps = regionprops(binPeakMap,'Eccentricity');
+        eccentricList(frameIdx) = regProps(1).Eccentricity;
+    end
     
     % Display progress
     if sum(percentFrames == frameIdx)
         [~,pIdx] = max(percentFrames == frameIdx);
         disp([num2str(percentsVect(pIdx)) '%']);
     end
+    
+    % Display the cross-correlations
+    if showAnalysis == 1
+        subplot(2,2,1);imagesc(fftshift(angle(xPowSpec)));
+        title(['Frame ' num2str(frameIdx) ': Cross-Power Spec. Phase'])
+        subplot(2,2,2);imagesc(fftshift(angle(xPowSpec.*binMask)));
+        title('Cropped Cross-Power Spec. Phase')
+        subplot(2,2,3);imagesc(xCorr);
+        title('Full 2D Cross-Corr.')       
+        subplot(2,2,4)
+        imagesc(upsampledXCorr);
+        title(['Upsampled, E=' num2str(eccentricList(frameIdx))]) 
+        drawnow;
+    end
+    
+end
+if showAnalysis == 1,close;end
+
+% Show x and y translations, velocity magnitude
+if showAnalysis ==1
+    figure;
+    subplot(2,1,1);plot(transList);
+    title('Translational movement');xlabel('Frame #');ylabel('Pixels shifted');legend('X','Y')
+    subplot(2,1,2);plot((1.5:1:numFrames),sqrt(sum(diff(transList,[],1).^2,2)));
+    title('Movement Velocity');xlabel('Frame #');ylabel('Velocity (pixels)');
+    drawnow;
 end

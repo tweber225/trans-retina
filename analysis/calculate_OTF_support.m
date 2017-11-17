@@ -1,4 +1,4 @@
-function normOTFCutoff = calculate_OTF_support(inputStack,thresholdMag)
+function normOTFCutoff = calculate_OTF_support(inputStack,thresholdMag,showAnalysis)
 % ANALYSIS/CALCULATE_OTF_SUPPORT
 % Flattens the image fields
 % 
@@ -19,6 +19,9 @@ end
 
 % Get an average magnitude across the whole stack
 magMean = mean(magFFT2Stack,3);
+if showAnalysis == 1
+    figure;imagesc(log(magMean));title('Average Magnitude Spectrum');drawnow;pause(2);
+end
 
 % Interpolate radially outward from the center of the average mag spectrum
 numThetas = xPix*pi; % Just the circumference of a circle inscribed to the frame
@@ -44,6 +47,13 @@ stdNoise = std(noiseBackground);
 cutoffRho = max(radii(avgRad > (meanNoise + thresholdMag*stdNoise)));
 normOTFCutoff = cutoffRho/(xPix/2);
 disp(['Detected normalized OTF cutoff: ' num2str(normOTFCutoff)])
+
+if showAnalysis == 1
+    figure;plot(log(avgRad));
+    hold on;plot(5*(avgRad > (meanNoise + thresholdMag*stdNoise)));
+    title('Radial Mean Magnitude and Cutoff');
+    legend('Radial average magnitude','OTF support cutoff');drawnow;
+end
 
 
 

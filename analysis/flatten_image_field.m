@@ -1,4 +1,4 @@
-function inputStack = flatten_image_field(inputStack,flatFraction)
+function inputStack = flatten_image_field(inputStack,flatFraction,showAnalysis)
 % ANALYSIS/FLATTEN_IMAGE_FIELD
 % Flattens the image fields
 % 
@@ -33,6 +33,7 @@ filtSize = flatFraction*xPix;
 disp('Beginning Field Flattening');
 percentsVect = [10 20 30 40 50 60 70 80 90 100];
 percentFrames = round(numFrames*percentsVect/100);
+if showAnalysis == 1,figure;end
 for frameIdx = 1:numFrames % using parfor seems to crash computer here, beware!
     % Pull out current frame
     currentFrame = inputStack(:,:,frameIdx);
@@ -51,5 +52,12 @@ for frameIdx = 1:numFrames % using parfor seems to crash computer here, beware!
     if sum(percentFrames == frameIdx)
         [~,pIdx] = max(percentFrames == frameIdx);
         disp([num2str(percentsVect(pIdx)) '%']);
+    end
+    
+    % Show the flattened frames as they come out
+    if showAnalysis == 1
+        imagesc(inputStack(:,:,frameIdx));colorbar;
+        title('Flattened frames');
+        drawnow;
     end
 end

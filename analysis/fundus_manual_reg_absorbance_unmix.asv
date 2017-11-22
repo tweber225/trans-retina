@@ -27,7 +27,7 @@ fileNameList = {'170905_subject001_capture006_660nm-absorb.tiff',...
 %% Parameters
 fixedSource = 2; % 850nm LED is sharpest
 doManualRegistration = 1;
-makeNewRegistrationControlPoints = 0;
+makeNewRegistrationControlPoints = 1;
 doControlPointCorrelationTuning = 1;
 
 % Transforms to consider
@@ -44,7 +44,7 @@ numChroms = numel(chromList);
 
 % Select particular filter kernels absorbance images to use for
 % registration and to unmix
-kernelsToUseRegistration = [3,6,10]; numKernelsToUseRegistration = numel(kernelsToUseRegistration);
+kernelsToUseRegistration = [5];
 kernelsToUnmix = [1,2,3,4,6,8,10,14,18,24];
 
 % Calculated parameters
@@ -69,13 +69,13 @@ if doManualRegistration == 1
     % Also if enabled, do manual control point selection
     if makeNewRegistrationControlPoints == 1
         % Loop through each kernel to use for registration
-        for kernelIdx = 1:numKernelsToUseRegistration
+        for kernelIdx = kernelsToUseRegistration
             % Loop through this registering to fixed frame
             for sourceIdx = 1:numSources
                 % Normalize frames to show in control point select tool
-                normFixed = absStackArray{fixedSource}(:,:,kernelsToUseRegistration(kernelIdx));
+                normFixed = absStackArray{fixedSource}(:,:,kernelIdx);
                 normFixed = normFixed/(0.5*max(normFixed(:)));
-                normMoving = absStackArray{sourceIdx}(:,:,kernelsToUseRegistration(kernelIdx));
+                normMoving = absStackArray{sourceIdx}(:,:,kernelIdx);
                 normMoving = normMoving/(0.5*max(normMoving(:)));
                 % Gather the new control points
                 [selectedMovingPoints,selectedFixedPoints] = cpselect(normMoving,normFixed,'Wait',true);
@@ -99,59 +99,59 @@ if doManualRegistration == 1
     
     
     for sourceIdx = 1:numSources
-        for kernelIdx = 1:numKernelsToUseRegistration
-            if sourceIdx == fixedSource
-                % Skip fixed frame, return a static transform
-                sourceTForm = affine2d;
-            else
-                movingPoints = controlPointCellArray{kernelIdx,sourceIdx}.movingPoints;
-                fixedPoints = controlPointCellArray{kernelIdx,sourceIdx}.fixedPoints;
-                % various estimations of the geometric transform
-                transType = 1;
-                if nonreflectivesimilarity == 1
-                    tForm{transType} = fitgeotrans(movingPoints,fixedPoints,'nonreflectivesimilarity');
-                    transType = transType+1;
+        if sourceIdx == fixedSource
+            % Skip fixed frame, return a static transform
+            sourceTForm = affine2d;
+        else
+            movingPoints = controlPointCellArray{kernelIdx,sourceIdx}.movingPoints;
+            fixedPoints = controlPointCellArray{kernelIdx,sourceIdx}.fixedPoints;
+            % various estimations of the geometric transform
+            transType = 1;
+            if nonreflectivesimilarity == 1
+                tForm{transType} = fitgeotrans(movingPoints,fixedPoints,'nonreflectivesimilarity');
+                transType = transType+1;
+            end
+            if affine == 1
+                tForm{transType} = fitgeotrans(movingPoints,fixedPoints,'affine');
+                transType = transType+1;
+            end
+            if projective == 1
+                tForm{transType} = fitgeotrans(movingPoints,fixedPoints,'projective');
+                transType = transType+1;
+            end
+            if poly2 == 1
+                tForm{transType} = fitgeotrans(movingPoints,fixedPoints,'polynomial',2);
+                transType = transType+1;
+            end
+            if poly3 == 1
+                tForm{transType} = fitgeotrans(movingPoints,fixedPoints,'polynomial',3);
+                transType = transType+1;
+            end
+            if poly4 == 1
+                tForm{transType} = fitgeotrans(movingPoints,fixedPoints,'polynomial',4);
+                transType = transType+1;
+            end
+            % review options and select the best fit for each channel
+            selectionMade = 0;
+            while selectionMade == 0
+                for transIdx = 1:numTransTypes
+                    movingFrame = absStackArray{sourceIdx}(:,:,kernelsToUseRegistration);
+                    fixedFrame = absStackArray{fixedSource}(:,:,kernelsToUseRegistration);
+                    % Warp the moving frame
+                    regFrame = imwarp(movingFrame,imref2d(size(movingFrame)),tForm{transIdx},'OutputView',imref2d(size(fixedFrame)));
+                    imshowpair(regFrame,fixedFrame);title(num2str(transIdx))
+                    drawnow;pause(2);
                 end
-                if affine == 1
-                    tForm{transType} = fitgeotrans(movingPoints,fixedPoints,'affine');
-                    transType = transType+1;
-                end
-                if projective == 1
-                    tForm{transType} = fitgeotrans(movingPoints,fixedPoints,'projective');
-                    transType = transType+1;
-                end
-                if poly2 == 1
-                    tForm{transType} = fitgeotrans(movingPoints,fixedPoints,'polynomial',2);
-                    transType = transType+1;
-                end
-                if poly3 == 1
-                    tForm{transType} = fitgeotrans(movingPoints,fixedPoints,'polynomial',3);
-                    transType = transType+1;
-                end
-                if poly4 == 1
-                    tForm{transType} = fitgeotrans(movingPoints,fixedPoints,'polynomial',4);
-                    transType = transType+1;
-                end
-                % review options and select the best fit for each channel
-                selectionMade = 0;
-                while selectionMade == 0
-                    for transIdx = 1:numTransTypes
-                        movingFrame = absStackArray{sourceIdx}(:,:,kernelsToUseRegistration(kernelIdx));
-                        fixedFrame = absStackArray{fixedSource}(:,:,kernelsToUseRegistration(kernelIdx));
-                        % Warp the moving frame
-                        regFrame = imwarp(movingFrame,imref2d(size(movingFrame)),tForm{transIdx},'OutputView',imref2d(size(fixedFrame)));
-                        imshowpair(regFrame,fixedFrame);title(num2str(transIdx))
-                        drawnow;pause(2);
-                    end
-                    prompt = 'Which transform was best? (1,2,3,etc) (0=repeat)';
-                    bestTransType = input(prompt);
+                prompt = 'Which transform was best? (1,2,3,etc) (0=repeat)';
+                bestTransType = input(prompt);
+                
+                if bestTransType ~= 0, selectionMade = 1; end
+            end %while loop--review
+            
+        end
 
-                    if bestTransType ~= 0, selectionMade = 1; end
-                end %while loop--review
-            end %conditional to skip registering the same fixed frame to itself
-        end % Loop through registration kernels
-    end %loop through sources-applying transforms
-end %conditional to enable manual registration
+    end
+end
 
 
 %% Absorbance unmixing

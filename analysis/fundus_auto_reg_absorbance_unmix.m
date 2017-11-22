@@ -1,4 +1,4 @@
-% ANALYSIS/FUNDUS_ABSORBANCE_UNMIX
+% ANALYSIS/FUNDUS_AUTO_REG_ABSORBANCE_UNMIX
 % Script to load several absorbance fundus images (or stacks--repeated
 % calculations with different filter kernel widths), register them,
 % transform them, then run spectral unmixing

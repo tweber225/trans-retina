@@ -133,6 +133,7 @@ if doManualRegistration == 1
                     transType = transType+1;
                 end
                 % review options and select the best fit for each channel
+                % and each kernel
                 selectionMade = 0;
                 while selectionMade == 0
                     for transIdx = 1:numTransTypes
@@ -155,3 +156,38 @@ end %conditional to enable manual registration
 
 
 %% Absorbance unmixing
+% Current shortcomings of this approach: 1.) QE of camera is not considered
+% (declines from about 525nm Si CCD (or after 700nm with e2v's EV76C661).
+% 2.) Absorption along the way to back of the eye (& homogenous melanin
+% layer at RPE) is not considered (overall will tend to boost longer
+% wavelengths). It's possible these two will cancel each other's effects
+% out, but to some extend there will be some error.
+
+% Make spectra folder string name
+nmToInterpOver = 600:1000;numNmToInterpOver = numel(nmToInterpOver);
+analysisPathNameArray = regexp(cd,'\','split');
+transRetinaPathName = strjoin(analysisPathNameArray(1:(end-1)),'\');
+spectraPathName = [transRetinaPathName filesep 'spectra'];
+% Load chromophores
+chromMat = zeros(numNmToInterpOver,numChroms);
+normFlag = 0; % Don't normalize the chromophores absorption
+for chromIdx = 1:numChroms
+    chromMat(:,chromIdx) = load_interpolate_spectrum([spectraPathName filesep 'chromophores'],chromList{chromIdx},nmToInterpOver,normFlag);
+end
+
+% Load source spectra
+sourceMat = zeros(numNmToInterpOver,numSources);
+normFlag = 1; % Do normalize source emissions
+for sourceIdx = 1:numSources
+    sourceMat(:,sourceIdx) = load_interpolate_spectrum([spectraPathName filesep 'sources'],sourceList{sourceIdx},nmToInterpOver,normFlag);
+end
+
+% Unmixing: Fit the absorbance data to model of mixed chromophores
+
+
+
+
+
+
+
+

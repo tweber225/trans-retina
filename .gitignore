@@ -2,3 +2,4 @@ PCO Pixelfly USB old GUI/data/
 acquisition/data/
 acquisition/testing/
 *.mexw64
+*.asv

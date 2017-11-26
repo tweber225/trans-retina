@@ -12,7 +12,7 @@
 
 %% Filenames
 sourceList = {'940nmLED', '850nmLED', '780nmLED', '730nmLED', '660nmLED'};
-dataPath = 'C:\Users\tweber\Desktop\local data analysis\170905';
+dataPath = 'C:\Users\twebe\Desktop\local data analysis\170905';
 captureFileNameList = {'170905_subject001_capture006',...
     '170905_subject001_capture001', ...
     '170905_subject001_capture003', ...
@@ -32,11 +32,11 @@ doControlPointCorrelationTuning = 1;
 
 % Transforms to consider
 nonreflectivesimilarity = 1;
-affine = 1;
-projective = 1;
+affine = 0;
+projective = 0;
 poly2 = 1;
 poly3 = 1;
-poly4 = 1;
+poly4 = 0;
 
 % Input chromophores
 chromList = {'HbO2', 'Hb', 'melanin'};
@@ -45,7 +45,7 @@ numChroms = numel(chromList);
 % Select particular filter kernels absorbance images to use for
 % registration and to unmix
 kernelsToUseRegistration = [3,6,10]; numKernelsToUseRegistration = numel(kernelsToUseRegistration);
-kernelsToUnmix = [1,2,3,4,6,8,10,14,18,24];
+kernelsToUnmix = [1,2,3,4,6,8,10,14,18,24]; numKernelsToUnmix = numel(kernelsToUnmix);
 
 % Calculated parameters
 numSources = numel(sourceList);
@@ -144,14 +144,36 @@ if doManualRegistration == 1
                         imshowpair(regFrame,fixedFrame);title(num2str(transIdx))
                         drawnow;pause(2);
                     end
-                    prompt = 'Which transform was best? (1,2,3,etc) (0=repeat)';
+                    prompt = 'Which transform was best? (1,2,3,etc) (0=repeat) ';
                     bestTransType = input(prompt);
-
+                    bestTransMat(sourceIdx,kernelIdx) = bestTransType;
+                    
                     if bestTransType ~= 0, selectionMade = 1; end
                 end %while loop--review
             end %conditional to skip registering the same fixed frame to itself
         end % Loop through registration kernels
     end %loop through sources-applying transforms
+    
+    % Review selections made, make final decision on each source channel
+    disp('Columns: kernels, Rows: sources');
+    disp(bestTransMat);
+    
+    % Ask which transformation to use, then do it
+    for sourceIdx = 1:numSources
+        if sourceIdx == fixedSource
+            % Don't need to transform
+        else
+            % Ask which transform to use
+            choiceTransform = input(['Transform to use for source ' num2str(sourceIdx) '? ']);
+            
+            % Transform
+            tFormToUse = 
+            
+        end
+        
+    end
+    % Crop to valid portions (where there's a spectrum at each)
+    
 end %conditional to enable manual registration
 
 
@@ -182,10 +204,18 @@ for sourceIdx = 1:numSources
     sourceMat(:,sourceIdx) = load_interpolate_spectrum([spectraPathName filesep 'sources'],sourceList{sourceIdx},nmToInterpOver,normFlag);
 end
 
-% Unmixing: Fit the absorbance data to model of mixed chromophores
+% Loops through desired kernels to unmix
+for kernelIdx = 1:numKernelsToUnmix
+    % Unmixing: Fit the absorbance data to model of mixed chromophores
+    modelMat = sourceMat'*chromMat; % Make the linear model for each chromophore
+    absorbVector = reshape(regAbsorbStack,[regStackWidth*regStackHeight numSources])'; % reshape so we can do efficient matrix "division"
+    chromVector = modelMat\absorbVector;
+    chromStack = single(reshape(chromVector,[regStackHeight regStackWidth numChroms]));
 
-
-
+    % Save this chromophore stack and kernel choice
+    chromFileName = ['chromophores_kernel' num2str(kernelsToUnMix(kernelIdx),'%02d') '.tiff'];
+    save_tiff_stack(chromStack,[dataPath filesep chromFileName]);
+end
 
 
 

@@ -12,7 +12,7 @@
 
 %% Filenames
 sourceList = {'940nmLED', '850nmLED', '780nmLED', '730nmLED', '660nmLED'};
-dataPath = 'C:\Users\tweber\Desktop\local data analysis\170905';
+dataPath = 'C:\Users\twebe\Desktop\local data analysis\170905';
 captureFileNameList = {'170905_subject001_capture006',...
     '170905_subject001_capture001', ...
     '170905_subject001_capture003', ...
@@ -28,7 +28,7 @@ fileNameList = {'170905_subject001_capture006_660nm-absorb.tiff',...
 fixedSource = 2; % 850nm LED is sharpest
 doManualRegistration = 1;
 makeNewRegistrationControlPoints = 0;
-doControlPointCorrelationTuning = 1;
+adjustSourceSpectraForHead = 1;
 
 % Transforms to consider
 nonreflectivesimilarity = 0;
@@ -45,7 +45,8 @@ numChroms = numel(chromList);
 % Select particular filter kernels absorbance images to use for
 % registration and to unmix
 kernelsToUseRegistration = [3,6,10]; numKernelsToUseRegistration = numel(kernelsToUseRegistration);
-kernelsToUnmix = [1,2,3,4,6,8,10,14,18,24]; numKernelsToUnmix = numel(kernelsToUnmix);
+%kernelsToUnmix = [1,2,3,4,6,8,10,14,18,24]; numKernelsToUnmix = numel(kernelsToUnmix);
+kernelsToUnmix = [6,14]; numKernelsToUnmix = numel(kernelsToUnmix);
 
 % Calculated parameters
 numSources = numel(sourceList);
@@ -255,6 +256,18 @@ for sourceIdx = 1:numSources
     sourceMat(:,sourceIdx) = load_interpolate_spectrum([spectraPathName filesep 'sources'],sourceList{sourceIdx},nmToInterpOver,normFlag);
     disp(sourceList{sourceIdx})
 end
+
+% If enabled, adjust the source spectra to account for transmission through
+% skin, head, and possibly RPE
+if adjustSourceSpectraForHead
+    
+end
+
+% If enabled, adjust the source spectra to account for camera's QE
+if adjustSourceSpectraForQE
+    
+end
+
 
 regStackHeight = size(regAbsorbStack,1);
 regStackWidth = size(regAbsorbStack,2);

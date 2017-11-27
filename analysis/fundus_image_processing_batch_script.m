@@ -20,8 +20,8 @@ fileNameList = {'170905_subject001_capture001_850nm.tiff', ...
     '170905_subject001_capture005_660nm.tiff', ...
     '170905_subject001_capture006_660nm.tiff'};
 
-% % Loop through processing (registration) pipeline calls
-% numFilesToRun = numel(fileNameList);
+% Loop through processing (registration) pipeline calls
+numFilesToRun = numel(fileNameList);
 % 
 % for pipeIdx = 1:numFilesToRun
 %     newFileName = fileNameList{pipeIdx};

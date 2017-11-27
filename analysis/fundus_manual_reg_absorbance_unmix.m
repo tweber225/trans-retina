@@ -12,7 +12,7 @@
 
 %% Filenames
 sourceList = {'940nmLED', '850nmLED', '780nmLED', '730nmLED', '660nmLED'};
-dataPath = 'C:\Users\twebe\Desktop\local data analysis\170905';
+dataPath = 'C:\Users\tweber\Desktop\local data analysis\170905';
 captureFileNameList = {'170905_subject001_capture006',...
     '170905_subject001_capture001', ...
     '170905_subject001_capture003', ...
@@ -31,11 +31,11 @@ makeNewRegistrationControlPoints = 0;
 doControlPointCorrelationTuning = 1;
 
 % Transforms to consider
-nonreflectivesimilarity = 1;
+nonreflectivesimilarity = 0;
 affine = 0;
 projective = 0;
 poly2 = 1;
-poly3 = 1;
+poly3 = 0;
 poly4 = 0;
 
 % Input chromophores
@@ -142,8 +142,12 @@ if doManualRegistration == 1
                         % Warp the moving frame
                         regFrame = imwarp(movingFrame,imref2d(size(movingFrame)),tForm{transIdx},'OutputView',imref2d(size(fixedFrame)));
                         imshowpair(regFrame,fixedFrame);title(num2str(transIdx))
-                        drawnow;pause(2);
+                        drawnow;
+                        SSIVal = ssim(regFrame,fixedFrame);
+                        disp(['Structural Similarity Index: ' num2str(SSIVal)])
+                        %pause(2);
                     end
+                    
                     prompt = 'Which transform was best? (1,2,3,etc) (0=repeat) ';
                     bestTransType = input(prompt);
                     bestTransMat(sourceIdx,kernelIdx) = bestTransType;
@@ -155,24 +159,69 @@ if doManualRegistration == 1
     end %loop through sources-applying transforms
     
     % Review selections made, make final decision on each source channel
-    disp('Columns: kernels, Rows: sources');
+    disp('Review your choices (Columns: kernels, Rows: sources)');
     disp(bestTransMat);
-    
+       
     % Ask which transformation to use, then do it
+    fixedFrameSize = size(fixedFrame);
+    fixedFrameRef = imref2d(fixedFrameSize);
+    regAbsorbStack = zeros([fixedFrameSize numSources numKernelsToUnmix]);
     for sourceIdx = 1:numSources
         if sourceIdx == fixedSource
             % Don't need to transform
+            outTForm = affine2d;
         else
             % Ask which transform to use
             choiceTransform = input(['Transform to use for source ' num2str(sourceIdx) '? ']);
+            % Determine what tranform that was
+            choiceClass = class(tForm{choiceTransform});
             
-            % Transform
-            tFormToUse = 
+            % Gather all the control points to use
+            allMovingPoints = []; allFixedPoints = [];
+            for kernelIdx = 1:numKernelsToUseRegistration
+                allMovingPoints = [allMovingPoints; controlPointCellArray{kernelIdx,sourceIdx}.movingPoints];
+                allFixedPoints = [allFixedPoints; controlPointCellArray{kernelIdx,sourceIdx}.fixedPoints];
+            end
             
+            % Compute average transform across all kernels for this source
+            switch choiceClass
+                case 'affine2d'
+                    if isSimilarity(tForm{choiceTransform})
+                        outTForm = fitgeotrans(allMovingPoints,allFixedPoints,'nonreflectivesimilarity');
+                    else
+                        outTForm = fitgeotrans(allMovingPoints,allFixedPoints.fixedPoints,'affine');
+                    end
+                case 'projective2d'
+                    outTForm = fitgeotrans(allMovingPoints,allFixedPoints,'projective');
+                case 'images.geotrans.PolynomialTransformation2D'
+                    polyDeg = tForm{choiceTransform}.Degree;
+                    outTForm = fitgeotrans(allMovingPoints,allFixedPoints,'polynomial',polyDeg);
+            end           
         end
+        % Make a cropping binary frame
+        warpFrameSize = size(absStackArray{sourceIdx}(:,:,1),1);
+        [xGr,yGr] = meshgrid((-warpFrameSize*.5+.5):(warpFrameSize*.5),(-warpFrameSize*.5+.5):(warpFrameSize*.5));
+        binCropFrame = ((xGr.^2 + yGr.^2) <= (warpFrameSize/2).^2);
+        
+        % Final transforms
+        
+        for kernelIdx = 1:numKernelsToUnmix
+            sourceFrame = absStackArray{sourceIdx}(:,:,kernelsToUnmix(kernelIdx));
+            regAbsorbStack(:,:,sourceIdx,kernelIdx) = imwarp(sourceFrame,imref2d(size(sourceFrame)),outTForm,'OutputView',fixedFrameRef);
+        end
+        warpCropFrame(:,:,sourceIdx) = imwarp(binCropFrame,imref2d(size(sourceFrame)),outTForm,'OutputView',fixedFrameRef);
         
     end
+    
     % Crop to valid portions (where there's a spectrum at each)
+    validCropFrame = (sum(warpCropFrame,3) > (numSources-.5));
+    regAbsorbStack = regAbsorbStack.*repmat(validCropFrame,[1 1 numSources numKernelsToUnmix]);
+    
+    % Save each stack of multiple sources
+    for kernelIdx = 1:numKernelsToUnmix
+        chromFileName = ['multiabsorb_kernel' num2str(kernelsToUnmix(kernelIdx),'%02d') '.tiff'];
+        save_tiff_stack(single(regAbsorbStack(:,:,:,kernelIdx)),[dataPath filesep chromFileName]);
+    end
     
 end %conditional to enable manual registration
 
@@ -185,6 +234,7 @@ end %conditional to enable manual registration
 % wavelengths). It's possible these two will cancel each other's effects
 % out, but to some extend there will be some error.
 
+disp('Loading spectra ...')
 % Make spectra folder string name
 nmToInterpOver = 600:1000;numNmToInterpOver = numel(nmToInterpOver);
 analysisPathNameArray = regexp(cd,'\','split');
@@ -195,6 +245,7 @@ chromMat = zeros(numNmToInterpOver,numChroms);
 normFlag = 0; % Don't normalize the chromophores absorption
 for chromIdx = 1:numChroms
     chromMat(:,chromIdx) = load_interpolate_spectrum([spectraPathName filesep 'chromophores'],chromList{chromIdx},nmToInterpOver,normFlag);
+    disp(chromList{chromIdx})
 end
 
 % Load source spectra
@@ -202,19 +253,37 @@ sourceMat = zeros(numNmToInterpOver,numSources);
 normFlag = 1; % Do normalize source emissions
 for sourceIdx = 1:numSources
     sourceMat(:,sourceIdx) = load_interpolate_spectrum([spectraPathName filesep 'sources'],sourceList{sourceIdx},nmToInterpOver,normFlag);
+    disp(sourceList{sourceIdx})
 end
 
-% Loops through desired kernels to unmix
+regStackHeight = size(regAbsorbStack,1);
+regStackWidth = size(regAbsorbStack,2);
+numPixelsPerFrame = regStackHeight*regStackWidth;
+% Loop through desired kernels to unmix
 for kernelIdx = 1:numKernelsToUnmix
+    disp(['Unmixing kernel ' num2str(kernelIdx) ' of ' num2str(numKernelsToUnmix)]);
     % Unmixing: Fit the absorbance data to model of mixed chromophores
     modelMat = sourceMat'*chromMat; % Make the linear model for each chromophore
-    absorbVector = reshape(regAbsorbStack,[regStackWidth*regStackHeight numSources])'; % reshape so we can do efficient matrix "division"
-    chromVector = modelMat\absorbVector;
-    chromStack = single(reshape(chromVector,[regStackHeight regStackWidth numChroms]));
+    % reshape so we can simply loop through a pixel index
+    absorbVector = reshape(regAbsorbStack(:,:,:,kernelIdx),[numPixelsPerFrame numSources])'; 
+    
+    % Do a non-negative least squares fit of the absorbance data
+    chromVector = zeros(numChroms,numPixelsPerFrame);
+    percentsVector = 10:10:100;
+    percentsPixels = numPixelsPerFrame*percentsVector/100;
+    for pixelIdx = 1:numPixelsPerFrame
+        chromVector(:,pixelIdx) = lsqnonneg(modelMat,absorbVector(:,pixelIdx));
+        if sum(pixelIdx == percentsPixels) == 1
+            disp([num2str(percentsVector(pixelIdx == percentsPixels)) '%'])
+        end
+    end
+    
+    % Reshape back
+    chromStack = reshape(chromVector',[regStackHeight regStackWidth numChroms]);
 
     % Save this chromophore stack and kernel choice
-    chromFileName = ['chromophores_kernel' num2str(kernelsToUnMix(kernelIdx),'%02d') '.tiff'];
-    save_tiff_stack(chromStack,[dataPath filesep chromFileName]);
+    chromFileName = ['chromophores_kernel' num2str(kernelsToUnmix(kernelIdx),'%02d') '.tiff'];
+    save_tiff_stack(single(chromStack),[dataPath filesep chromFileName]);
 end
 
 

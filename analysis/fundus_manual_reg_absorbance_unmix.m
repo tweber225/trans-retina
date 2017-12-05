@@ -11,8 +11,9 @@
 %
 
 %% Filenames
-sourceList = {'940nmLED', '850nmLED', '780nmLED', '730nmLED', '660nmLED'};
-dataPath = 'C:\Users\twebe\Desktop\local data analysis\170905';
+sourceList = {'940nmLED', '850nmLED', '780nmLED', '730nmLED', '660nmLED'}; % Note: inclusion in spectral unmixing is determined below 
+chromList = {'HbO2', 'Hb', 'melanin'}; 
+dataPath = 'C:\Users\tweber\Desktop\local data analysis\170905';
 captureFileNameList = {'170905_subject001_capture006',...
     '170905_subject001_capture001', ...
     '170905_subject001_capture003', ...
@@ -28,28 +29,28 @@ fileNameList = {'170905_subject001_capture006_660nm-absorb.tiff',...
 fixedSource = 2; % 850nm LED is sharpest
 doManualRegistration = 1;
 makeNewRegistrationControlPoints = 0;
-adjustSourceSpectraForHead = 1;
+doControlPointCorrelationTuning = 0;
+compareTransforms = 0;
+adjustSourceSpectraForHead = 0;
+adjustSourceSpectraForQE = 1;
 
 % Transforms to consider
 nonreflectivesimilarity = 0;
 affine = 0;
 projective = 0;
 poly2 = 1;
-poly3 = 0;
-poly4 = 0;
-
-% Input chromophores
-chromList = {'HbO2', 'Hb', 'melanin'};
-numChroms = numel(chromList);
+poly3 = 1;
+poly4 = 1;
 
 % Select particular filter kernels absorbance images to use for
 % registration and to unmix
 kernelsToUseRegistration = [3,6,10]; numKernelsToUseRegistration = numel(kernelsToUseRegistration);
 %kernelsToUnmix = [1,2,3,4,6,8,10,14,18,24]; numKernelsToUnmix = numel(kernelsToUnmix);
-kernelsToUnmix = [6,14]; numKernelsToUnmix = numel(kernelsToUnmix);
+kernelsToUnmix = [4,6,14]; numKernelsToUnmix = numel(kernelsToUnmix);
 
 % Calculated parameters
 numSources = numel(sourceList);
+numChroms = numel(chromList);
 numTransTypes = sum([nonreflectivesimilarity;affine;projective;poly2;poly3;poly4]);
 
 
@@ -135,8 +136,9 @@ if doManualRegistration == 1
                 end
                 % review options and select the best fit for each channel
                 % and each kernel
+                bestTransMat = zeros(numSources,numKernelsToUseRegistration);
                 selectionMade = 0;
-                while selectionMade == 0
+                while ((selectionMade == 0) && (compareTransforms == 1))
                     for transIdx = 1:numTransTypes
                         movingFrame = absStackArray{sourceIdx}(:,:,kernelsToUseRegistration(kernelIdx));
                         fixedFrame = absStackArray{fixedSource}(:,:,kernelsToUseRegistration(kernelIdx));
@@ -164,6 +166,7 @@ if doManualRegistration == 1
     disp(bestTransMat);
        
     % Ask which transformation to use, then do it
+    fixedFrame = absStackArray{fixedSource}(:,:,1);
     fixedFrameSize = size(fixedFrame);
     fixedFrameRef = imref2d(fixedFrameSize);
     regAbsorbStack = zeros([fixedFrameSize numSources numKernelsToUnmix]);
@@ -179,7 +182,8 @@ if doManualRegistration == 1
             
             % Gather all the control points to use
             allMovingPoints = []; allFixedPoints = [];
-            for kernelIdx = 1:numKernelsToUseRegistration
+            %for kernelIdx = 1:numKernelsToUseRegistration
+            for kernelIdx = 2 % hacking this line to just use, the second set of control points, which was fine (using them all together leads to some problems)
                 allMovingPoints = [allMovingPoints; controlPointCellArray{kernelIdx,sourceIdx}.movingPoints];
                 allFixedPoints = [allFixedPoints; controlPointCellArray{kernelIdx,sourceIdx}.fixedPoints];
             end
@@ -235,6 +239,19 @@ end %conditional to enable manual registration
 % wavelengths). It's possible these two will cancel each other's effects
 % out, but to some extend there will be some error.
 
+% Which sources/chromophores to consider
+%sourceList = {'940nmLED', '850nmLED', '780nmLED', '730nmLED', '660nmLED'};
+sourcesToInclude = [1, 1, 1, 1, 1];
+%chromList = {'HbO2', 'Hb','melanin'}; 
+chromsToInclude = [1, 1, 1];
+
+numChromsUnmix = sum(chromsToInclude);
+ascendingNumbers = 1:numChroms;
+chromNumberIndices = ascendingNumbers(logical(chromsToInclude));
+numSourcesUnmix = sum(sourcesToInclude);
+ascendingNumbers = 1:numSources;
+sourceNumberIndices = ascendingNumbers(logical(sourcesToInclude));
+
 disp('Loading spectra ...')
 % Make spectra folder string name
 nmToInterpOver = 600:1000;numNmToInterpOver = numel(nmToInterpOver);
@@ -242,29 +259,36 @@ analysisPathNameArray = regexp(cd,'\','split');
 transRetinaPathName = strjoin(analysisPathNameArray(1:(end-1)),'\');
 spectraPathName = [transRetinaPathName filesep 'spectra'];
 % Load chromophores
-chromMat = zeros(numNmToInterpOver,numChroms);
+chromMat = zeros(numNmToInterpOver,numChromsUnmix);
 normFlag = 0; % Don't normalize the chromophores absorption
-for chromIdx = 1:numChroms
-    chromMat(:,chromIdx) = load_interpolate_spectrum([spectraPathName filesep 'chromophores'],chromList{chromIdx},nmToInterpOver,normFlag);
-    disp(chromList{chromIdx})
+for chromIdx = 1:numChromsUnmix
+    chromMat(:,chromIdx) = load_interpolate_spectrum([spectraPathName filesep 'chromophores'],chromList{chromNumberIndices(chromIdx)},nmToInterpOver,normFlag);
+    disp(chromList{chromNumberIndices(chromIdx)})
 end
 
 % Load source spectra
-sourceMat = zeros(numNmToInterpOver,numSources);
+sourceMat = zeros(numNmToInterpOver,numSourcesUnmix);
 normFlag = 1; % Do normalize source emissions
-for sourceIdx = 1:numSources
-    sourceMat(:,sourceIdx) = load_interpolate_spectrum([spectraPathName filesep 'sources'],sourceList{sourceIdx},nmToInterpOver,normFlag);
-    disp(sourceList{sourceIdx})
+for sourceIdx = 1:numSourcesUnmix
+    sourceMat(:,sourceIdx) = load_interpolate_spectrum([spectraPathName filesep 'sources'],sourceList{sourceNumberIndices(sourceIdx)},nmToInterpOver,normFlag);
+    disp(sourceList{sourceNumberIndices(sourceIdx)})
 end
 
 % If enabled, adjust the source spectra to account for transmission through
 % skin, head, and possibly RPE
 if adjustSourceSpectraForHead
-    
+    % Not implemented yet
 end
 
 % If enabled, adjust the source spectra to account for camera's QE
-if adjustSourceSpectraForQE
+if adjustSourceSpectraForQE == 1
+    % Name the camera
+    cameraQESpectrumName = 'pixelflyusb';
+    % Search for and load that spectrum
+    normFlag = 0;
+    cameraQE = load_interpolate_spectrum([spectraPathName filesep 'cameras'],cameraQESpectrumName,nmToInterpOver,normFlag);
+    
+    % Loop through all the source spectra and adjust them
     
 end
 
@@ -272,16 +296,20 @@ end
 regStackHeight = size(regAbsorbStack,1);
 regStackWidth = size(regAbsorbStack,2);
 numPixelsPerFrame = regStackHeight*regStackWidth;
-% Loop through desired kernels to unmix
+
+% Make the model matrix
+modelMat = sourceMat'*chromMat; % Make the linear model for each chromophore
+modelMat = modelMat./(10^6); % scale down a bit so our chromophore concentrations are not really small
+disp(['Condition number for model: ' num2str(cond(modelMat))]);
+
+%% Loop through desired kernels to unmix
 for kernelIdx = 1:numKernelsToUnmix
     disp(['Unmixing kernel ' num2str(kernelIdx) ' of ' num2str(numKernelsToUnmix)]);
-    % Unmixing: Fit the absorbance data to model of mixed chromophores
-    modelMat = sourceMat'*chromMat; % Make the linear model for each chromophore
     % reshape so we can simply loop through a pixel index
-    absorbVector = reshape(regAbsorbStack(:,:,:,kernelIdx),[numPixelsPerFrame numSources])'; 
+    absorbVector = reshape(regAbsorbStack(:,:,sourceNumberIndices,kernelIdx),[numPixelsPerFrame numSourcesUnmix])'; 
     
     % Do a non-negative least squares fit of the absorbance data
-    chromVector = zeros(numChroms,numPixelsPerFrame);
+    chromVector = zeros(numChromsUnmix,numPixelsPerFrame);
     percentsVector = 10:10:100;
     percentsPixels = numPixelsPerFrame*percentsVector/100;
     for pixelIdx = 1:numPixelsPerFrame
@@ -292,7 +320,7 @@ for kernelIdx = 1:numKernelsToUnmix
     end
     
     % Reshape back
-    chromStack = reshape(chromVector',[regStackHeight regStackWidth numChroms]);
+    chromStack = reshape(chromVector',[regStackHeight regStackWidth numChromsUnmix]);
 
     % Save this chromophore stack and kernel choice
     chromFileName = ['chromophores_kernel' num2str(kernelsToUnmix(kernelIdx),'%02d') '.tiff'];

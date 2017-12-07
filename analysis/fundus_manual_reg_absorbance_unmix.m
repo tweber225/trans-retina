@@ -288,8 +288,11 @@ if adjustSourceSpectraForQE == 1
     normFlag = 0;
     cameraQE = load_interpolate_spectrum([spectraPathName filesep 'cameras'],cameraQESpectrumName,nmToInterpOver,normFlag);
     
-    % Loop through all the source spectra and adjust them
+    % Multiply all the source spectra by QE of camera
+    modifiedSourceMat = sourceMat.*repmat(cameraQE,[1 numSourcesUnmix]);
     
+    % Renormalize
+    modifiedSourceMat = modifiedSourceMat./repmat(sum(modifiedSourceMat),[numNmToInterpOver 1]);
 end
 
 

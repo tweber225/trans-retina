@@ -242,7 +242,7 @@ end %conditional to enable manual registration
 % Which sources/chromophores to consider
 %sourceList = {'940nmLED', '850nmLED', '780nmLED', '730nmLED', '660nmLED'};
 sourcesToInclude = [1, 1, 1, 1, 1];
-%chromList = {'HbO2', 'Hb','melanin'}; 
+%chromList = {'HbO2','Hb','melanin'}; 
 chromsToInclude = [1, 1, 1];
 
 numChromsUnmix = sum(chromsToInclude);

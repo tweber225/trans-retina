@@ -276,8 +276,22 @@ end
 
 % If enabled, adjust the source spectra to account for transmission through
 % skin, head, and possibly RPE
-if adjustSourceSpectraForHead
-    % Not implemented yet
+if adjustSourceSpectraForHead == 1
+    % Make transmission model
+    HbConc = 150; % g/L
+    O2Sat = 60/100;
+    bloodVolFrac = 2/100;
+    waterVolFrac = 62/100;
+    fatVolFrac = 5/100; % absorption spectrum is fairly insensitive to fat <10%
+    melanosomeVolFrac = .01/100; % Very sensitive
+    sourceDistance = 2; %cm VERY sensitive
+    headTrans = head_transmission_model(sourceDistance,nmToInterpOver,HbConc,O2Sat,bloodVolFrac,waterVolFrac,fatVolFrac,melanosomeVolFrac); % For fixed 3cm source distance
+    
+    % Multiply all the source spectra by QE of camera
+    modifiedSourceMat = sourceMat.*repmat(headTrans,[1 numSourcesUnmix]);
+    
+    % Renormalize
+    modifiedSourceMat = modifiedSourceMat./repmat(sum(modifiedSourceMat),[numNmToInterpOver 1]);
 end
 
 % If enabled, adjust the source spectra to account for camera's QE
@@ -304,6 +318,7 @@ numPixelsPerFrame = regStackHeight*regStackWidth;
 modelMat = sourceMat'*chromMat; % Make the linear model for each chromophore
 modelMat = modelMat./(10^6); % scale down a bit so our chromophore concentrations are not really small
 disp(['Condition number for model: ' num2str(cond(modelMat))]);
+
 
 %% Loop through desired kernels to unmix
 for kernelIdx = 1:numKernelsToUnmix

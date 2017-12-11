@@ -17,8 +17,8 @@ rawSpectrum = rawXLSData(:,2);
 % Calculate wavelength pitch of spectrum
 wavelengthPitch = mean(diff(rawWavelengths));
 
-% Determine moving average span width
-spanWidth = floor(0.5/wavelengthPitch)*2+1;
+% Determine moving average span width (~5nm resolution is good enough)
+spanWidth = floor(2/wavelengthPitch)*2+1;
 
 % Smooth out the spectrum
 smoothSpectrum = smooth(rawSpectrum,spanWidth);
@@ -31,3 +31,6 @@ outSpectrum = reshape(outSpectrum,[numel(outSpectrum),1]);
 if normalizePower == 1
     outSpectrum = outSpectrum/sum(outSpectrum);   
 end
+
+% Force <0 to 0
+outSpectrum(outSpectrum<0) = 0;

@@ -25,6 +25,7 @@ switch camName
         settings.channelsEnable = [1 0 0 0 0 0]; % Six channels max
         
         settings.framesetsToCapture = 100;
+        settings.maxAllocationSize = 1*2^10; % in MB
         settings.bitdepth = 8;
         
         settings.rollingAverageFrames = int32(2); % int32 for compatibility later, valid choices are powers of 2 up to 64

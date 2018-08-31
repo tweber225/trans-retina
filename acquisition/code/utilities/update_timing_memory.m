@@ -44,14 +44,10 @@ handles.settings.totalFrames = totalFrames;
 acquisitionTime = totalFrames/handles.settings.framerate;
 acquisitionTimeString = ['Acquistion Time: ' num2str(acquisitionTime) ' sec'];
 set(handles.displayAcquisitionTime,'String',acquisitionTimeString);
-handles.settings.acquistionTime = acquisitionTime;
+handles.settings.acquisitionTime = acquisitionTime;
 
 % Memory used in allocation
-if handles.settings.bitdepth > 8
-    bytesPerPixel = 2;
-else
-    bytesPerPixel = 1;
-end
+bytesPerPixel = ceil(handles.settings.bitdepth/8);
 pixCount = double(handles.settings.numberLines)*double(handles.constants.sensorXPixels);
 bytesInAllocation = bytesPerPixel*pixCount*totalFrames;
 MBsInAllocation = round(10*bytesInAllocation/(2^20))/10;

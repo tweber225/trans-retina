@@ -142,6 +142,12 @@ guidata(hObject,handles);
 
 function uiTextNumberLines_Callback(hObject, eventdata, handles)
 targetLines = str2double(get(hObject,'String'));
+% check that we're not exceeding max allocation size
+estimatedAllocationSize = targetLines*handles.constants.sensorXPixels*ceil(handles.settings.bitdepth/8)*handles.settings.framesetsToCapture*sum(handles.settings.channelsEnable)/2^20;
+if estimatedAllocationSize > handles.settings.maxAllocationSize
+    set(hObject,'String',num2str(handles.settings.numberLines)); % set to old number of lines
+    disp('Tried to allocate more memory than max allowable!'); guidata(hObject,handles); return % update GUI and get out
+end
 xPix = handles.constants.sensorXPixels; yPix = handles.constants.sensorYPixels;
 actualNumberLines = set_AOI_for_num_lines(handles.camHandle,targetLines,xPix,yPix);
 handles.settings.numberLines = actualNumberLines;
@@ -166,6 +172,12 @@ function uiSelectBitdepth_Callback(hObject, eventdata, handles)
 bitdepthOptions = cellstr(get(handles.uiSelectBitdepth,'String'));
 bitdepthIndex = 1:numel(bitdepthOptions);
 targetBitdepth = str2double(bitdepthOptions{get(hObject,'Value')});
+% check that we're not exceeding max allocation size
+estimatedAllocationSize = double(handles.settings.numberLines)*handles.constants.sensorXPixels*ceil(targetBitdepth/8)*handles.settings.framesetsToCapture*sum(handles.settings.channelsEnable)/2^20;
+if estimatedAllocationSize > handles.settings.maxAllocationSize
+    set(hObject,'Value',abs(get(hObject,'Value')-3)); % set to old bitdepth, this only works for 2 bit depths options
+    disp('Tried to allocate more memory than max allowable!'); guidata(hObject,handles); return % update GUI and get out
+end
 actualBitdepth = set_bitdepth(handles.camHandle,targetBitdepth);
 handles.settings.bitdepth = actualBitdepth;
 set(handles.uiSelectBitdepth,'Value',bitdepthIndex(strcmp(bitdepthOptions,num2str(actualBitdepth))));
@@ -224,6 +236,12 @@ guidata(hObject,handles);
 
 function uiTextFramesetsToCapture_Callback(hObject, eventdata, handles)
 targetFramesetsToCapture = round(str2double(get(hObject,'String')));
+% check that we're not exceeding max allocation size
+estimatedAllocationSize = double(handles.settings.numberLines)*handles.constants.sensorXPixels*ceil(handles.settings.bitdepth/8)*targetFramesetsToCapture*sum(handles.settings.channelsEnable)/2^20;
+if estimatedAllocationSize > handles.settings.maxAllocationSize
+    set(hObject,'String',handles.settings.framesetsToCapture); % set to old # framesets
+    disp('Tried to allocate more memory than max allowable!'); guidata(hObject,handles); return % update GUI and get out
+end
 handles.settings.framesetsToCapture = targetFramesetsToCapture;
 set(hObject,'String',targetFramesetsToCapture);
 [handles.sequenceList,handles.memoryIDList] = adjust_sequence_allocation(handles.camHandle,handles.settings,handles.constants,handles.memoryIDList);
@@ -500,6 +518,7 @@ uiTextDisplayLow_Callback(handles.uiTextDisplayLow, eventdata, handles);
 handles = guidata(hObject); % get back gui data set in line above
 set(handles.uiTextDisplayHigh,'String',num2str(maxLevel));
 uiTextDisplayHigh_Callback(handles.uiTextDisplayHigh, eventdata, handles);
+handles = guidata(hObject); % get back gui data set in line above
 if ~get(handles.uiButtonPreview,'Value')
     oldFrame = double(get(handles.retinaImg, 'CData'));
     oldFrameRaw = (oldFrame/oldScale)+oldOffset;
@@ -516,6 +535,7 @@ uiTextDisplayLow_Callback(handles.uiTextDisplayLow, eventdata, handles);
 handles = guidata(hObject); % get back gui data set in line above
 set(handles.uiTextDisplayHigh,'String',num2str(2^handles.settings.bitdepth));
 uiTextDisplayHigh_Callback(handles.uiTextDisplayHigh, eventdata, handles);
+handles = guidata(hObject); % get back gui data set in line above
 if ~get(handles.uiButtonPreview,'Value')
     oldFrame = double(get(handles.retinaImg, 'CData'));
     oldFrameRaw = (oldFrame/oldScale)+oldOffset;

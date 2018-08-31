@@ -10,13 +10,14 @@ Version 1: June 2017 (2 colors)
 
 Version 2: July 2017 (1-4 colors+more features)
 
+Version 3: August 2018 (1-6 channels, NIR-sensitive camera)
 
-MATLAB code to run camera in sync with alternating LEDs (up to 4) for trans-scleral retina imaging. 
+
+MATLAB code to run IDS camera (with .NET interface) in synchrony with alternating LEDs (up to 6) for trans-illumination chorioretinal imaging. 
 In the directory: "cam_exposure_LED_sync" is a Arduino sketch file that should syncronize exposure signals and the LED outputs.
 
-In the future repo may include some analysis code.
 
-MATLAB GUI (multicolor_imaging_GUI.m) hot keys:
+OBSOLETE IN NEW! MATLAB GUI (multicolor_imaging_GUI.m) hot keys:
 
 p = Start/stop preview
 
@@ -55,7 +56,3 @@ t = Toggle external fixation target LED
 o (not zero) = Start a preview with only the first LED channel
 
 
-
-Features to add to GUI:
-
--Low priority: limit on number of frames for capture mode (to avoid over allocating memory)

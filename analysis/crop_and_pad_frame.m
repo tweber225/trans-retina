@@ -30,4 +30,5 @@ numOutCircPix = length(xOutCirc);
 [theta,~] = cart2pol(xOutCirc,yOutCirc);
 [Xq,Yq] = pol2cart(theta,repmat(rhoEdge,[numOutCircPix 1]));
 croppedAndPaddedFrame = croppedAvgFrame;
-croppedAndPaddedFrame(~logical(circMask)) = interp2(xGrid,yGrid,croppedAvgFrame,Xq,Yq);
+%croppedAndPaddedFrame(~logical(circMask)) = interp2(xGrid,yGrid,croppedAvgFrame,Xq,Yq);
+croppedAndPaddedFrame(~logical(circMask)) = 0;

@@ -11,32 +11,35 @@
 %
 
 %% Filenames
-sourceList = {'940nmLED', '850nmLED', '780nmLED', '730nmLED', '660nmLED'}; % Note: inclusion in spectral unmixing is determined below 
-chromList = {'HbO2', 'Hb', 'melanin'}; 
+sourceList = {'850nmLEDmax', '780nmLEDmax', '730nmLEDmax', '660nmLEDmax', '940nmLEDmax'}; % Note: inclusion in spectral unmixing is determined below 
+chromList = {'HbO2', 'Hb' , 'melanin'}; % don't change (select or deselect below)
 dataPath = 'C:\Users\tweber\Desktop\local data analysis\170905';
-captureFileNameList = {'170905_subject001_capture006',...
-    '170905_subject001_capture001', ...
+captureFileNameList = {'170905_subject001_capture001',...
     '170905_subject001_capture003', ...
     '170905_subject001_capture004', ...
-    '170905_subject001_capture005'};
-fileNameList = {'170905_subject001_capture006_660nm-absorb.tiff',...
-    '170905_subject001_capture001_850nm-absorb.tiff', ...
-    '170905_subject001_capture003_780nm-absorb.tiff', ...
-    '170905_subject001_capture004_730nm-absorb.tiff', ...
-    '170905_subject001_capture005_660nm-absorb.tiff'};
+    '170905_subject001_capture005', ...
+    '170905_subject001_capture006'};
+fileNameList = {'absorb_crop', ...
+    'absorb_crop', ...
+    'absorb_crop', ...
+    'absorb_crop', ...
+    'absorb_crop'};
+controlPointsFile = 'control_points-final.mat';
 
 %% Parameters
-fixedSource = 2; % 850nm LED is sharpest
+fixedSource = 1; % 850nm LED is sharpest (Nth capture in "captureFileNameList")
 doManualRegistration = 1;
 makeNewRegistrationControlPoints = 0;
-doControlPointCorrelationTuning = 0;
+fractionMaxToShowWhite = 0.5; % to show as white on the manaul control point registrations (tune as needed)
+doControlPointCorrelationTuning = 1;
 compareTransforms = 0;
+downSampleFactor = 1;
 adjustSourceSpectraForHead = 0;
-adjustSourceSpectraForQE = 1;
+adjustSourceSpectraForQE = 0;
 
 % Transforms to consider
-nonreflectivesimilarity = 0;
-affine = 0;
+nonreflectivesimilarity = 1;
+affine = 1;
 projective = 0;
 poly2 = 1;
 poly3 = 1;
@@ -44,9 +47,8 @@ poly4 = 1;
 
 % Select particular filter kernels absorbance images to use for
 % registration and to unmix
-kernelsToUseRegistration = [3,6,10]; numKernelsToUseRegistration = numel(kernelsToUseRegistration);
-%kernelsToUnmix = [1,2,3,4,6,8,10,14,18,24]; numKernelsToUnmix = numel(kernelsToUnmix);
-kernelsToUnmix = [4,6,14]; numKernelsToUnmix = numel(kernelsToUnmix);
+kernelsToUseRegistration = [5]; numKernelsToUseRegistration = numel(kernelsToUseRegistration);
+kernelsToUnmix = 1:26; numKernelsToUnmix = numel(kernelsToUnmix);
 
 % Calculated parameters
 numSources = numel(sourceList);
@@ -58,7 +60,7 @@ numTransTypes = sum([nonreflectivesimilarity;affine;projective;poly2;poly3;poly4
 if doManualRegistration == 1
     % Load unregistered-absorbance frames
     for sourceIdx = 1:numSources
-        tiffPathFileName = [dataPath filesep captureFileNameList{sourceIdx} filesep fileNameList{sourceIdx}];
+        tiffPathFileName = [dataPath filesep captureFileNameList{sourceIdx} filesep fileNameList{sourceIdx} '.tiff'];
         tiffFileInfo = imfinfo(tiffPathFileName); numKernels = numel(tiffFileInfo);
         absStack = zeros(tiffFileInfo(1).Height,tiffFileInfo(1).Width,numKernels);
         disp(['Loading: ' tiffPathFileName]);
@@ -74,12 +76,13 @@ if doManualRegistration == 1
         for kernelIdx = 1:numKernelsToUseRegistration
             % Loop through this registering to fixed frame
             for sourceIdx = 1:numSources
-                % Normalize frames to show in control point select tool
+                % Normalize image frames to show in control point select tool
                 normFixed = absStackArray{fixedSource}(:,:,kernelsToUseRegistration(kernelIdx));
-                normFixed = normFixed/(0.5*max(normFixed(:)));
+                normFixed = normFixed/(fractionMaxToShowWhite*max(normFixed(:)));
                 normMoving = absStackArray{sourceIdx}(:,:,kernelsToUseRegistration(kernelIdx));
-                normMoving = normMoving/(0.5*max(normMoving(:)));
+                normMoving = normMoving/(fractionMaxToShowWhite*max(normMoving(:)));
                 % Gather the new control points
+                disp(['Beginning manual control point selection for source #' num2str(fixedSource) ' vs #' num2str(sourceIdx)]);
                 [selectedMovingPoints,selectedFixedPoints] = cpselect(normMoving,normFixed,'Wait',true);
                 controlPointCellArray{kernelIdx,sourceIdx}.movingPoints = selectedMovingPoints;
                 controlPointCellArray{kernelIdx,sourceIdx}.fixedPoints = selectedFixedPoints;
@@ -87,16 +90,47 @@ if doManualRegistration == 1
         end
         
         % Save these points
-        save([dataPath filesep 'control_points.mat'],'controlPointCellArray');
+        save([dataPath filesep controlPointsFile],'controlPointCellArray');
     else
         % Otherwise load control points generated and saved before
         % (variable=controlPointCellArray)
-        load([dataPath filesep 'control_points.mat'],'controlPointCellArray')
+        load([dataPath filesep controlPointsFile],'controlPointCellArray')
     end
     
     % optional: cpcorr (to fine tune, or not to fine tune)
     if doControlPointCorrelationTuning == 1
-        
+    % Loop through each kernel to use for registration
+        for kernelIdx = 1:numKernelsToUseRegistration
+            % Loop through this registering to fixed frame
+            for sourceIdx = 1:numSources
+                if sourceIdx == fixedSource
+                    % Skip this if we're comparing the fixed source to
+                    % itself
+                else
+                    % gather correct moving and fixed points
+                    movingPoints = controlPointCellArray{kernelIdx,sourceIdx}.movingPoints;
+                    fixedPoints = controlPointCellArray{kernelIdx,sourceIdx}.fixedPoints;
+                    
+                    % gather moving and fixed frames
+                    movingImg = absStackArray{sourceIdx}(:,:,kernelsToUseRegistration(kernelIdx));
+                    fixedImg = absStackArray{fixedSource}(:,:,kernelsToUseRegistration(kernelIdx));
+                    
+                    % xcorr the control points to fine tune
+                    movingPointsAdjusted = cpcorr(movingPoints,fixedPoints,movingImg,fixedImg);
+                    
+%                     % plot original points on moving frame
+%                     figure; imshow(movingImg)
+%                     hold on
+%                     plot(movingPoints(:,1),movingPoints(:,2),'xw') 
+%                     title('moving')
+%                     
+%                     % plot adjusted
+%                     plot(movingPointsAdjusted(:,1),movingPointsAdjusted(:,2),'xy')
+%                     pause(2)
+                end
+            
+            end
+        end
     end
     
     
@@ -136,7 +170,10 @@ if doManualRegistration == 1
                 end
                 % review options and select the best fit for each channel
                 % and each kernel
-                bestTransMat = zeros(numSources,numKernelsToUseRegistration);
+                if exist('bestTransMat') && (sum(bestTransMat) ~= 0)
+                else
+                    bestTransMat = zeros(numSources,numKernelsToUseRegistration);
+                end
                 selectionMade = 0;
                 while ((selectionMade == 0) && (compareTransforms == 1))
                     for transIdx = 1:numTransTypes
@@ -148,7 +185,7 @@ if doManualRegistration == 1
                         drawnow;
                         SSIVal = ssim(regFrame,fixedFrame);
                         disp(['Structural Similarity Index: ' num2str(SSIVal)])
-                        %pause(2);
+                        pause(.5);
                     end
                     
                     prompt = 'Which transform was best? (1,2,3,etc) (0=repeat) ';
@@ -183,7 +220,7 @@ if doManualRegistration == 1
             % Gather all the control points to use
             allMovingPoints = []; allFixedPoints = [];
             %for kernelIdx = 1:numKernelsToUseRegistration
-            for kernelIdx = 2 % hacking this line to just use, the second set of control points, which was fine (using them all together leads to some problems)
+            for kernelIdx = 1 % hacking this line to just use, the first set of control points, which was fine (using them all together leads to some problems)
                 allMovingPoints = [allMovingPoints; controlPointCellArray{kernelIdx,sourceIdx}.movingPoints];
                 allFixedPoints = [allFixedPoints; controlPointCellArray{kernelIdx,sourceIdx}.fixedPoints];
             end
@@ -194,7 +231,7 @@ if doManualRegistration == 1
                     if isSimilarity(tForm{choiceTransform})
                         outTForm = fitgeotrans(allMovingPoints,allFixedPoints,'nonreflectivesimilarity');
                     else
-                        outTForm = fitgeotrans(allMovingPoints,allFixedPoints.fixedPoints,'affine');
+                        outTForm = fitgeotrans(allMovingPoints,allFixedPoints,'affine');
                     end
                 case 'projective2d'
                     outTForm = fitgeotrans(allMovingPoints,allFixedPoints,'projective');
@@ -203,24 +240,14 @@ if doManualRegistration == 1
                     outTForm = fitgeotrans(allMovingPoints,allFixedPoints,'polynomial',polyDeg);
             end           
         end
-        % Make a cropping binary frame
-        warpFrameSize = size(absStackArray{sourceIdx}(:,:,1),1);
-        [xGr,yGr] = meshgrid((-warpFrameSize*.5+.5):(warpFrameSize*.5),(-warpFrameSize*.5+.5):(warpFrameSize*.5));
-        binCropFrame = ((xGr.^2 + yGr.^2) <= (warpFrameSize/2).^2);
-        
+
         % Final transforms
-        
-        for kernelIdx = 1:numKernelsToUnmix
+                for kernelIdx = 1:numKernelsToUnmix
             sourceFrame = absStackArray{sourceIdx}(:,:,kernelsToUnmix(kernelIdx));
             regAbsorbStack(:,:,sourceIdx,kernelIdx) = imwarp(sourceFrame,imref2d(size(sourceFrame)),outTForm,'OutputView',fixedFrameRef);
         end
-        warpCropFrame(:,:,sourceIdx) = imwarp(binCropFrame,imref2d(size(sourceFrame)),outTForm,'OutputView',fixedFrameRef);
         
     end
-    
-    % Crop to valid portions (where there's a spectrum at each)
-    validCropFrame = (sum(warpCropFrame,3) > (numSources-.5));
-    regAbsorbStack = regAbsorbStack.*repmat(validCropFrame,[1 1 numSources numKernelsToUnmix]);
     
     % Save each stack of multiple sources
     for kernelIdx = 1:numKernelsToUnmix
@@ -232,18 +259,12 @@ end %conditional to enable manual registration
 
 
 %% Absorbance unmixing
-% Current shortcomings of this approach: 1.) QE of camera is not considered
-% (declines from about 525nm Si CCD (or after 700nm with e2v's EV76C661).
-% 2.) Absorption along the way to back of the eye (& homogenous melanin
-% layer at RPE) is not considered (overall will tend to boost longer
-% wavelengths). It's possible these two will cancel each other's effects
-% out, but to some extend there will be some error.
 
 % Which sources/chromophores to consider
-%sourceList = {'940nmLED', '850nmLED', '780nmLED', '730nmLED', '660nmLED'};
-sourcesToInclude = [1, 1, 1, 1, 1];
+%sourceList = {'850nmLEDmax', '780nmLEDmax', '730nmLEDmax', '660nmLEDmax', '940nmLEDmax'};
+sourcesToInclude = [1, 1, 1, 1, 0];
 %chromList = {'HbO2','Hb','melanin'}; 
-chromsToInclude = [1, 1, 1];
+chromsToInclude = [1, 1, 0];
 
 numChromsUnmix = sum(chromsToInclude);
 ascendingNumbers = 1:numChroms;
@@ -277,21 +298,16 @@ end
 % If enabled, adjust the source spectra to account for transmission through
 % skin, head, and possibly RPE
 if adjustSourceSpectraForHead == 1
-    % Make transmission model
-    HbConc = 150; % g/L
-    O2Sat = 60/100;
-    bloodVolFrac = 2/100;
-    waterVolFrac = 62/100;
-    fatVolFrac = 5/100; % absorption spectrum is fairly insensitive to fat <10%
-    melanosomeVolFrac = .01/100; % Very sensitive
-    sourceDistance = 2; %cm VERY sensitive
-    headTrans = head_transmission_model(sourceDistance,nmToInterpOver,HbConc,O2Sat,bloodVolFrac,waterVolFrac,fatVolFrac,melanosomeVolFrac); % For fixed 3cm source distance
-    
-    % Multiply all the source spectra by QE of camera
-    modifiedSourceMat = sourceMat.*repmat(headTrans,[1 numSourcesUnmix]);
+    % Search for and load that spectrum
+    normFlag = 0;
+    headTrans = load_interpolate_spectrum([spectraPathName filesep 'head transmission'],'measured',nmToInterpOver,normFlag);
+        
+    % Multiply all the source spectra by head transmission
+    incidentSourceMat = sourceMat;
+    sourceMat = sourceMat.*repmat(headTrans,[1 numSourcesUnmix]);
     
     % Renormalize
-    modifiedSourceMat = modifiedSourceMat./repmat(sum(modifiedSourceMat),[numNmToInterpOver 1]);
+    sourceMat = sourceMat./repmat(sum(sourceMat),[numNmToInterpOver 1]);
 end
 
 % If enabled, adjust the source spectra to account for camera's QE
@@ -303,10 +319,18 @@ if adjustSourceSpectraForQE == 1
     cameraQE = load_interpolate_spectrum([spectraPathName filesep 'cameras'],cameraQESpectrumName,nmToInterpOver,normFlag);
     
     % Multiply all the source spectra by QE of camera
-    modifiedSourceMat = sourceMat.*repmat(cameraQE,[1 numSourcesUnmix]);
+    flatQESourceMat = sourceMat;
+    sourceMat = sourceMat.*repmat(cameraQE,[1 numSourcesUnmix]);
     
     % Renormalize
-    modifiedSourceMat = modifiedSourceMat./repmat(sum(modifiedSourceMat),[numNmToInterpOver 1]);
+    sourceMat = sourceMat./repmat(sum(sourceMat),[numNmToInterpOver 1]);
+end
+
+% Optional downsampling of the register absorbance stack before unmixing
+% (helps computation and relieves some pressure on registering frames
+% perfectly)
+if downSampleFactor >1
+    regAbsorbStack = imresize(regAbsorbStack,1/downSampleFactor);
 end
 
 
@@ -325,27 +349,35 @@ for kernelIdx = 1:numKernelsToUnmix
     disp(['Unmixing kernel ' num2str(kernelIdx) ' of ' num2str(numKernelsToUnmix)]);
     % reshape so we can simply loop through a pixel index
     absorbVector = reshape(regAbsorbStack(:,:,sourceNumberIndices,kernelIdx),[numPixelsPerFrame numSourcesUnmix])'; 
+       
+    % set any negative values to 0 before beginning non-negative least
+    % squares
+    absorbVector(absorbVector<0) = 0;
+    
+    % Solve the least squares problem since it take virtually no time
+    chromVectorLSq = modelMat\absorbVector;
     
     % Do a non-negative least squares fit of the absorbance data
     chromVector = zeros(numChromsUnmix,numPixelsPerFrame);
     percentsVector = 10:10:100;
     percentsPixels = numPixelsPerFrame*percentsVector/100;
-    for pixelIdx = 1:numPixelsPerFrame
-        chromVector(:,pixelIdx) = lsqnonneg(modelMat,absorbVector(:,pixelIdx));
-        if sum(pixelIdx == percentsPixels) == 1
-            disp([num2str(percentsVector(pixelIdx == percentsPixels)) '%'])
-        end
-    end
+%     for pixelIdx = 1:numPixelsPerFrame
+%         chromVector(:,pixelIdx) = lsqnonneg(modelMat,absorbVector(:,pixelIdx));
+%         if sum(pixelIdx == percentsPixels) == 1
+%             disp([num2str(percentsVector(pixelIdx == percentsPixels)) '%'])
+%         end
+%     end
     
     % Reshape back
-    chromStack = reshape(chromVector',[regStackHeight regStackWidth numChromsUnmix]);
+    chromStackLSq = reshape(chromVectorLSq',[regStackHeight regStackWidth numChromsUnmix]);
+    chromStackNNLSq = reshape(chromVector',[regStackHeight regStackWidth numChromsUnmix]);
 
-    % Save this chromophore stack and kernel choice
-    chromFileName = ['chromophores_kernel' num2str(kernelsToUnmix(kernelIdx),'%02d') '.tiff'];
-    save_tiff_stack(single(chromStack),[dataPath filesep chromFileName]);
+    % Save this chromophore stacks and kernel choice
+    chromLSqFileName = ['chromophores_lsq_kernel' num2str(kernelsToUnmix(kernelIdx),'%02d') '.tiff'];
+    chromNNLSqFileName = ['chromophores_nnlsq_kernel' num2str(kernelsToUnmix(kernelIdx),'%02d') '.tiff'];
+    save_tiff_stack(single(chromStackLSq),[dataPath filesep chromLSqFileName]);
+    save_tiff_stack(single(chromStackNNLSq),[dataPath filesep chromNNLSqFileName]);
 end
-
-
 
 
 

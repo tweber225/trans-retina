@@ -1,9 +1,12 @@
 function headTransFunc = head_transmission_model(sourceDistance,nmToInterpOver,HbMassConc,O2Sat,bloodVolFrac,waterVolFrac,fatVolFrac,melanosomeVolFrac)
-% Note: rodent cortext SO2 60-70, go with 67 for humans
-% blood volume fraction ~3.5
-% Water volume ~70
+% Note, some good estimates for parameters:
+% Hb concentration ~ 150 g/L
+% rodent cortext SO2 60%
+% blood volume fraction ~2
+% Water volume ~60
 % Fat (anyone's guess, not too critical) ~5%
-% Melanosome volume fraction rough guess ~.03%
+% Melanosome volume fraction rough guess ~0.01% (very sensitive)
+% Source distance 1.5-2cm
 
 
 HbMW = 64458; % g/mol

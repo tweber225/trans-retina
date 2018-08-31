@@ -1,9 +1,9 @@
 function maxBlurAvgFrame = smooth_max_filter(inputFrame,filterRadius)
 % ANALYSIS/SMOOTH_MAX_FILTER
 % Filters input frame by finding the maximum around each pixel (in
-% circlular area domain of radius filterRadius). Then it blurs the results with a
-% Gaussian filter of the same radius. The combined effect is a "smooth
-% maximum" filter.
+% circlular area domain of radius filterRadius). Then it blurs the results
+% with a Gaussian filter of 1/2 the radius used before. The combined effect
+% is a "smooth (local) maximum" filter.
 %
 % Part 5 of standard image processing pipeline
 % Timothy D. Weber
@@ -21,4 +21,4 @@ maxOrder = sum(filtDomain(:));
 maxImg = ordfilt2(inputFrame,maxOrder,filtDomain);
 
 % Execute Guassian-blurring
-maxBlurAvgFrame = imgaussfilt(maxImg,filterRadius,'FilterDomain','spatial');
+maxBlurAvgFrame = imgaussfilt(maxImg,filterRadius/2,'FilterDomain','spatial');

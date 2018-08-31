@@ -17,8 +17,8 @@ rawSpectrum = rawXLSData(:,2);
 % Calculate wavelength pitch of spectrum
 wavelengthPitch = mean(diff(rawWavelengths));
 
-% Determine moving average span width (~5nm resolution is good enough)
-spanWidth = floor(2/wavelengthPitch)*2+1;
+% Determine moving average span width (~2.5nm resolution is good enough)
+spanWidth = floor(1/wavelengthPitch)*2+1;
 
 % Smooth out the spectrum
 smoothSpectrum = smooth(rawSpectrum,spanWidth);

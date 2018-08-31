@@ -1,10 +1,13 @@
 /* 
-  Camera exposure and multi-LED output synchronizer v1.3
+  Camera exposure and multi-LED output synchronizer v1.4
+  Timothy D Weber, BU Biomicroscopy Lab, August 2018
+
+  History:
   Version 1.1: now using the digitalWriteFast library from: https://github.com/NicksonYap/digitalWriteFast
   Version 1.2: disabled "acquisition on" indicator to increase speed 
-  Version 1.3: including 4 LED channels, and 4 "enable" pins to select which LEDs to use for each session
+  Version 1.3: including 4 LED channels, and 4 "enable" pins to select which LEDs to use for each session (June 2017)
+  Version 1.4: expanded to 6 LED channels (August 2018)
   
-  Timothy D Weber, BU Biomicroscopy Lab, June 2017
  */
 
 // Include the fast digital read/write library
@@ -13,14 +16,20 @@
 // set up constant parameters
 const int exposurePin = 1; // Camera's exposure signal to trigger off
 const int acquisitionPin = 2; // Signal that an acquisition is ongoing
-const int LED1Pin = 3; // Following 4 pins are digital on/off signals for LEDs
+const int LED1Pin = 3; // Following 6 pins are digital on/off signals for LEDs
 const int LED2Pin = 4;
 const int LED3Pin = 5;
 const int LED4Pin = 6;
+const int LED5Pin = 7;
+const int LED6Pin = 8;
+
 const int LED1Enable = 9; // Following 4 pins are to signal whether each LED should be used
 const int LED2Enable = 10;
 const int LED3Enable = 11;
 const int LED4Enable = 12;
+const int LED5Enable = 13;
+const int LED6Enable = 14;
+
 
 // set up some digital state variables
 boolean currentExposure = false;
@@ -38,11 +47,16 @@ void setup() {
   pinModeFast(LED2Enable, INPUT);
   pinModeFast(LED3Enable, INPUT);
   pinModeFast(LED4Enable, INPUT);
-  
+  pinModeFast(LED5Enable, INPUT);
+  pinModeFast(LED6Enable, INPUT);
+
   pinModeFast(LED1Pin, OUTPUT);
   pinModeFast(LED2Pin, OUTPUT);
   pinModeFast(LED3Pin, OUTPUT);
   pinModeFast(LED4Pin, OUTPUT);
+  pinModeFast(LED5Pin, OUTPUT);
+  pinModeFast(LED6Pin, OUTPUT);
+
 }
 
 void loop() {
@@ -51,10 +65,10 @@ void loop() {
 
   if (currentAcquisition == HIGH) {
 
-    // If the last loop was not part of the ongoing acquistion, then we just started
+    // If the last loop was not part of the ongoing acquistion, then we have just started an acquistion
     if (previousAcquisition == LOW) {
       
-      // Determine starting LED
+      // Determine LED to start with (check each in order until finding an enabled LED)
       if digitalReadFast(LED1Enable) {
         nextLED = 1;
       }
@@ -67,9 +81,15 @@ void loop() {
       else if digitalReadFast(LED4Enable) {
         nextLED = 4;
       }
+      else if digitalReadFast(LED5Enable) {
+        nextLED = 5;
+      }
+      else if digitalReadFast(LED6Enable) {
+        nextLED = 6;
+      }
     }
     
-    // poll state of camera exposure
+    // Poll state of camera exposure
     currentExposure = digitalReadFast(exposurePin);
 
     // Detect an UP edge on the camera exposure signal
@@ -85,13 +105,19 @@ void loop() {
         else if (nextLED == 3) {
           digitalWriteFast(LED3Pin,HIGH);
         }
-        else {
+        else if (nextLED == 4) {
           digitalWriteFast(LED4Pin,HIGH);
+        }
+        else if (nextLED == 5) {
+          digitalWriteFast(LED5Pin,HIGH);
+        }
+        else {
+          digitalWriteFast(LED6Pin,HIGH);
         }
       }
     }
     
-    // Else--detect a DOWN edge
+    // Else--look for a DOWN edge (that's if prev exposure was high and we're now low)
     else {
       if (previousExposure == HIGH) {
         
@@ -105,12 +131,18 @@ void loop() {
         else if (nextLED == 3) {
           digitalWriteFast(LED3Pin,LOW);
         }
-        else {
+        else if (nextLED == 4) {
           digitalWriteFast(LED4Pin,LOW);
+        }
+        else if (nextLED == 5) {
+          digitalWriteFast(LED5Pin,LOW);
+        }
+        else {
+          digitalWriteFast(LED6Pin,LOW);
         }
         
         // Determine correct LED to turn on for next image
-        // This has to be written like this because digitalRead(/Write)Fast ...
+        // This has to be written like this (awfully) because digitalRead(/Write)Fast ...
         // commands require that the pin value is known at compile time
         if (nextLED==1) {
           if digitalReadFast(LED2Enable) {
@@ -121,6 +153,12 @@ void loop() {
           }
           else if digitalReadFast(LED4Enable) {
             nextLED = 4;       
+          }
+          else if digitalReadFast(LED5Enable) {
+            nextLED = 5;       
+          }
+          else if digitalReadFast(LED6Enable) {
+            nextLED = 6;       
           }
           else {
             nextLED = 1;        
@@ -134,6 +172,12 @@ void loop() {
           else if digitalReadFast(LED4Enable) {
             nextLED = 4;       
           }
+          else if digitalReadFast(LED5Enable) {
+            nextLED = 5;       
+          }
+          else if digitalReadFast(LED6Enable) {
+            nextLED = 6;       
+          }
           else if digitalReadFast(LED1Enable) {
             nextLED = 1;
           } 
@@ -146,6 +190,12 @@ void loop() {
           if digitalReadFast(LED4Enable) {
             nextLED = 4;       
           }
+          else if digitalReadFast(LED5Enable) {
+            nextLED = 5;       
+          }
+          else if digitalReadFast(LED6Enable) {
+            nextLED = 6;       
+          }
           else if digitalReadFast(LED1Enable) {
             nextLED = 1;
           } 
@@ -155,6 +205,48 @@ void loop() {
           else {
             nextLED = 3;
           }  
+        }
+
+        else if (nextLED==4) {
+          if digitalReadFast(LED5Enable) {
+            nextLED = 5;       
+          }
+          else if digitalReadFast(LED6Enable) {
+            nextLED = 6;       
+          }
+          else if digitalReadFast(LED1Enable) {
+            nextLED = 1;
+          } 
+          else if digitalReadFast(LED2Enable) {
+            nextLED = 2;    
+          }
+          else if digitalReadFast(LED3Enable) {
+            nextLED = 3;
+          }
+          else {
+            nextLED = 4;  
+          }
+        }
+
+        else if (nextLED==5) {
+          if digitalReadFast(LED6Enable) {
+            nextLED = 6;       
+          }
+          else if digitalReadFast(LED1Enable) {
+            nextLED = 1;
+          } 
+          else if digitalReadFast(LED2Enable) {
+            nextLED = 2;    
+          }
+          else if digitalReadFast(LED3Enable) {
+            nextLED = 3;
+          }
+          else if digitalReadFast(LED4Enable) {
+            nextLED = 4;  
+          }
+          else {
+            nextLED = 5;
+          }
         }
         
         else {
@@ -167,8 +259,14 @@ void loop() {
           else if digitalReadFast(LED3Enable) {
             nextLED = 3;
           }
-          else {
+          else if digitalReadFast(LED4Enable) {
             nextLED = 4;       
+          }
+          else if digitalReadFast(LED5Enable) {
+            nextLED = 5;       
+          }
+          else {
+            nextLED = 6;       
           }  
         }
       }  
@@ -187,6 +285,8 @@ void loop() {
       digitalWriteFast(LED2Pin, LOW);
       digitalWriteFast(LED3Pin, LOW);
       digitalWriteFast(LED4Pin, LOW);
+      digitalWriteFast(LED5Pin, LOW);
+      digitalWriteFast(LED6Pin, LOW);
 
       nextLED = 1; // reset the current LED variable
       previousExposure = false; // if transitioning into non-active acquistion, ... 

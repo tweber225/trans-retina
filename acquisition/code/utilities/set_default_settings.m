@@ -1,4 +1,4 @@
-function handles = set_default_settings(handles,eventdata,camName)
+function handles = set_default_settings(handles,camName)
 
 % Load default settings for this camera
 handles.settings = default_settings(camName);

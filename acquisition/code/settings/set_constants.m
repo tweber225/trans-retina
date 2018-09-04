@@ -10,7 +10,7 @@ switch camName
                 
         constants.secondsOfExtraFramesAtEndOfSequence = 0.5;
         
-        constants.fracFramePeriodForExposure =.03;
+        constants.fracFramePeriodForExposure =1;
         
         constants.histogramBins = 128;
 end

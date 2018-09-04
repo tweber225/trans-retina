@@ -9,8 +9,8 @@ targetBitdepth = str2double(bitdepthOptions{get(hObject,'Value')});
 
 % Since changing the bit depth changes memory allocation, need to check
 % first whether we'll exceed the max allowable allocation size
-bytesPerPixel = ceil(handles.settings.bitdepth/8);
-frameBytes = targetLines*handles.constants.sensorXPixels*bytesPerPixel;
+bytesPerPixel = ceil(targetBitdepth/8);
+frameBytes = handles.settings.numberLines*handles.constants.sensorXPixels*bytesPerPixel;
 numChannels = sum(handles.settings.channelsEnable);
 estimatedAllocationSizeMB = frameBytes*handles.settings.framesetsToCapture*numChannels/2^20; % denominator to convert from bytes to MB
 

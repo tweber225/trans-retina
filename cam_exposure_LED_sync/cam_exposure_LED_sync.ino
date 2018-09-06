@@ -14,21 +14,21 @@
 #include <digitalWriteFast.h>
 
 // set up constant parameters
-const int exposurePin = 1; // Camera's exposure signal to trigger off
-const int acquisitionPin = 2; // Signal that an acquisition is ongoing
-const int LED1Pin = 3; // Following 6 pins are digital on/off signals for LEDs
-const int LED2Pin = 4;
-const int LED3Pin = 5;
-const int LED4Pin = 6;
-const int LED5Pin = 7;
-const int LED6Pin = 8;
+const int exposurePin = 0; // Camera's exposure signal to trigger off
+const int acquisitionPin = 1; // Signal that an acquisition is ongoing
+const int LED1Pin = 2; // Following 6 pins are digital on/off signals for LEDs
+const int LED2Pin = 3;
+const int LED3Pin = 4;
+const int LED4Pin = 5;
+const int LED5Pin = 6;
+const int LED6Pin = 7;
 
-const int LED1Enable = 9; // Following 4 pins are to signal whether each LED should be used
-const int LED2Enable = 10;
-const int LED3Enable = 11;
-const int LED4Enable = 12;
-const int LED5Enable = 13;
-const int LED6Enable = 14;
+const int LED1Enable = 8; // Following 4 pins are to signal whether each LED should be used
+const int LED2Enable = 9;
+const int LED3Enable = 10;
+const int LED4Enable = 11;
+const int LED5Enable = 12;
+const int LED6Enable = 13;
 
 
 // set up some digital state variables

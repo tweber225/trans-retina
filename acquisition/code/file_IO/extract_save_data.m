@@ -1,54 +1,44 @@
-function handles = extract_save_data(handles,targetFramesToAcquire)
+function handles = extract_save_data(handles,rawBuffer,targetFramesToAcquire)
 
-% display saving status on button
+% Prohibit starting another capture, display saving status
 set(handles.uiButtonCapture,'Enable','off');drawnow
 set(handles.uiButtonCapture,'String','Saving Data');drawnow
 
-% get the sequence list
-[~,seqIDList] = handles.camHandle.Memory.Sequence.GetList;
-seqIDList = int32(seqIDList);
-
-% get frame size and bitdepth
-frameWidth = handles.constants.sensorXPixels;
-frameHeight = handles.settings.numberLines;
-numChannels = sum(handles.settings.channelsEnable);
+% Get full frame and sequence info
+frameWidth = handles.settings.numCols;
+frameHeight = handles.settings.numRows;
+numChannels = int32(sum(handles.settings.channelsEnable));
 channelIdx = 1:numel(handles.settings.channelsEnable);
-if handles.settings.bitdepth == 8
-    dataType = 'uint8';
-else
-    dataType = 'uint16';
-end
+[rc,frameStride] = AT_GetInt(handles.camHandle,'AOIStride'); 
+AT_CheckWarning(rc);
+dataType = 'uint16';
 
 % saving options
-% options.append = true;
-% if handles.settings.allocationSize/numChannels >= (4*2^10) % if individual channel req's >4GB then use 64bit addressing
-%     options.big = true;
-% end
 options.message = false;
 
 % Loop through all the frames
-for frameIdx = 1:targetFramesToAcquire
+for frameIdx = 1:targetFramesToAcquire %note that frameIdx is 1-based
+    % Display status
     set(handles.uiButtonCapture,'String',['Saving Data (' num2str(frameIdx) '/' num2str(targetFramesToAcquire) ')']);drawnow
-    % Convert to memory IDs
-    [~,memID] = handles.camHandle.Memory.Sequence.ToMemoryID(seqIDList(frameIdx));
     
-    % Copy the frame out of the API-either 8b or 16b data if in 10b ADC mode
-    [~,rawFrameData] = handles.camHandle.Memory.CopyToArray(memID,handles.colorMode);
-    frameData = cast(rawFrameData,dataType);
+    % Convert buffer into matrix
+    [rc,frameMatrixRotated] = AT_ConvertMono12PackedToMatrix(rawBuffer(:,frameIdx),frameHeight,frameWidth,frameStride);
+    AT_CheckWarning(rc);
+
+    % Rotate the frame
+    currentFrame = rot90(uint16(frameMatrixRotated));
     
-    % Reshape Frame
-    currentFrame = reshape(frameData,[frameWidth frameHeight])';
-    
-    % Determine channel make filename
+    % Determine channel, make filename
     channelNumberInSeq = mod(frameIdx-1,numChannels)+1;
     channelNumberOverall = min(channelIdx(cumsum(handles.settings.channelsEnable) == channelNumberInSeq));
-    %saveFilename = ['channel' num2str(channelNumberOverall) '.tif'];
     saveFilename = ['channel' num2str(channelNumberOverall) filesep 'frame' num2str(ceil(frameIdx/numChannels),'%04d') '.tif'];
     savePath = [handles.settings.capturePath filesep saveFilename];
     
-    % Put into the right file (for its channel)
+    % Save this frame
     saveastiff(currentFrame,savePath,options);
 end
+
+% Finally re-enable capture button
 set(handles.uiButtonCapture,'Enable','on')
 
 

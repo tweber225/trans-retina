@@ -8,3 +8,10 @@ addDigitalChannel(daqHandle,'Dev1',portLineString,'OutputOnly');
 digitalOutputScan = zeros([1 numPins]);
 
 outputSingleScan(daqHandle,digitalOutputScan);
+
+devices = daq.getDevices;
+
+% DAQ Initialized
+disp(['DAQ initialized (' devices(1).Description ')'])
+
+

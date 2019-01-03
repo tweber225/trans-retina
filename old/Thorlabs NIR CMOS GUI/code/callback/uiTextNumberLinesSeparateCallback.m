@@ -48,11 +48,11 @@ handles = update_timing_memory(handles);
 % Update area on image frame used to calculate histogram (make sure we're
 % not taking a range that exceeds frame indices, like what might happen if
 % we drastically reduce frame number of lines)
-handles.settings.histYRangeLow = round(handles.settings.numberLines/2-handles.constants.sensorYPixels/6);
+handles.settings.histYRangeLow = round(handles.settings.numberLines*(1/2-3.75/10));
 if handles.settings.histYRangeLow < 1
     handles.settings.histYRangeLow = 1;
 end
-handles.settings.histYRangeHigh = round(handles.settings.numberLines/2+handles.constants.sensorYPixels/6);
+handles.settings.histYRangeHigh = round(handles.settings.numberLines*(1/2+3.75/10));
 if handles.settings.histYRangeHigh > handles.settings.numberLines
     handles.settings.histYRangeHigh = handles.settings.numberLines;
 end

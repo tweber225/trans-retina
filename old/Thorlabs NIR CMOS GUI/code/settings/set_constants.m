@@ -5,8 +5,8 @@ switch camName
         constants.sensorXPixels = 1280;
         constants.sensorYPixels = 1024;
         
-        constants.histXRangeLow = round(constants.sensorXPixels/3); % Follows from above
-        constants.histXRangeHigh = round(constants.sensorXPixels*2/3);
+        constants.histXRangeLow = round(constants.sensorXPixels*(1/2-3.75/10)); % Follows from above
+        constants.histXRangeHigh = round(constants.sensorXPixels*(1/2+3.75/10));
                 
         constants.secondsOfExtraFramesAtEndOfSequence = 0.5;
         

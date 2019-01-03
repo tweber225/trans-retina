@@ -4,8 +4,8 @@ function uiTextDisplayHighSeparateCallback(hObject,handles)
 targetValue = str2double(get(hObject,'String'));
 
 % Check if in valid range
-if targetValue > 2^handles.settings.bitdepth 
-    targetValue = 2^handles.settings.bitdepth; 
+if targetValue > 2^handles.settings.bitDepth 
+    targetValue = 2^handles.settings.bitDepth; 
 elseif targetValue <= handles.settings.displayRangeLow
     targetValue = handles.settings.displayRangeLow+1;
 end

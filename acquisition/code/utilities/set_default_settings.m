@@ -3,68 +3,97 @@ function handles = set_default_settings(handles,camName)
 % Load default settings for this camera
 handles.settings = default_settings(camName);
 
+% With the settings values, now set the settings that need to be set and
+% updated on GUI (roughly in order of default settings file)
+
+% Set electronic shutter mode - Don't need to for Zyla 4.2
+%rc = AT_SetEnumString(handles.camHandle,'ElectronicShutterMode',handles.settings.electronicShutterMode);
+%AT_CheckWarning(rc);
+
+% Set Readout Rate (ie Pixel Clock)
+rc = AT_SetEnumString(handles.camHandle,'PixelReadoutRate',handles.settings.pixelReadoutRate);
+AT_CheckWarning(rc);
+
+% Set readout mode and overlap mode
+rc = AT_SetEnumString(handles.camHandle,'SensorReadoutMode',handles.settings.sensorReadoutMode);
+AT_CheckWarning(rc);
+rc = AT_SetBool(handles.camHandle,'Overlap',handles.settings.overlap);
+AT_CheckWarning(rc);
+
+% Set triggering and cycle modes
+rc = AT_SetEnumString(handles.camHandle,'TriggerMode',handles.settings.triggerMode);
+AT_CheckWarning(rc);
+rc = AT_SetEnumString(handles.camHandle,'CycleMode',handles.settings.cycleMode);
+AT_CheckWarning(rc);
+
+% Get sensor dimensions 
+[rc,sensorWidth] = AT_GetInt(handles.camHandle,'SensorWidth');
+AT_CheckWarning(rc);
+[rc,sensorHeight] = AT_GetInt(handles.camHandle,'SensorHeight');
+AT_CheckWarning(rc);
+handles.settings.sensorWidth = sensorWidth;
+handles.settings.sensorHeight = sensorHeight;
+
+% Set initial histogram and display ranges
+handles.settings.histYRangeLow = round(handles.settings.initialNumRows*(1/2-1/(2*sqrt(2)))); % follows from above
+handles.settings.histYRangeHigh = round(handles.settings.initialNumRows*(1/2+1/(2*sqrt(2)))); % follows from above
+handles.settings.histXRangeLow = round(handles.settings.initialNumCols*(1/2-1/(2*sqrt(2)))); % Follows from above
+handles.settings.histXRangeHigh = round(handles.settings.initialNumCols*(1/2+1/(2*sqrt(2))));
+       
+% Get minimum AOI sizes
+[rc,minHeight] = AT_GetIntMin(handles.camHandle,'AOIHeight');
+AT_CheckWarning(rc);
+[rc,minWidth] = AT_GetIntMin(handles.camHandle,'AOIWidth');
+AT_CheckWarning(rc);
+handles.settings.minWidth = minWidth;
+handles.settings.minHeight = minHeight;
+
 % Set AOI
-targetLines = handles.settings.numberLines;
-xPix = handles.constants.sensorXPixels;
-yPix = handles.constants.sensorYPixels;
-actualNumberLines = set_AOI_for_num_lines(handles.camHandle,targetLines,xPix,yPix);
-handles.settings.numberLines = actualNumberLines;
-set(handles.uiTextNumberLines,'String',actualNumberLines);
+targetCols = handles.settings.numCols;
+targetRows = handles.settings.numRows;
+[actualNumCols,actualNumRows] = set_AOI_for_num_cols_rows(handles,targetCols,targetRows);
+handles.settings.numCols = actualNumCols;
+handles.settings.numRows = actualNumRows;
+set(handles.uiTextNumCols,'String',actualNumCols);
+set(handles.uiTextNumRows,'String',actualNumRows);
 
-% Set Pixel Clock
-targetPixelclock = handles.settings.pixelclock;
-actualPixelclock = set_pixelclock(handles.camHandle,targetPixelclock);
-handles.settings.pixelclock = actualPixelclock;
-set(handles.uiTextPixelclock,'String',actualPixelclock);
+% Set frame rate (by setting equivalent exposure and thus max max frame rate)
+targetFrameRate = handles.settings.frameRate;
+actualFrameRate = set_framerate(handles.camHandle,targetFrameRate,handles.settings.numRows);
+handles.settings.frameRate = actualFrameRate;
+set(handles.uiTextFrameRate,'String',num2str(0.1*round(actualFrameRate*10)));
 
-% Set Framerate (and also: exposure)
-targetFramerate = handles.settings.framerate;
-[actualFramerate,actualExposure] = set_framerate(handles.camHandle,targetFramerate,handles.constants.fracFramePeriodForExposure);
-handles.settings.framerate = actualFramerate;
-handles.settings.exposure = actualExposure;
-set(handles.uiTextFramerate,'String',num2str(0.1*round(actualFramerate*10)));
-set(handles.displayExposure,'String',['(' num2str(round(actualExposure)) 'ms)']);
-
-% Set bitdepth
-bitdepthOptions = cellstr(get(handles.uiSelectBitdepth,'String'));
-bitdepthIndex = 1:numel(bitdepthOptions);
-targetBitdepth = handles.settings.bitdepth;
-actualBitdepth = set_bitdepth(handles.camHandle,targetBitdepth);
-handles.settings.bitdepth = actualBitdepth;
-set(handles.uiSelectBitdepth,'Value',bitdepthIndex(strcmp(bitdepthOptions,num2str(actualBitdepth))));
-
-% Set gain "boost"
-targetGainBoost = handles.settings.gainBoost;
-actualGainBoost = set_gainboost(handles.camHandle,targetGainBoost);
-handles.settings.gainBoost = actualGainBoost;
-set(handles.uiCheckGainBoost,'Value',actualGainBoost);
-
-% Set Hardware offset
-targetValue = handles.settings.hardwareOffset;
-if targetValue < 0 % check if valid value
-    actualValue = 0;
-elseif targetValue > 255
-    actualValue = 255;
-elseif targetValue-round(targetValue) ~= 0
-    actualValue = round(targetValue);
-else
-    actualValue = targetValue;
-end
-handles.setting.hardwareOffset = actualValue;
-set(handles.uiTextHardwareOffset,'String',num2str(actualValue));
-handles.camHandle.BlackLevel.Offset.Set(int32(actualValue));
+% Set pre-amp gain control
+preAmpOptions = cellstr(get(handles.uiSelectPreAmp,'String'));
+preAmpIndex = 1:numel(preAmpOptions);
+targetPreAmp = handles.settings.simplePreAmpGainControl;
+[actualBitDepth,actualPixelEncoding] = set_preamp_bitdepth_encoding(handles.camHandle,targetPreAmp);
+handles.settings.bitDepth = actualBitDepth;
+handles.settings.pixelEncoding = actualPixelEncoding;
+set(handles.uiSelectPreAmp,'Value',preAmpIndex(strcmp(preAmpOptions,targetPreAmp)));
 
 % Set framesets to capture
 targetFramesetsToCapture = round(handles.settings.framesetsToCapture);
 set(handles.uiTextFramesetsToCapture,'String',targetFramesetsToCapture);
 
+% Set flash toggle button
+set(handles.uiButtonFlash,'Value',handles.settings.flash);
+
 % Set number of frames to average on the fly
 rollingAverageFramesOptions = cellstr(get(handles.uiSelectRollingAverageFrames,'String'));
 rollingAverageFramesIdx = 1:numel(rollingAverageFramesOptions);
 rollingAverageFramesValue = rollingAverageFramesIdx(strcmp(rollingAverageFramesOptions,num2str(handles.settings.rollingAverageFrames)));
-set(handles.uiSelectRollingAverageFrames,'Value',rollingAverageFramesValue); 
+set(handles.uiSelectRollingAverageFrames,'Value',rollingAverageFramesValue);
+
+% Set continuous autoscaling
+set(handles.uiCheckContinuousAutoScale,'Value',handles.settings.continuousAutoScale);
+
+% Set target refresh rate
+set(handles.uiTextTargetRefresh,'String',handles.settings.targetRefresh);
 
 % Set display levels
+handles.settings.displayRangeLow = 0;
+handles.settings.displayRangeHigh = 2^handles.settings.bitDepth; % let this auto-calculate
 set(handles.uiTextDisplayLow,'String',num2str(handles.settings.displayRangeLow));
 set(handles.uiTextDisplayHigh,'String',num2str(handles.settings.displayRangeHigh));
 
@@ -77,7 +106,7 @@ set(handles.uiCheckChannel5,'Value',handles.settings.channelsEnable(5));
 set(handles.uiCheckChannel6,'Value',handles.settings.channelsEnable(6));
 
 % Show enabled channels to Arduino via digital out pins
-digitalOutputScan = [0 handles.settings.channelsEnable];
+digitalOutputScan = [0, handles.settings.flash, handles.settings.channelsEnable(2:end)];
 outputSingleScan(handles.daqHandle,digitalOutputScan);
 
 % Set channel to show
@@ -88,6 +117,4 @@ set(handles.uiTextFileBaseName,'String',handles.settings.fileBaseName);
 
 % Set capture number, then advance number until file folder doesn't exist
 handles = advance_capture_number(handles);
-
-
 

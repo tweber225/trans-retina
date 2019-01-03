@@ -1,4 +1,8 @@
 function varargout = acquisition_GUI(varargin)
+% Retinal Imaging GUI v4.0 (for Andor Zyla 4.2 USB)
+% Timothy Weber 
+% BU Biomicroscopy Lab, 2019
+%
 % ACQUISITION_GUI MATLAB code for acquisition_GUI.fig
 %      ACQUISITION_GUI, by itself, creates a new ACQUISITION_GUI or raises the existing
 %      singleton*.
@@ -8,7 +12,7 @@ function varargout = acquisition_GUI(varargin)
 %
 %      ACQUISITION_GUI('CALLBACK',hObject,eventData,handles,...) calls the local
 %      function named CALLBACK in ACQUISITION_GUI.M with the given input arguments.
-%
+% 
 %      ACQUISITION_GUI('Property','Value',...) creates a new ACQUISITION_GUI or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
 %      applied to the GUI before acquisition_GUI_OpeningFcn gets called.  An
@@ -22,7 +26,7 @@ function varargout = acquisition_GUI(varargin)
 
 % Edit the above text to modify the response to help acquisition_GUI
 
-% Last Modified by GUIDE v2.5 31-Aug-2018 15:46:08
+% Last Modified by GUIDE v2.5 03-Jan-2019 16:56:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -62,75 +66,50 @@ guidata(hObject, handles);
 % uiwait(handles.acquisitionGUIFig);
 
 % CAMERA AND SYSTEM CHOICES
-camName = 'DCC3240N'; % in future may add other options
-camNumber = 0; % in future may add support for more than 1 camera
-numDigitalPins = 7; % 6 channels plus an 'arm' for acquisition pin
+camName = 'zyla42'; % nickname for cam, in future may add other options
+numDigitalPins = 7; % 5 switchabel channels plus an 'arm', and 'pseudo-flash' (to enable channels 2-5)
 
 % ADD RELEVANT SUB-FOLDERS TO PATH (allows functions in these folders to be
 % called)
-addpath(genpath('code')); % Add code subfolders to path
+addpath(genpath('code')); % Add all code subfolders to path
 
 % START UP FUNCTION
-start_up_GUI(hObject,handles,camName,camNumber,numDigitalPins);
+start_up_GUI(hObject,handles,camName,numDigitalPins);
 
 
-%% CLOSE FUNCTION --- Executes when user attempts to close acquisitionGUIFig. Very important.
+
+
+%% CLOSE FUNCTION -- Executes when user attempts to close acquisition_GUI. Very important.
 function acquisitionGUIFig_CloseRequestFcn(hObject, ~, handles)
 if get(handles.uiButtonCapture,'Value') == 1
-    disp('Cannot close window! In middle of capture or saving.'); return % if capture is ongoing, reject the closing request
+    % if capture is ongoing, reject the closing request
+    disp('Cannot close window! In middle of capture or saving.'); return
 end
-handles.camHandle.Exit; % disables camera handle and releases data structs and memory areas
-delete(handles.daqHandle); daqreset % Close DAQ
-delete(hObject); % delete(hObject) closes the figure
-
-%% OUTPUT FUNCTION - not used
-function varargout = acquisition_GUI_OutputFcn(hObject, eventdata, handles) 
-varargout{1} = handles.output;
+shut_down_GUI(handles); delete(hObject); % shutdown function and close the figure
 
 
 %% CALLBACK FUNCTIONS
-function uiTextFramerate_Callback(hObject,~,handles)
-% Hints: get(hObject,'String') returns contents of uiTextFramerate as text
-%        str2double(get(hObject,'String')) returns contents of uiTextFramerate as a double
-uiTextFramerateSeparateCallback(hObject,handles);
+% GENERAL SETTINGS
+function uiTextFrameRate_Callback(hObject,~,handles)
+uiTextFrameRateSeparateCallback(hObject,handles);
 
-function uiTextPixelclock_Callback(hObject,~,handles)
-uiTextPixelclockSeparateCallback(hObject,handles);
+function uiTextNumCols_Callback(hObject,~,handles)
+uiTextNumRowsCols(hObject,handles);
 
-function uiTextNumberLines_Callback(hObject,~,handles)
-% Note: Always centers area of interest (AOI, i.e. the result of reducing the number of frame lines) around the middle row
-uiTextNumberLinesSeparateCallback(hObject,handles);
+function uiTextNumRows_Callback(hObject,~,handles)
+uiTextNumRowsCols(hObject,handles);
 
-function uiSelectBitdepth_Callback(hObject, ~, handles)
-% Hints: contents = cellstr(get(hObject,'String')) returns uiSelectBitdepth contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from uiSelectBitdepth
-uiSelectBitdepthSeparateCallback(hObject,handles);
+function uiSelectPreAmp_Callback(hObject, ~, handles)
+uiSelectPreAmpSeparateCallback(hObject,handles);
 
-function uiCheckGainBoost_Callback(hObject, ~, handles)
-% Hint: get(hObject,'Value') returns toggle state of uiCheckGainBoost
-uiCheckGainBoostSeparateCallback(hObject,handles);
-
-function uiTextHardwareOffset_Callback(hObject, ~, handles)
-uiTextHardwareOffsetSeparateCallback(hObject,handles);
-
-function uiTextFramesetsToCapture_Callback(hObject, ~, handles)
-uiTextFramesetsToCaptureSeparateCallback(hObject,handles);
-
-function uiSelectRollingAverageFrames_Callback(hObject, ~, handles)
-uiSelectRollingAverageFramesSeparateCallback(hObject,handles)
-
-function uiTextDisplayLow_Callback(hObject, ~, handles)
-uiTextDisplayLowSeparateCallback(hObject,handles);
-
-function uiTextDisplayHigh_Callback(hObject, ~, handles)
-uiTextDisplayHighSeparateCallback(hObject,handles);
-
-function uiTextFileBaseName_Callback(hObject, ~, handles)
-uiTextFileBaseNameSeparateCallback(hObject,handles);
+% CHANNEL SELECTION
+function uiSelectChannel_Callback(hObject, ~, handles)
+select_channel(hObject,handles);
 
 function uiCheckChannel1_Callback(hObject, ~, handles)
-handles = channel_enable_disable(hObject,handles,1);
-select_channel(handles.uiSelectChannel,handles);
+%(Channel 1 is always on)
+%handles = channel_enable_disable(hObject,handles,1); 
+%select_channel(handles.uiSelectChannel,handles);
 
 function uiCheckChannel2_Callback(hObject, ~, handles)
 handles = channel_enable_disable(hObject,handles,2);
@@ -152,87 +131,182 @@ function uiCheckChannel6_Callback(hObject, ~, handles)
 handles = channel_enable_disable(hObject,handles,6);
 select_channel(handles.uiSelectChannel,handles);
 
-function uiSelectChannel_Callback(hObject, ~, handles)
-select_channel(hObject,handles);
+% DISPLAY SETTINGS
+function uiSelectRollingAverageFrames_Callback(hObject, ~, handles)
+uiSelectRollingAverageFramesSeparateCallback(hObject,handles);
 
-function uiDisplayCaptureNumber_Callback(hObject, eventdata, handles)
+function uiTextTargetRefresh_Callback(hObject, ~, handles)
+uiTextTargetRefreshSeparateCallback(hObject,handles);
+
+function uiButtonResetLevels_Callback(hObject, ~, handles)
+uiButtonResetLevelsSeparateCallback(hObject,handles);
+
+function uiButtonAutoscaleLevels_Callback(hObject, ~, handles)
+uiButtonAutoscaleLevelsSeparateCallback(hObject,handles);
+
+function uiCheckContinuousAutoScale_Callback(hObject, ~, handles)
+uiCheckContinuousAutoScaleSeparateCallback(hObject,handles);
+
+% CAPTURE SETTINGS
+function uiTextFramesetsToCapture_Callback(hObject, ~, handles)
+uiTextFramesetsToCaptureSeparateCallback(hObject,handles);
+
+function uiButtonFlash_Callback(hObject, ~, handles)
+toggle_pseudo_flash(hObject,handles);
+
+function uiTextFileBaseName_Callback(hObject, ~, handles)
+uiTextFileBaseNameSeparateCallback(hObject,handles);
+
+function uiDisplayCaptureNumber_Callback(~, ~, ~)
 % no callback since always disabled from edit (automatically incremented)
+
+% DISPLAY RANGE
+function uiTextDisplayLow_Callback(hObject, ~, handles)
+uiTextDisplayLowSeparateCallback(hObject,handles);
+
+function uiTextDisplayHigh_Callback(hObject, ~, handles)
+uiTextDisplayHighSeparateCallback(hObject,handles);
 
 
 
 %% PREVIEW FUNCTION
-% Leave code in main GUI function because speed is important
 function uiButtonPreview_Callback(hObject, eventdata, handles)
-if get(hObject,'Value')
-    handles = disable_controls(handles); % Disable controls that are not updateable in real-time
-    set(hObject,'String','Stop'); % switch the button
-    digitalOutputScan = [1 handles.settings.channelsEnable]; % tell arduino that we're going to start
+if get(hObject,'Value') % ... if the button has been depressed ...
+    handles = disable_controls(handles); % Disable controls that are not allowed to be updated
+    set(hObject,'String','Stop'); % switch the button's label
+    digitalOutputScan = [1, handles.settings.flash, handles.settings.channelsEnable(2:end)]; % display 1 on "acquisition" bit & enabled channels
     outputSingleScan(handles.daqHandle,digitalOutputScan);
     
-    frameWidth = handles.constants.sensorXPixels;
-    frameHeight = handles.settings.numberLines;
-    numChannels = int32(sum(handles.settings.channelsEnable));
+    % Get full frame and sequence info
+    frameWidth = handles.settings.numCols; frameHeight = handles.settings.numRows;
+    [rc,frameStride] = AT_GetInt(handles.camHandle,'AOIStride'); AT_CheckWarning(rc);
+    numChannels = int32(sum(handles.settings.channelsEnable)); 
     channelsEnableCumulSum = cumsum(handles.settings.channelsEnable);
-    seqListCopy = int32(handles.sequenceList);
-    finalSeqID = seqListCopy(end);
+    pixelEncoding = handles.settings.pixelEncoding;
     
-    % Rolling average buffer set-up (16 bit buffer, 64 frame max for 10bit)
-    avgBuffer = zeros([64, frameWidth*frameHeight],'uint16');
-    
-    % Histogram data limits
-    x1 = handles.constants.histXRangeLow; x2 = handles.constants.histXRangeHigh;
+    % Display data limits (what fraction of the image field to use in image
+    % preview and histogram calcs). Displaying part of frame is faster.
+    x1 = handles.settings.histXRangeLow; x2 = handles.settings.histXRangeHigh;
     y1 = handles.settings.histYRangeLow; y2 = handles.settings.histYRangeHigh;
     
-    % Start
-    handles.camHandle.Acquisition.Capture(uEye.Defines.DeviceParameter.DontWait);
-    disp('Freerun On')
+    % Rolling average buffer (w/ 16b encoding we risk saturating this
+    % datatype, but likely we're not using frame averaging with high DR)
+    avgBuffer = zeros([y2-y1+1, x2-x1+1, handles.settings.avgBufferSize],'uint16');
+    
+    % Make the raw buffer/MATLAB buffer
+    rawBuffer = zeros([handles.settings.imageSizeBytes,handles.settings.totalFrames],'uint8');
+    
+    % Compute number of frames to skip displaying, and show refresh rate in UI
+    showNthFrame = int32(numChannels*round(handles.settings.framesetRate/handles.settings.targetRefresh));
+    if showNthFrame < 1, showNthFrame = 1; end
+    handles.settings.actualRefresh = handles.settings.frameRate/double(showNthFrame);
+    set(handles.uiTextTargetRefresh,'String',num2str(round(handles.settings.actualRefresh*100)/100));
+    
+    % Circular buffer indices (0-start because we'll use a bunch of mod cmds)
+    bufferIndex = int32(0); nextAvgFrame = int32(0); autoScaleCounter = int32(0);
+    
+    % Compute first frame to show (use 0-based index, like bufferIndex)
+    oldChannelInSeq = channelsEnableCumulSum(handles.settings.selectChannel);
+    nextFrameToShow = int32(oldChannelInSeq - 1);
+    
+    % Make list of recent refresh times
+    recentRefreshRates = zeros(8,1);
+    
+    % Before starting, push new handles struct to GUI data
+    guidata(hObject,handles);
+    
+    % START!
+    rc = AT_Command(handles.camHandle,'AcquisitionStart'); AT_CheckWarning(rc);
 
-    % Loop around grabbing last sequence frame(s)
+    % Loop around grabbing available frame
     tic; lastTime = toc;
-    recentRefreshRates = zeros(4,1);
     while get(hObject,'Value') % continuously loop while preview button is ON, or until capture is hit
-        handles = guidata(hObject); % get back gui data that might have been updated elsewhere
-        selectChannelInAcquisition = channelsEnableCumulSum(handles.settings.selectChannel); % check channel to show
-        % Which sequence frame was last acquired?
-        [~,lastSeqID] = handles.camHandle.Memory.Sequence.GetLast;
-        
-        % Find the last frame FROM THE SELECTED CHANNEL to display on GUI'
-        framesIntoSet = mod(lastSeqID-1,numChannels)+1;
-        framesetStart = lastSeqID - framesIntoSet;
-        if lastSeqID >= framesetStart+selectChannelInAcquisition
-            lastSelectedChannelSeqID = framesetStart+selectChannelInAcquisition;
-        else
-            lastSelectedChannelSeqID = mod(framesetStart-numChannels+selectChannelInAcquisition,finalSeqID);
+        % Get frame data from SDK buffer and put into MATLAB buffer, then
+        % requeue the frame (~4ms)
+        [rc,rawBuffer(:,bufferIndex+1)] = AT_WaitBuffer(handles.camHandle,1000);
+        AT_CheckWarning(rc);
+        rc = AT_QueueBuffer(handles.camHandle,handles.settings.imageSizeBytes);
+        AT_CheckWarning(rc);
+
+        % Check whether this frame is next scheduled frame to show 
+        if bufferIndex == nextFrameToShow
+            
+            % If it is correct, then convert buffer into matrix (2ms)
+            if strcmp(pixelEncoding,'Mono12Packed')
+                [rc,frameMatrixRotated] = AT_ConvertMono12PackedToMatrix(rawBuffer(:,bufferIndex+1),frameHeight,frameWidth,frameStride);
+            else
+                [rc,frameMatrixRotated] = AT_ConvertMono16ToMatrix(rawBuffer(:,bufferIndex+1),frameHeight,frameWidth,frameStride);
+            end
+            AT_CheckWarning(rc);
+            
+            % Place cropped and rotated frame in average buffer (0.5ms)
+            avgBuffer(:,:,nextAvgFrame+1) = rot90(frameMatrixRotated(x1:x2,y1:y2)); % note the rotation changes index ordering
+            nextAvgFrame = mod(nextAvgFrame+1,handles.settings.rollingAverageFrames);
+            
+            % If the continuous auto-scaling option is selected (8.5ms)
+            if (handles.settings.continuousAutoScale==1)
+                if autoScaleCounter == 0, uiButtonAutoscaleLevelsSeparateCallback(handles.uiButtonAutoscaleLevels,handles); end
+                autoScaleCounter = mod(autoScaleCounter+1,ceil (handles.settings.actualRefresh/handles.settings.continuousAutoScaleRate));
+            end
+            
+            % Sum buffer and update image axis CData (2.8ms)
+            sumFrame = sum(avgBuffer(:,:,1:handles.settings.rollingAverageFrames),3,'native');
+            scaled8bFrame = uint8((sumFrame - handles.displayOffset)*handles.displayScale);
+            set(handles.retinaImg, 'CData', scaled8bFrame);
+                       
+            % Recompute histogram (1.6ms)
+            handles.retinaHist.Data = bitshift(sumFrame,-log2(double(handles.settings.rollingAverageFrames)));
+            
+            % Must drawnow to show new frame and histogram--also
+            % interruption point (1024x1024:90ms, 724x724:30ms)
+            drawnow;
+                        
+            % Get new GUI data in case anything has been changed (7ms)
+            handles = guidata(hObject);
+            
+            % Adjust nextFrameToShow if "Select Channel" is changed
+            if channelsEnableCumulSum(handles.settings.selectChannel) ~= oldChannelInSeq
+                % Take old nextFrameToShow, add the relative position of
+                % new channel, and add/skip another whole frame sequence
+                % to give more time.
+                nextFrameToShow = nextFrameToShow + (channelsEnableCumulSum(handles.settings.selectChannel)-oldChannelInSeq) + numChannels;
+                oldChannelInSeq = channelsEnableCumulSum(handles.settings.selectChannel);
+            end
+            
+            % Adjust showNthFrame if frame rate or target refresh change
+            if int32(numChannels*round(handles.settings.frameRate/(numChannels*handles.settings.targetRefresh))) ~= showNthFrame
+                showNthFrame = int32(numChannels*round(handles.settings.frameRate/(numChannels*handles.settings.targetRefresh)));
+                if showNthFrame < 1, showNthFrame = 1; end
+                handles.settings.actualRefresh = handles.settings.frameRate/double(showNthFrame);
+                set(handles.uiTextTargetRefresh,'String',num2str(round(handles.settings.actualRefresh*100)/100));
+            end
+            
+            % Compute next frame to display (<1ms)
+            nextFrameToShow = mod(nextFrameToShow+showNthFrame, handles.settings.totalFrames);
+            
+            % Update refresh rate display
+            thisTime = toc; % compute screen refresh rate
+            recentRefreshRates = circshift(recentRefreshRates,1);
+            recentRefreshRates(1) = 1/(thisTime - lastTime);         lastTime = thisTime;
+            set(handles.displayRefreshRate,'String',['Refresh rate: ' num2str(round(100*mean(recentRefreshRates))/100) ' Hz']);
         end
         
-        % Compute sequence ID's (and corresponding memory IDs) to acquire
-        framesToGet = mod(lastSelectedChannelSeqID - (0:(handles.settings.rollingAverageFrames-1))*numChannels - 1,finalSeqID) + 1;
-        for avgIdx = 1:handles.settings.rollingAverageFrames % Copy the image data for the last X frames of selected channel
-            [~,lastMemID] = handles.camHandle.Memory.Sequence.ToMemoryID(framesToGet(avgIdx));
-            [~,rawFrameData] = handles.camHandle.Memory.CopyToArray(lastMemID,handles.colorMode);
-            avgBuffer(avgIdx,:) = uint16(rawFrameData); % put into buffer
-        end
+        % Advance the buffer index - and loop around when in Preview Mode
+        bufferIndex = mod(bufferIndex+1,handles.settings.totalFrames);
         
-        % Sum and display buffer, recompute histogram, update refresh rate
-        sumFrame = reshape(sum(avgBuffer(1:handles.settings.rollingAverageFrames,:),1,'native'),[frameWidth frameHeight])';
-        scaled8bFrame = uint8((sumFrame - handles.displayOffset)*handles.displayScale);
-        set(handles.retinaImg, 'CData', scaled8bFrame);
-        handles.retinaHist.Data = bitshift(sumFrame(y1:y2,x1:x2),-log2(double(handles.settings.rollingAverageFrames)));
-        drawnow; %Must drawnow to show new frame and histogram--also the interruption point when stopping
-        thisTime = toc; % compute screen refresh rate
-        recentRefreshRates = circshift(recentRefreshRates,1);
-        recentRefreshRates(1) = 1/(thisTime - lastTime);         lastTime = thisTime;
-        set(handles.displayRefreshRate,'String',['Refresh rate: ' num2str(round(10*mean(recentRefreshRates))/10) ' fps']);
     end
     handles = guidata(hObject);
+    
     % Re-enable controls
     handles = enable_controls(handles);
     set(hObject,'String','Start Preview');
-    digitalOutputScan = [0 handles.settings.channelsEnable]; % tell arduino that we've ended
+    digitalOutputScan = [0, handles.settings.flash, handles.settings.channelsEnable(2:end)]; % tell arduino that we've ended
     outputSingleScan(handles.daqHandle,digitalOutputScan);
-    % redo allocation (in case frame rate was changed)
-    [handles.sequenceList,handles.memoryIDList] = adjust_sequence_allocation(handles.camHandle,handles.settings,handles.constants,handles.memoryIDList);
+    
+    % Redo allocation 
+    handles = reallocate_series_buffer(handles);
     guidata(hObject,handles); % Update GUI handles right before closing out preview
+    
     % Check whether we've been instructed to jump straight into capture
     if handles.jumpPreviewToCapture == 1
         handles.jumpPreviewToCapture = 0;
@@ -242,15 +316,12 @@ if get(hObject,'Value')
     
 else
     % Self-interruption: turns the freerun off immediately
-    handles.camHandle.Acquisition.Stop;
-    disp('Freerun Off')
+    rc = AT_Command(handles.camHandle,'AcquisitionStop'); AT_CheckWarning(rc);
+    
 end
   
 
-
-
 %% CAPTURE FUNCTION 
-% Leave code in main GUI function because speed is important
 function uiButtonCapture_Callback(hObject, eventdata, handles)
 if get(handles.uiButtonPreview,'Value') % If Preview Mode is on, turn it off
     set(handles.uiButtonPreview,'Value',0);
@@ -262,114 +333,165 @@ if get(handles.uiButtonPreview,'Value') % If Preview Mode is on, turn it off
     % capture callback
     guidata(hObject,handles);
 else
-    if get(hObject,'Value')
+    if get(hObject,'Value') % ... if the button has been depressed ... 
         handles = disable_all_controls(handles); % Disable all controls
-        set(hObject,'String','Abort'); % switch the button
-        digitalOutputScan = [1 handles.settings.channelsEnable]; % tell arduino that we're going to start
+        set(hObject,'String','Abort'); % switch the button's label
+        digitalOutputScan = [1, handles.settings.flash, handles.settings.channelsEnable(2:end)]; % display 1 on "acquisition" bit & enabled channels
         outputSingleScan(handles.daqHandle,digitalOutputScan);
 
-        frameWidth = handles.constants.sensorXPixels;
-        frameHeight = handles.settings.numberLines;
-        numChannels = int32(sum(handles.settings.channelsEnable));
-        targetFramesToAcquire = numChannels*handles.settings.framesetsToCapture;
+        % Get full frame and sequence info
+        frameWidth = handles.settings.numCols; frameHeight = handles.settings.numRows;
+        [rc,frameStride] = AT_GetInt(handles.camHandle,'AOIStride'); AT_CheckWarning(rc);
+        numChannels = int32(sum(handles.settings.channelsEnable)); 
         channelsEnableCumulSum = cumsum(handles.settings.channelsEnable);
-        selectChannelInAcquisition = channelsEnableCumulSum(handles.settings.selectChannel); % only needs to be updated once
-        seqListCopy = int32(handles.sequenceList);
-        finalSeqID = seqListCopy(end);
-
-        % Rolling average buffer set-up (16 bit buffer, 64 frame max for 10bit)
-        avgBuffer = zeros([64, frameWidth*frameHeight],'uint16');
-
-        % Histogram data limits
-        x1 = handles.constants.histXRangeLow; x2 = handles.constants.histXRangeHigh;
+        pixelEncoding = handles.settings.pixelEncoding;
+        targetFramesToAcquire = handles.settings.totalFrames;
+        
+        % Display data limits (what fraction of the image field to use in image
+        % preview and histogram calcs). Displaying part of frame is faster.
+        x1 = handles.settings.histXRangeLow; x2 = handles.settings.histXRangeHigh;
         y1 = handles.settings.histYRangeLow; y2 = handles.settings.histYRangeHigh;
 
-        % Start
-        handles.settings.captureStartTime = datestr(datetime); % note start time
-        handles.camHandle.Acquisition.Capture(uEye.Defines.DeviceParameter.DontWait);
-        disp('Starting Capture')
+        % Rolling average buffer (w/ 16b encoding we risk saturating this
+        % datatype, but likely we're not using frame averaging with high DR)
+        avgBuffer = zeros([y2-y1+1, x2-x1+1, handles.settings.avgBufferSize],'uint16');
+        
+        % Make the raw buffer/MATLAB buffer
+        rawBuffer = zeros([handles.settings.imageSizeBytes,handles.settings.totalFrames],'uint8');
 
-        % Loop around grabbing last sequence frame(or frameS if averaging), until acquiring enough
-        tic; lastTime = toc; recentRefreshRates = zeros(4,1);
-        lastSeqID = 0;
-        while lastSeqID < targetFramesToAcquire && get(hObject,'Value')
-            % Which sequence frame was last acquired?
-            [~,lastSeqID] = handles.camHandle.Memory.Sequence.GetLast;
+        % Compute number of frames to skip displaying, and show refresh rate in UI
+        showNthFrame = int32(numChannels*round(handles.settings.framesetRate/handles.settings.targetRefresh));
+        if showNthFrame < 1, showNthFrame = 1; end
+        handles.settings.actualRefresh = handles.settings.frameRate/double(showNthFrame);
+        set(handles.uiTextTargetRefresh,'String',num2str(round(handles.settings.actualRefresh*100)/100));
+    
+        % Circular buffer indices (0-start because we'll use a bunch of mod cmds)
+        bufferIndex = int32(0); nextAvgFrame = int32(0); autoScaleCounter = int32(0);
 
-            % Find the last frame FROM THE SELECTED CHANNEL to display on GUI'
-            framesIntoSet = mod(lastSeqID-1,numChannels)+1;
-            framesetStart = lastSeqID - framesIntoSet;
-            if lastSeqID >= framesetStart+selectChannelInAcquisition
-                lastSelectedChannelSeqID = framesetStart+selectChannelInAcquisition;
-            else
-                lastSelectedChannelSeqID = mod(framesetStart-numChannels+selectChannelInAcquisition,finalSeqID);
+        % Compute first frame to show (use 0-based index, like bufferIndex)
+        oldChannelInSeq = channelsEnableCumulSum(handles.settings.selectChannel);
+        nextFrameToShow = int32(oldChannelInSeq - 1);
+
+        % Make list of recent refresh times
+        recentRefreshRates = zeros(8,1);
+
+        % Before starting, push new handles struct to GUI data
+        guidata(hObject,handles);
+        
+        % START!
+        rc = AT_Command(handles.camHandle,'AcquisitionStart'); AT_CheckWarning(rc);
+
+        % Loop grabbing frames until reaching target number of frames
+        tic; lastTime = toc;
+        while bufferIndex < targetFramesToAcquire && get(hObject,'Value')
+            % Get frame data from SDK buffer and put into MATLAB buffer, then
+            % requeue the frame (~4ms for 1MPixel)
+            [rc,rawBuffer(:,bufferIndex+1)] = AT_WaitBuffer(handles.camHandle,1000);
+            AT_CheckWarning(rc);
+            rc = AT_QueueBuffer(handles.camHandle,handles.settings.imageSizeBytes);
+            AT_CheckWarning(rc);
+            
+            % Check whether this frame is next scheduled frame to show 
+            if bufferIndex == nextFrameToShow
+
+               % If it is correct, then convert buffer into matrix (2ms)
+                if strcmp(pixelEncoding,'Mono12Packed')
+                    [rc,frameMatrixRotated] = AT_ConvertMono12PackedToMatrix(rawBuffer(:,bufferIndex+1),frameHeight,frameWidth,frameStride);
+                else
+                    [rc,frameMatrixRotated] = AT_ConvertMono16ToMatrix(rawBuffer(:,bufferIndex+1),frameHeight,frameWidth,frameStride);
+                end
+                AT_CheckWarning(rc);
+
+                % Place cropped and rotated frame in average buffer (0.5ms)
+                avgBuffer(:,:,nextAvgFrame+1) = rot90(frameMatrixRotated(x1:x2,y1:y2)); % note the rotation changes index ordering
+                nextAvgFrame = mod(nextAvgFrame+1,handles.settings.rollingAverageFrames);
+
+                % If the continuous auto-scaling option is selected (8.5ms)
+                if (handles.settings.continuousAutoScale==1)
+                    if autoScaleCounter == 0, uiButtonAutoscaleLevelsSeparateCallback(handles.uiButtonAutoscaleLevels,handles); end
+                    autoScaleCounter = mod(autoScaleCounter+1,ceil (handles.settings.actualRefresh/handles.settings.continuousAutoScaleRate));
+                end
+                
+                % Sum buffer and update image axis CData (2.8ms)
+                sumFrame = sum(avgBuffer(:,:,1:handles.settings.rollingAverageFrames),3,'native');
+                scaled8bFrame = uint8((sumFrame - handles.displayOffset)*handles.displayScale);
+                set(handles.retinaImg, 'CData', scaled8bFrame);
+                
+                % Recompute histogram (1.6ms)
+                handles.retinaHist.Data = bitshift(sumFrame,-log2(double(handles.settings.rollingAverageFrames)));
+
+                % Must drawnow to show new frame and histogram--also
+                % interruption point (1024x1024:90ms, 724x724:30ms)
+                drawnow;
+                
+                % Get new GUI data (flash may have changed)
+                handles = guidata(hObject);
+                if (handles.settings.flash == 1) && (handles.settings.flashStartFrame == -1)
+                    handles.settings.flashStartFrame = bufferIndex;
+                end
+                
+                % Compute next frame to display (<1ms)
+                nextFrameToShow = mod(nextFrameToShow+showNthFrame, handles.settings.totalFrames);
+                
+                % Update refresh rate display
+                thisTime = toc; % compute screen refresh rate
+                recentRefreshRates = circshift(recentRefreshRates,1);
+                recentRefreshRates(1) = 1/(thisTime - lastTime);         lastTime = thisTime;
+                set(handles.displayRefreshRate,'String',['Refresh rate: ' num2str(round(100*mean(recentRefreshRates))/100) ' Hz']);   
+                
+                % Display capture progress
+                set(hObject,'String',['Abort (' num2str(bufferIndex) '/' num2str(targetFramesToAcquire) ')']);
             end
-
-            % Compute sequence ID's (and corresponding memory IDs) to acquire
-            framesToGet = mod(lastSelectedChannelSeqID - (0:(handles.settings.rollingAverageFrames-1))*numChannels - 1,finalSeqID) + 1;
-            for avgIdx = 1:handles.settings.rollingAverageFrames % Copy the image data for the last X frames of selected channel
-                [~,lastMemID] = handles.camHandle.Memory.Sequence.ToMemoryID(framesToGet(avgIdx));
-                [~,rawFrameData] = handles.camHandle.Memory.CopyToArray(lastMemID,handles.colorMode);
-                avgBuffer(avgIdx,:) = uint16(rawFrameData); % put into buffer
-            end
-
-            % Sum and display buffer, recompute histogram, update refresh rate
-            sumFrame = reshape(sum(avgBuffer(1:handles.settings.rollingAverageFrames,:),1,'native'),[frameWidth frameHeight])';
-            scaled8bFrame = uint8((sumFrame - handles.displayOffset)*handles.displayScale);
-            set(handles.retinaImg, 'CData', scaled8bFrame);
-            handles.retinaHist.Data = bitshift(sumFrame(y1:y2,x1:x2),-log2(double(handles.settings.rollingAverageFrames)));
-            drawnow; %Must drawnow to show new frame and histogram--also the interruption point when stopping
-            thisTime = toc; % compute screen refresh rate
-            recentRefreshRates = circshift(recentRefreshRates,1);
-            recentRefreshRates(1) = 1/(thisTime - lastTime);         lastTime = thisTime;
-            set(handles.displayRefreshRate,'String',['Refresh rate: ' num2str(round(10*mean(recentRefreshRates))/10) ' fps']);
-            % also display on button the capture progress
-            set(hObject,'String',['Abort (' num2str(lastSeqID) '/' num2str(targetFramesToAcquire) ')']);
-            % Check that last sequence ID again
-            [~,lastSeqID] = handles.camHandle.Memory.Sequence.GetLast;
+            
+            % Advance the buffer index - no circular looping in Capture
+            bufferIndex = bufferIndex+1;
+            
         end
-        %if capture button is still ON, then not aborted, stop camera and save
+        % if capture button is still ON, then we have not aborted, stop camera and save
         if get(hObject,'Value')
-            handles.camHandle.Acquisition.Stop; % Stop! we have enough frames
-
+            % STOP! we have enough frames
+            rc = AT_Command(handles.camHandle,'AcquisitionStop'); AT_CheckWarning(rc);
+            
+            % Also let arduino know we've stopped
+            digitalOutputScan = [0, handles.settings.flash, handles.settings.channelsEnable(2:end)];
+            outputSingleScan(handles.daqHandle,digitalOutputScan);
+            
             % Extract data and save
-            handles = extract_save_data(handles,targetFramesToAcquire);
+            handles = extract_save_data(handles,rawBuffer,targetFramesToAcquire);
             handles = save_settings(handles);
             handles = advance_capture_number(handles); % find next capture number
 
-            % Re-enable controls
+            % Re-enable controls, switch button's label
             handles = enable_all_controls(handles);
             set(hObject,'String','Start Capture'); set(hObject,'Value',0);
             disp('Capture Finished');
-            digitalOutputScan = [0 handles.settings.channelsEnable]; % tell arduino that we've ended
-            outputSingleScan(handles.daqHandle,digitalOutputScan);
+            
             guidata(hObject,handles); % Update GUI handles right before closing out
         end
     else
-        % Aborting: turn the freerun off
-        handles.camHandle.Acquisition.Stop;
+        % We are aborting the capture, so stop camera
+        rc = AT_Command(handles.camHandle,'AcquisitionStop'); AT_CheckWarning(rc);
         disp('Aborting capture')
-        set(hObject,'String','Start Capture'); 
-        % Don't save aborted data
-        % Re-enable controls
+        
+        % Switch back the button's label
+        set(hObject,'String','Start Capture');
+        
+        % Don't save aborted data. Re-enable controls
         handles = enable_all_controls(handles);
-        digitalOutputScan = [0 handles.settings.channelsEnable]; % tell arduino that we've ended
+        digitalOutputScan = [0, handles.settings.flash, handles.settings.channelsEnable(2:end)]; % tell arduino that we've ended
         outputSingleScan(handles.daqHandle,digitalOutputScan);
         guidata(hObject,handles); % Update GUI handles right before closing out
     end
 end
 
-%% LEVELS FUNCTIONS 
-function uiButtonAutoscaleLevels_Callback(hObject, ~, handles)
-uiButtonAutoscaleLevelsSeparateCallback(hObject,handles);
-
-function uiButtonResetLevels_Callback(hObject, ~, handles)
-uiButtonResetLevelsSeparateCallback(hObject,handles)
+%% OUTPUT FUNCTION - not used
+function varargout = acquisition_GUI_OutputFcn(hObject, eventdata, handles) 
+varargout{1} = handles.output;
 
 
-%% CREATE FUNCTIONS - uninteresting but necesssary to start
-function uiTextFramerate_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to uiTextFramerate (see GCBO)
+%% CREATE FUNCTIONS - no custom code here, but necesssary to start program
+function uiTextFrameRate_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to uiTextFrameRate (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 % Hint: edit controls usually have a white background on Windows.
@@ -378,17 +500,17 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-function uiTextPixelclock_CreateFcn(hObject, eventdata, handles)
+function uiTextNumCols_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 
-function uiTextNumberLines_CreateFcn(hObject, eventdata, handles)
+function uiTextNumRows_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 
-function uiCheckGainBoost_CreateFcn(hObject, eventdata, handles)
+function uiSelectPreAmp_CreateFcn(hObject, eventdata, handles)
 
 function uiSelectChannel_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
@@ -434,3 +556,35 @@ function uiDisplayCaptureNumber_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+function uiTextTargetRefresh_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+%% HOTKEYS 
+% supported: F1 (Preview), F2 (Cont. Auto Scale), F4 (Capture), F5 (Flash)
+function acquisitionGUIFig_WindowKeyPressFcn(hObject, eventdata, handles)
+% Key that was pressed is in eventdata.Key field
+if strcmp(eventdata.Key,'f1') % Toggle Preview Button and run callback
+    oldValue = get(handles.uiButtonPreview,'Value');
+    set(handles.uiButtonPreview,'Value',~oldValue);
+    uiButtonPreview_Callback(handles.uiButtonPreview, eventdata, handles);
+
+elseif strcmp(eventdata.Key,'f4') % Toggle Capture button and run callback
+    oldValue = get(handles.uiButtonCapture,'Value');
+    set(handles.uiButtonCapture,'Value',~oldValue);
+    uiButtonCapture_Callback(handles.uiButtonCapture, eventdata, handles);
+    
+elseif strcmp(eventdata.Key,'f2') % Toggle continuous autoscale and run callback
+    oldValue = get(handles.uiCheckContinuousAutoScale,'Value');
+    set(handles.uiCheckContinuousAutoScale,'Value',~oldValue);
+    uiCheckContinuousAutoScale_Callback(handles.uiCheckContinuousAutoScale, eventdata, handles);
+    
+elseif strcmp(eventdata.Key,'f5') % Toggle quasi-flash and run callback
+    oldValue = get(handles.uiButtonFlash,'Value');
+    set(handles.uiButtonFlash,'Value',~oldValue);
+    uiButtonFlash_Callback(handles.uiButtonFlash, eventdata, handles);
+end
+

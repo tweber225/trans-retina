@@ -1,5 +1,13 @@
 function uiButtonResetLevelsSeparateCallback(hObject,handles)
 
+% First turn off continuous auto scale if on
+if handles.settings.continuousAutoScale == 1
+    set(handles.uiCheckContinuousAutoScale,'Value',0');
+    uiCheckContinuousAutoScaleSeparateCallback(handles.uiCheckContinuousAutoScale,handles);
+    % Get the updated GUI data
+    handles = guidata(hObject); 
+end
+
 % note the old display offsets
 oldOffset = handles.displayOffset;
 oldScale = handles.displayScale;
@@ -12,7 +20,7 @@ uiTextDisplayLowSeparateCallback(handles.uiTextDisplayLow, handles);
 handles = guidata(hObject);
 
 % Update the max display level to the max for given bitdepth
-set(handles.uiTextDisplayHigh,'String',num2str(2^handles.settings.bitdepth));
+set(handles.uiTextDisplayHigh,'String',num2str(2^handles.settings.bitDepth));
 uiTextDisplayHighSeparateCallback(handles.uiTextDisplayHigh, handles);
 
 % get back gui data set in line above

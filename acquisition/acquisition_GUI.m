@@ -378,6 +378,9 @@ else
         % Before starting, push new handles struct to GUI data
         guidata(hObject,handles);
         
+        % Note the time
+        handles.settings.captureStartTime = datestr(datetime);
+        
         % START!
         rc = AT_Command(handles.camHandle,'AcquisitionStart'); AT_CheckWarning(rc);
 

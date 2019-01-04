@@ -3,7 +3,7 @@ function settings = default_settings(camName)
 switch camName
     case 'zyla42'
         settings.sessionStartTime = datestr(datetime);
-        settings.captureStartTime = 'none';
+        settings.captureStartTime = 'none';  % leave blank until capture time
         
         % Rolling shutter mode
         settings.electronicShutterMode = 'Rolling';

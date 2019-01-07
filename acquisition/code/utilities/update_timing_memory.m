@@ -38,8 +38,8 @@ set(handles.displayGlobalExposure,'String',globalExposureString);
 handles.settings.globalExposure = globalExposureWindowTime;
 
 % Illumination Duty Cycle (in percentage)
-dutyCycle = (globalExposureWindowTime/handles.settings.exposure)*100;
-dutyCycleString = ['Duty Cycle: ' num2str(dutyCycle) '%'];
+dutyCycle = (1/10)*round((globalExposureWindowTime/handles.settings.exposure)*100*10);
+dutyCycleString = ['Illumination Duty Cycle: ' num2str(dutyCycle) '%'];
 set(handles.displayDutyCycle,'String',dutyCycleString);
 handles.settings.dutyCycle = dutyCycle;
 

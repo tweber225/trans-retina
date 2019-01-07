@@ -27,12 +27,18 @@ handles.blankFrame = zeros([blankFrameHeight,blankFrameWidth],'uint8'); %always 
 imshow(handles.blankFrame, [0, 255], 'Parent', handles.retinaAxis)
 handles.retinaImg = get(handles.retinaAxis,'Children');
 
+% RENDER BLANK ON "EXTRA AXIS" -- range of image (not cropped) but scaled
+% down considerably
+handles.blankExtraFrame = zeros([224,244],'uint8'); %always show 8-bit images on screen
+imshow(handles.blankExtraFrame, [0, 255], 'Parent', handles.extraAxis);
+handles.retinaExtraImg = get(handles.extraAxis,'Children');
+
 % RENDER HISTOGRAM
 handles.histogramBinEdges = linspace(0,2^handles.settings.bitDepth,handles.settings.histogramBins+1);
 handles.retinaHist = histogram(uint16(handles.blankFrame),handles.histogramBinEdges,'Parent',handles.histAxis); %histogram is always 16-bit
 handles.histAxis.XLim = [handles.histogramBinEdges(1) handles.histogramBinEdges(end)];
 handles.histAxis.YScale = 'log';
-handles.histAxis.YLim = [1 10^4];
+handles.histAxis.YLim = [1 10^5];
 
 % UPDATE GUI HANDLES STRUCT
 % to pass all these updates along

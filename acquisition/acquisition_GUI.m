@@ -240,7 +240,8 @@ if get(hObject,'Value') % ... if the button has been depressed ...
             AT_CheckWarning(rc);
             
             % Place cropped and rotated frame in average buffer (0.5ms)
-            avgBuffer(:,:,nextAvgFrame+1) = rot90(frameMatrixRotated(x1:x2,y1:y2)); % note the rotation changes index ordering
+            frameMatrix = uint16(rot90(frameMatrixRotated));
+            avgBuffer(:,:,nextAvgFrame+1) = frameMatrix(y1:y2,x1:x2);
             nextAvgFrame = mod(nextAvgFrame+1,handles.settings.rollingAverageFrames);
             
             % If the continuous auto-scaling option is selected (8.5ms)
@@ -253,7 +254,11 @@ if get(hObject,'Value') % ... if the button has been depressed ...
             sumFrame = sum(avgBuffer(:,:,1:handles.settings.rollingAverageFrames),3,'native');
             scaled8bFrame = uint8((sumFrame - handles.displayOffset)*handles.displayScale);
             set(handles.retinaImg, 'CData', scaled8bFrame);
-                       
+            
+            % Show full image, scaled on extra axis (<1ms)
+            scaled8bSmallFrame = uint8((imresize(frameMatrix,224/frameHeight,'nearest') - handles.displayOffset)*handles.displayScale);
+            set(handles.retinaExtraImg, 'CData', scaled8bSmallFrame);
+                    
             % Recompute histogram (1.6ms)
             handles.retinaHist.Data = bitshift(sumFrame,-log2(double(handles.settings.rollingAverageFrames)));
             
@@ -406,7 +411,8 @@ else
                 AT_CheckWarning(rc);
 
                 % Place cropped and rotated frame in average buffer (0.5ms)
-                avgBuffer(:,:,nextAvgFrame+1) = rot90(frameMatrixRotated(x1:x2,y1:y2)); % note the rotation changes index ordering
+                frameMatrix = uint16(rot90(frameMatrixRotated));
+                avgBuffer(:,:,nextAvgFrame+1) = frameMatrix(y1:y2,x1:x2); % note the rotation changes index ordering
                 nextAvgFrame = mod(nextAvgFrame+1,handles.settings.rollingAverageFrames);
 
                 % If the continuous auto-scaling option is selected (8.5ms)
@@ -419,6 +425,10 @@ else
                 sumFrame = sum(avgBuffer(:,:,1:handles.settings.rollingAverageFrames),3,'native');
                 scaled8bFrame = uint8((sumFrame - handles.displayOffset)*handles.displayScale);
                 set(handles.retinaImg, 'CData', scaled8bFrame);
+                
+                 % Show full image, scaled on extra axis (<1ms)
+                scaled8bSmallFrame = uint8((imresize(frameMatrix,224/frameHeight,'nearest') - handles.displayOffset)*handles.displayScale);
+                set(handles.retinaExtraImg, 'CData', scaled8bSmallFrame);
                 
                 % Recompute histogram (1.6ms)
                 handles.retinaHist.Data = bitshift(sumFrame,-log2(double(handles.settings.rollingAverageFrames)));

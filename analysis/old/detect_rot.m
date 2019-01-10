@@ -117,6 +117,3 @@ if showAnalysis == 1
 end
 
 
-
-
-

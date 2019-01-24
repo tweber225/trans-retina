@@ -8,6 +8,7 @@ set(handles.uiButtonCapture,'String','Saving Data');drawnow
 frameWidth = handles.settings.numCols;
 frameHeight = handles.settings.numRows;
 numChannels = int32(sum(handles.settings.channelsEnable));
+pixelEncoding = handles.settings.pixelEncoding;
 channelIdx = 1:numel(handles.settings.channelsEnable);
 [rc,frameStride] = AT_GetInt(handles.camHandle,'AOIStride'); 
 AT_CheckWarning(rc);
@@ -22,7 +23,11 @@ for frameIdx = 1:targetFramesToAcquire %note that frameIdx is 1-based
     set(handles.uiButtonCapture,'String',['Saving Data (' num2str(frameIdx) '/' num2str(targetFramesToAcquire) ')']);drawnow
     
     % Convert buffer into matrix
-    [rc,frameMatrixRotated] = AT_ConvertMono12PackedToMatrix(rawBuffer(:,frameIdx),frameHeight,frameWidth,frameStride);
+    if strcmp(pixelEncoding,'Mono12Packed')
+        [rc,frameMatrixRotated] = AT_ConvertMono12PackedToMatrix(rawBuffer(:,frameIdx),frameHeight,frameWidth,frameStride);
+    else
+        [rc,frameMatrixRotated] = AT_ConvertMono16ToMatrix(rawBuffer(:,frameIdx),frameHeight,frameWidth,frameStride);
+    end
     AT_CheckWarning(rc);
 
     % Rotate the frame

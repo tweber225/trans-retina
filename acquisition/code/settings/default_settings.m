@@ -53,16 +53,27 @@ switch camName
         settings.flash = 0;
         settings.flashStartFrame = int32(-1); %-1 means that it hasn't been set
         
+        % Flag if a frame was lost during capture
+        settings.frameLossDetected = 0;
+        
         % Cooling Status -- obviously turn it on! this setting is automatic
         settings.coolerStatus = '---'; % nothing for now, auto-fill with memory display update
         
         % Target number of frames to show in preview / sec
         settings.targetRefresh = 10; % fps
         
+        % Digital zoom settings for preview mode
+        settings.digitalZoom = 0;
+        settings.digitalZoomFactor = 3;
+        
         % To allow a number of frames to be averaged on the fly and
         % displayed
         settings.rollingAverageFrames = int32(1); % int32 for compatibility later, valid choices are powers of 2 up to 64
         settings.avgBufferSize = uint16(8); % Max number in buffer
+        
+        % Autoscale quantiles
+        settings.autoScaleLowQuantile = .01;
+        settings.autoScaleHighQuantile = .99;
         
         % Continuously auto-scale the levels
         settings.continuousAutoScale = 0;

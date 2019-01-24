@@ -26,7 +26,7 @@ function varargout = acquisition_GUI(varargin)
 
 % Edit the above text to modify the response to help acquisition_GUI
 
-% Last Modified by GUIDE v2.5 03-Jan-2019 16:56:41
+% Last Modified by GUIDE v2.5 18-Jan-2019 15:14:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -106,10 +106,8 @@ uiSelectPreAmpSeparateCallback(hObject,handles);
 function uiSelectChannel_Callback(hObject, ~, handles)
 select_channel(hObject,handles);
 
-function uiCheckChannel1_Callback(hObject, ~, handles)
-%(Channel 1 is always on)
-%handles = channel_enable_disable(hObject,handles,1); 
-%select_channel(handles.uiSelectChannel,handles);
+function uiCheckChannel1_Callback(~, ~, ~)
+%(Channel 1 is always on, so no callback)
 
 function uiCheckChannel2_Callback(hObject, ~, handles)
 handles = channel_enable_disable(hObject,handles,2);
@@ -146,6 +144,9 @@ uiButtonAutoscaleLevelsSeparateCallback(hObject,handles);
 
 function uiCheckContinuousAutoScale_Callback(hObject, ~, handles)
 uiCheckContinuousAutoScaleSeparateCallback(hObject,handles);
+
+function uiCheckDigitalZoom_Callback(hObject, ~, handles)
+uiCheckDigitalZoomSeparateCallback(hObject,handles);
 
 % CAPTURE SETTINGS
 function uiTextFramesetsToCapture_Callback(hObject, ~, handles)
@@ -212,22 +213,31 @@ if get(hObject,'Value') % ... if the button has been depressed ...
     % Make list of recent refresh times
     recentRefreshRates = zeros(8,1);
     
-    % Before starting, push new handles struct to GUI data
+    % Before starting, push new handles data to GUI
     guidata(hObject,handles);
     
     % START!
     rc = AT_Command(handles.camHandle,'AcquisitionStart'); AT_CheckWarning(rc);
 
     % Loop around grabbing available frame
-    tic; lastTime = toc;
+    tic; lastTime = toc;    
     while get(hObject,'Value') % continuously loop while preview button is ON, or until capture is hit
-        % Get frame data from SDK buffer and put into MATLAB buffer, then
-        % requeue the frame (~4ms)
-        [rc,rawBuffer(:,bufferIndex+1)] = AT_WaitBuffer(handles.camHandle,1000);
+        % Get frame data from SDK buffer and put into MATLAB buffer, then requeue the frame (~4ms)
+        [rc,singleBuffer] = AT_WaitBuffer(handles.camHandle,1000); 
+        if rc == 0 %if no warning then move the output into buffer matrix
+            rawBuffer(:,bufferIndex+1) = singleBuffer;
+        else % otherwise there's been frame loss, stop acquisition
+            warndlg('Frame loss detected!')
+            rawBuffer(:,bufferIndex+1) = 0;
+            set(hObject,'Value',0);
+            rc = AT_Command(handles.camHandle,'AcquisitionStop'); AT_CheckWarning(rc);
+            bufferIndex = nextFrameToShow; % set this frame to "next frame to show" so we can exit properly
+            guidata(hObject,handles); % Pass data back to GUI
+        end
         AT_CheckWarning(rc);
         rc = AT_QueueBuffer(handles.camHandle,handles.settings.imageSizeBytes);
         AT_CheckWarning(rc);
-
+        
         % Check whether this frame is next scheduled frame to show 
         if bufferIndex == nextFrameToShow
             
@@ -244,23 +254,36 @@ if get(hObject,'Value') % ... if the button has been depressed ...
             avgBuffer(:,:,nextAvgFrame+1) = frameMatrix(y1:y2,x1:x2);
             nextAvgFrame = mod(nextAvgFrame+1,handles.settings.rollingAverageFrames);
             
+            % Sum buffer
+            sumFrame = sum(avgBuffer(:,:,1:handles.settings.rollingAverageFrames),3,'native');
+            
+            % Recompute histogram (1.6ms)
+            if handles.settings.digitalZoom == 1
+                zoomPixSelectX = round((x2-x1)*(0.5-0.5/handles.settings.digitalZoomFactor)):round((x2-x1)*(0.5+0.5/handles.settings.digitalZoomFactor));
+                zoomPixSelectY = round((y2-y1)*(0.5-0.5/handles.settings.digitalZoomFactor)):round((y2-y1)*(0.5+0.5/handles.settings.digitalZoomFactor));
+                handles.retinaHist.Data = bitshift(sumFrame(zoomPixSelectY,zoomPixSelectX),-log2(double(handles.settings.rollingAverageFrames)));
+            else
+                handles.retinaHist.Data = bitshift(sumFrame,-log2(double(handles.settings.rollingAverageFrames)));
+            end
+            
             % If the continuous auto-scaling option is selected (8.5ms)
             if (handles.settings.continuousAutoScale==1)
                 if autoScaleCounter == 0, uiButtonAutoscaleLevelsSeparateCallback(handles.uiButtonAutoscaleLevels,handles); end
                 autoScaleCounter = mod(autoScaleCounter+1,ceil (handles.settings.actualRefresh/handles.settings.continuousAutoScaleRate));
             end
             
-            % Sum buffer and update image axis CData (2.8ms)
-            sumFrame = sum(avgBuffer(:,:,1:handles.settings.rollingAverageFrames),3,'native');
-            scaled8bFrame = uint8((sumFrame - handles.displayOffset)*handles.displayScale);
+            % Scale and magnify summed image and update image axis CData (2.8ms)
+            if handles.settings.digitalZoom == 1
+                zoomImage = imresize(sumFrame(zoomPixSelectY,zoomPixSelectX),handles.settings.digitalZoomFactor);
+                scaled8bFrame = uint8((zoomImage - handles.displayOffset)*handles.displayScale);
+            else
+                scaled8bFrame = uint8((sumFrame - handles.displayOffset)*handles.displayScale);
+            end
             set(handles.retinaImg, 'CData', scaled8bFrame);
             
             % Show full image, scaled on extra axis (<1ms)
             scaled8bSmallFrame = uint8((imresize(frameMatrix,224/frameHeight,'nearest') - handles.displayOffset)*handles.displayScale);
             set(handles.retinaExtraImg, 'CData', scaled8bSmallFrame);
-                    
-            % Recompute histogram (1.6ms)
-            handles.retinaHist.Data = bitshift(sumFrame,-log2(double(handles.settings.rollingAverageFrames)));
             
             % Must drawnow to show new frame and histogram--also
             % interruption point (1024x1024:90ms, 724x724:30ms)
@@ -379,6 +402,9 @@ else
 
         % Make list of recent refresh times
         recentRefreshRates = zeros(8,1);
+        
+        % Reset frame loss flag
+        handles.settings.frameLossDetected = 0;
 
         % Before starting, push new handles struct to GUI data
         guidata(hObject,handles);
@@ -394,7 +420,14 @@ else
         while bufferIndex < targetFramesToAcquire && get(hObject,'Value')
             % Get frame data from SDK buffer and put into MATLAB buffer, then
             % requeue the frame (~4ms for 1MPixel)
-            [rc,rawBuffer(:,bufferIndex+1)] = AT_WaitBuffer(handles.camHandle,1000);
+            [rc,singleBuffer] = AT_WaitBuffer(handles.camHandle,2000); %2 sec timeout allowed
+            if rc == 0
+                rawBuffer(:,bufferIndex+1) = singleBuffer;
+            else
+                warndlg('Frame loss detected!')
+                handles.settings.frameLossDetected = 1;
+                rawBuffer(:,bufferIndex+1) = 0;
+            end
             AT_CheckWarning(rc);
             rc = AT_QueueBuffer(handles.camHandle,handles.settings.imageSizeBytes);
             AT_CheckWarning(rc);
@@ -415,29 +448,43 @@ else
                 avgBuffer(:,:,nextAvgFrame+1) = frameMatrix(y1:y2,x1:x2); % note the rotation changes index ordering
                 nextAvgFrame = mod(nextAvgFrame+1,handles.settings.rollingAverageFrames);
 
+                % Sum buffer
+                sumFrame = sum(avgBuffer(:,:,1:handles.settings.rollingAverageFrames),3,'native');
+
+                % Recompute histogram (1.6ms)
+                if handles.settings.digitalZoom == 1
+                    zoomPixSelectX = round((x2-x1)*(0.5-0.5/handles.settings.digitalZoomFactor)):round((x2-x1)*(0.5+0.5/handles.settings.digitalZoomFactor));
+                    zoomPixSelectY = round((y2-y1)*(0.5-0.5/handles.settings.digitalZoomFactor)):round((y2-y1)*(0.5+0.5/handles.settings.digitalZoomFactor));
+                    handles.retinaHist.Data = bitshift(sumFrame(zoomPixSelectY,zoomPixSelectX),-log2(double(handles.settings.rollingAverageFrames)));
+                else
+                    handles.retinaHist.Data = bitshift(sumFrame,-log2(double(handles.settings.rollingAverageFrames)));
+                end
+                
                 % If the continuous auto-scaling option is selected (8.5ms)
                 if (handles.settings.continuousAutoScale==1)
                     if autoScaleCounter == 0, uiButtonAutoscaleLevelsSeparateCallback(handles.uiButtonAutoscaleLevels,handles); end
                     autoScaleCounter = mod(autoScaleCounter+1,ceil (handles.settings.actualRefresh/handles.settings.continuousAutoScaleRate));
                 end
                 
-                % Sum buffer and update image axis CData (2.8ms)
+                % Scale and magnify summed image and update image axis CData (2.8ms)
                 sumFrame = sum(avgBuffer(:,:,1:handles.settings.rollingAverageFrames),3,'native');
-                scaled8bFrame = uint8((sumFrame - handles.displayOffset)*handles.displayScale);
+                if handles.settings.digitalZoom == 1
+                    zoomImage = imresize(sumFrame(zoomPixSelectY,zoomPixSelectX),handles.settings.digitalZoomFactor);
+                    scaled8bFrame = uint8((zoomImage - handles.displayOffset)*handles.displayScale);
+                else
+                    scaled8bFrame = uint8((sumFrame - handles.displayOffset)*handles.displayScale);
+                end
                 set(handles.retinaImg, 'CData', scaled8bFrame);
                 
                  % Show full image, scaled on extra axis (<1ms)
                 scaled8bSmallFrame = uint8((imresize(frameMatrix,224/frameHeight,'nearest') - handles.displayOffset)*handles.displayScale);
                 set(handles.retinaExtraImg, 'CData', scaled8bSmallFrame);
                 
-                % Recompute histogram (1.6ms)
-                handles.retinaHist.Data = bitshift(sumFrame,-log2(double(handles.settings.rollingAverageFrames)));
-
                 % Must drawnow to show new frame and histogram--also
                 % interruption point (1024x1024:90ms, 724x724:30ms)
                 drawnow;
                 
-                % Get new GUI data (flash may have changed)
+                % Get new GUI data (flash may have changed, mark it)
                 handles = guidata(hObject);
                 if (handles.settings.flash == 1) && (handles.settings.flashStartFrame == -1)
                     handles.settings.flashStartFrame = bufferIndex;
@@ -590,14 +637,25 @@ elseif strcmp(eventdata.Key,'f4') % Toggle Capture button and run callback
     set(handles.uiButtonCapture,'Value',~oldValue);
     uiButtonCapture_Callback(handles.uiButtonCapture, eventdata, handles);
     
-elseif strcmp(eventdata.Key,'f2') % Toggle continuous autoscale and run callback
-    oldValue = get(handles.uiCheckContinuousAutoScale,'Value');
-    set(handles.uiCheckContinuousAutoScale,'Value',~oldValue);
-    uiCheckContinuousAutoScale_Callback(handles.uiCheckContinuousAutoScale, eventdata, handles);
+% elseif strcmp(eventdata.Key,'f2') % Toggle continuous autoscale and run callback
+%     oldValue = get(handles.uiCheckContinuousAutoScale,'Value');
+%     set(handles.uiCheckContinuousAutoScale,'Value',~oldValue);
+%     uiCheckContinuousAutoScale_Callback(handles.uiCheckContinuousAutoScale, eventdata, handles);
+
+elseif strcmp(eventdata.Key,'f2') % Run autoscale (once) and run callback
+    uiButtonAutoscaleLevels_Callback(handles.uiButtonAutoscaleLevels, eventdata, handles);
+    
+elseif strcmp(eventdata.Key,'f3') % Toggle digital and run callback
+    oldValue = get(handles.uiCheckDigitalZoom,'Value');
+    set(handles.uiCheckDigitalZoom,'Value',~oldValue);
+    uiCheckDigitalZoom_Callback(handles.uiCheckDigitalZoom, eventdata, handles);
     
 elseif strcmp(eventdata.Key,'f5') % Toggle quasi-flash and run callback
     oldValue = get(handles.uiButtonFlash,'Value');
     set(handles.uiButtonFlash,'Value',~oldValue);
     uiButtonFlash_Callback(handles.uiButtonFlash, eventdata, handles);
 end
+
+
+
 

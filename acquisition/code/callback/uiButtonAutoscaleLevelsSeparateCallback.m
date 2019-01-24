@@ -5,7 +5,7 @@ oldOffset = handles.displayOffset;
 oldScale = handles.displayScale;
 
 % Get the max and min in the current histogram data
-Y = quantile(single(handles.retinaHist.Data(:)),[0.001,0.999]);
+Y = quantile(single(handles.retinaHist.Data(:)),[handles.settings.autoScaleLowQuantile,handles.settings.autoScaleHighQuantile]);
 maxLevel = Y(2);
 minLevel = Y(1);
 
@@ -23,7 +23,9 @@ uiTextDisplayHighSeparateCallback(handles.uiTextDisplayHigh, handles);
 % get back gui data set in line above
 handles = guidata(hObject); 
 
-
+% Special case: when we're not in preview mode
+% There's a static frame left over from a preview or capture mode, take the
+% axes data from that old frame and autoscale it and redisplay
 if ~get(handles.uiButtonPreview,'Value')
     oldFrame = double(get(handles.retinaImg, 'CData'));
     oldFrameRaw = (oldFrame/oldScale)+oldOffset;

@@ -91,6 +91,9 @@ set(handles.uiCheckContinuousAutoScale,'Value',handles.settings.continuousAutoSc
 % Set target refresh rate
 set(handles.uiTextTargetRefresh,'String',handles.settings.targetRefresh);
 
+% Set default digital zoom setting
+set(handles.uiCheckDigitalZoom,'Value',handles.settings.digitalZoom);
+
 % Set display levels
 handles.settings.displayRangeLow = 0;
 handles.settings.displayRangeHigh = 2^handles.settings.bitDepth; % let this auto-calculate

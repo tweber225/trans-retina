@@ -19,7 +19,7 @@ firstFrameName = fullfile(capturePath,chanName,['frame' num2str(1,'%04d') '.tif'
 firstFrameSize = size(loadtiff(firstFrameName));
 numCols = firstFrameSize(2);
 numLines = firstFrameSize(1);
-if settingsStruct.bitdepth <= 8
+if settingsStruct.bitDepth <= 8
     pixDataType = 'uint8';
 else
     pixDataType = 'uint16';

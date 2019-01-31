@@ -10,7 +10,7 @@ cVector = oneToSix(logical(settingsStruct.channelsEnable));
 % Save registered images, one channel at a time, convert to 16 bit range
 for cIdx = 1:numChannels
     channelSaveName = [savePathName filesep 'channel' num2str(cVector(cIdx)) 'registered.tiff'];
-    saveastiff(uint16(2^(16-settingsStruct.bitdepth)*registeredHypStack(:,:,:,cIdx)),channelSaveName);
+    saveastiff(uint16(2^(16-settingsStruct.bitDepth)*registeredHypStack(:,:,:,cIdx)),channelSaveName);
 end
 
 % Save registration settings + info, ie

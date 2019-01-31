@@ -27,8 +27,8 @@ windowFunction = repmat(blackman_harris(pixPerSide),[1 1 regOpt.polDFTChunkSize]
 for chunkIdx = 1:numChunks
     disp(['Computing polar FFT chunk ' num2str(chunkIdx) ' of ' num2str(numChunks)])
     fStart = 1+regOpt.polDFTChunkSize*(chunkIdx-1);
-    fEnd = regOpt.polDFTChunkSize*chunkIdx;
-    polarDFT(:,:,fStart:fEnd) = polar_fft2(double(croppedFrameStack(:,:,fStart:fEnd)).*windowFunction,rhoMin,rhoMax,numAngles,regOpt.polDFTUpSampleFactor);
+    fEnd = min(regOpt.polDFTChunkSize*chunkIdx,numFrames);
+    polarDFT(:,:,fStart:fEnd) = polar_fft2(double(croppedFrameStack(:,:,fStart:fEnd)).*windowFunction(:,:,1:(fEnd-fStart+1)),rhoMin,rhoMax,numAngles,regOpt.polDFTUpSampleFactor);
 end
 
 % FT the squared magnitude spectrum wrt angular dimension

@@ -22,8 +22,8 @@ correctedHypStack = rawHypStack; clear rawHypStack
 tic
 %% REGISTRATION
 regOpt.skipRotation = 0; % flag to skip rotational registration
-regOpt.regBWRadius = 77; % specify the radius of DFT frequencies to use, set to <1 to use selector
-regOpt.refFrameNumber = 100;
+regOpt.regBWRadius = 0; % specify the radius of DFT frequencies to use, set to <1 to use selector
+regOpt.refFrameNumber = 40;
 regOpt.maxAngle = 80e-3; % mrad
 regOpt.angleRes = 0.05e-3; % mrad - rotational precision
 regOpt.rhoMin = 8; % min pixel radius range to use in rotation detection

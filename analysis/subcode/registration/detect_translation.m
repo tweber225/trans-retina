@@ -68,7 +68,7 @@ end
 efStart = numChunks*regOpt.transChunkSize;
 FTStack = fft2(frameStack(:,:,(efStart+1):(efStart+extraFrames)));
 
-XPowSpecStack = FTRefFrame(:,:,1:extraFrames).*conj(FTStack);
+XPowSpecStack = FTRefFrame(:,:,ones(1,extraFrames)).*conj(FTStack);
 clear FTRefFrameStack FTStack
 
 normXPowSpecStack = XPowSpecStack./abs(XPowSpecStack).*repmat(ifftshift(BWMask),[1 1 extraFrames]);

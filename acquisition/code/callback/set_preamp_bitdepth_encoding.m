@@ -1,4 +1,4 @@
-function [actualBitDepth,actualPixelEncoding] = set_preamp_bitdepth_encoding(camHandle,targetPreAmp)
+function [actualBitDepth,actualPixelEncoding,actualPreAmp] = set_preamp_bitdepth_encoding(camHandle,targetPreAmp)
 
 % Use the SDK's simple pre amp gain control feature wrapper to set bit
 % depth and gain
@@ -23,5 +23,6 @@ AT_CheckWarning(rc);
 % Report set bitdepths, this is valid if no warnings appear!
 actualBitDepth = targetBitDepth; % We use this number routinely elsewhere for display levels
 actualPixelEncoding = targetPixelEncoding;
+actualPreAmp = targetPreAmp;
 
 

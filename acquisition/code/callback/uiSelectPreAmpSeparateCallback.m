@@ -5,11 +5,12 @@ preAmpOptions = cellstr(get(handles.uiSelectPreAmp,'String'));
 targetPreAmp = preAmpOptions{get(handles.uiSelectPreAmp,'Value')};
 
 % Try setting the pre amp and bit depth and encoding
-[actualBitDepth,actualPixelEncoding] = set_preamp_bitdepth_encoding(handles.camHandle,targetPreAmp);
+[actualBitDepth,actualPixelEncoding,actualPreAmp] = set_preamp_bitdepth_encoding(handles.camHandle,targetPreAmp);
 
 % Note the numerical bit depth and encoding in settings structure
 handles.settings.bitDepth = actualBitDepth;
 handles.settings.pixelEncoding = actualPixelEncoding;
+handles.settings.simplePreAmpGainControl = actualPreAmp;
 
 
 % Gain state affects bit depth and encoding and therefore size of buffer,

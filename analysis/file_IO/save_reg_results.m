@@ -21,7 +21,7 @@ save([savePathName filesep 'registration_info.mat'],'regOpt','fusedList','hyperL
 
 % Plot only the 1st channel's fused xy trans and rot
 t = (1/settingsStruct.framesetRate)*(0:settingsStruct.framesetsToCapture-1);
-figure;plotyy(t,fusedList.trans,t,fusedList.rot)
+figure;plotyy(t,fusedList.trans(:,:,1),t,fusedList.rot(:,1))
 xlabel('Time (sec)')
 ylabel('Translation / Rotation (yellow)')
 title('Detected Translation / Rotation')

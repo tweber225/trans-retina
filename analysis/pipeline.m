@@ -23,7 +23,7 @@ tic
 %% REGISTRATION
 regOpt.skipRotation = 0; % flag to skip rotational registration
 regOpt.regBWRadius = 0; % specify the radius of DFT frequencies to use, set to <1 to use selector
-regOpt.refFrameNumber = 40;
+regOpt.refFrameNumber = 23;
 regOpt.maxAngle = 80e-3; % mrad
 regOpt.angleRes = 0.05e-3; % mrad - rotational precision
 regOpt.rhoMin = 8; % min pixel radius range to use in rotation detection
@@ -34,8 +34,8 @@ regOpt.minRhoTrans = 8;
 regOpt.subPixelPrecision = 1/64; % sub-pixel translation precision
 regOpt.pixelZoomRange = 1.5; % range of pixels in which to zoom in around course estimate of peak
 regOpt.transChunkSize = 128; % # frames to detect translation in at once
-regOpt.rotRegSmoothSpan = 24;
-regOpt.transRegSmoothSpan = 6;
+regOpt.rotRegSmoothSpan = 8;
+regOpt.transRegSmoothSpan = 8;
 regOpt.dateComputed = string(datetime);
 
 hyperList(numChannels).rotHList = zeros(settingsStruct.framesetsToCapture);

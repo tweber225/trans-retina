@@ -637,15 +637,15 @@ elseif strcmp(eventdata.Key,'f4') % Toggle Capture button and run callback
     set(handles.uiButtonCapture,'Value',~oldValue);
     uiButtonCapture_Callback(handles.uiButtonCapture, eventdata, handles);
     
-% elseif strcmp(eventdata.Key,'f2') % Toggle continuous autoscale and run callback
+% elseif strcmp(eventdata.Key,'') % Toggle continuous autoscale and run callback
 %     oldValue = get(handles.uiCheckContinuousAutoScale,'Value');
 %     set(handles.uiCheckContinuousAutoScale,'Value',~oldValue);
 %     uiCheckContinuousAutoScale_Callback(handles.uiCheckContinuousAutoScale, eventdata, handles);
 
-elseif strcmp(eventdata.Key,'f2') % Run autoscale (once) and run callback
+elseif strcmp(eventdata.Key,'f6') % Run autoscale (once) and run callback
     uiButtonAutoscaleLevels_Callback(handles.uiButtonAutoscaleLevels, eventdata, handles);
     
-elseif strcmp(eventdata.Key,'f3') % Toggle digital and run callback
+elseif strcmp(eventdata.Key,'f2') % Toggle digital zoom and run callback
     oldValue = get(handles.uiCheckDigitalZoom,'Value');
     set(handles.uiCheckDigitalZoom,'Value',~oldValue);
     uiCheckDigitalZoom_Callback(handles.uiCheckDigitalZoom, eventdata, handles);
@@ -654,6 +654,12 @@ elseif strcmp(eventdata.Key,'f5') % Toggle quasi-flash and run callback
     oldValue = get(handles.uiButtonFlash,'Value');
     set(handles.uiButtonFlash,'Value',~oldValue);
     uiButtonFlash_Callback(handles.uiButtonFlash, eventdata, handles);
+    
+elseif strcmp(eventdata.Key,'f3') % Switch to the next channel
+    oldValue = get(handles.uiSelectChannel,'Value');
+    targetSelectChannel = mod(oldValue+1,numel(handles.settings.channelsEnable)); %increment
+    set(handles.uiSelectChannel,'Value',targetSelectChannel);
+    select_channel(handles.uiSelectChannel,handles); % run regular callback
 end
 
 

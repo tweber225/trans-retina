@@ -1,4 +1,4 @@
-function [xPoints,yPoints] = manual_segment_track(img)
+function [xPoints,yPoints] = manual_segment_track(img,specialFlag)
 % Function takes in an image and prompts user to manually track the center
 % of a vessel. Outputs a Nx2 list (x and y coordinates) of user-selected
 % points
@@ -11,8 +11,11 @@ img = single(img);
 normImg = norm_contrast(img);
 
 % Zoom into area of interest first
-imshow(normImg)
-[x,y] = getpts; close
+if ~strcmp(specialFlag, 'hold window')
+    imshow(normImg)
+end
+[x,y] = getpts; 
+close
 xCenter = round(x); 
 yCenter = round(y);
 

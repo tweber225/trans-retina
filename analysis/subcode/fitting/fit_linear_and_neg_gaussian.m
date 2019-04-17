@@ -1,4 +1,4 @@
-function [fitresult, gof] = fit_linear_and_neg_gaussian(x, y)
+function [fitresult, xData, yData, gof] = fit_linear_and_neg_gaussian(x, y)
 %FIT_LINEAR_AND_NEG_GAUSSIAN(X,Y)
 % Creates a fit of the x,y data to a linear function (mx+b) and a Gaussian.
 
@@ -24,7 +24,7 @@ cGuess = -mean(y)/100;
 dGuess = numPoints/4;
 eGuess = 0;
 
-%% Fit: 'untitled fit 1'.
+%% Fitting
 [xData, yData] = prepareCurveData( x, y );
 
 % Set up fittype and options.
@@ -35,16 +35,14 @@ opts.Lower = [aMin bMin cMin dMin eMin];
 opts.StartPoint = [aGuess bGuess cGuess dGuess eGuess];
 opts.Upper = [aMax bMax cMax dMax eMax];
 
-% Fit model to data.
-[fitresult, gof] = fit( xData, yData, ft, opts );
-
-% % Plot fit with data.
-% %figure( 'Name', 'untitled fit 1' );
-% h = plot( fitresult, xData, yData );
-% legend( h, 'y vs. x', 'untitled fit 1', 'Location', 'NorthEast' );
-% % Label axes
-% xlabel x
-% ylabel y
-% grid on
-
+% Check whether there's enoguh data first
+if length(yData) >= 2*length(opts.StartPoint)
+    % Fit model to data.
+    [fitresult, gof] = fit( xData, yData, ft, opts );
+else
+    % Don't fit the model
+    fitresult.d = nan;
+    fitresult.c = nan;
+    gof = nan;
+end
 

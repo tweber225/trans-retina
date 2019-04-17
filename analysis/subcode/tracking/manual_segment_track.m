@@ -7,6 +7,7 @@ zoomWidth = 128;
 blurFactor = 12;
 
 % Normalize the image contrast
+[yPixels,xPixels] = size(img);
 img = single(img);
 normImg = norm_contrast(img);
 
@@ -40,16 +41,32 @@ yPoints = y + (yi-scaleFactor*zoomWidth/2)/scaleFactor;
 
 while true
     % Ask user if more points are desired
-    prompt = 'Gather more points for this segment? (y/n)';
+    prompt = 'Drop the last data point, or gather more points for this segment? (d/y/n)';
     promptAnswer = input(prompt,'s');
     if promptAnswer == 'n'
         % Done, pass on the data
         break
+    elseif promptAnswer == 'd'
+        % Remove the last point
+        xPoints = xPoints(1:(end-1));
+        yPoints = yPoints(1:(end-1));
+        continue
     elseif promptAnswer == 'y'
         % Repeat the process above, with the zoomed region centered on last
         % point
         xCenterNew = round(xPoints(end));
-        yCenterNew = round(yPoints(end));    
+        yCenterNew = round(yPoints(end));
+        
+        % Check validity of center points, adjust if necessary
+        if (xCenterNew - zoomWidth/2+1) < 1
+            xCenterNew = zoomWidth/2;
+        elseif (xCenterNew + zoomWidth/2) > xPixels
+            xCenterNew = xPixels - zoomWidth/2;
+        elseif (yCenterNew - zoomWidth/2+1) < 1
+            yCenterNew = zoomWidth/2;
+        elseif (yCenterNew + zoomWidth/2) > yPixels
+            yCenterNew = yPixels - zoomWidth/2;
+        end
 
         % Crop the image to zoomed area
         cropImg = crop_image(normImg,xCenterNew,yCenterNew,zoomWidth);

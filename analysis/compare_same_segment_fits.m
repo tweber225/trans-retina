@@ -1,4 +1,4 @@
-% Script to load vessel fits and images and compare them
+% Script to load 2 vessel fits (and the average images) and compare them
 
 %% List the capture paths for the two image sets
 capturePathName1 = 'U:\eng_research_biomicroscopy\Data\BME-BIOMC-24\20190413\subject001_capture005';

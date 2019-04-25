@@ -1,20 +1,20 @@
-anglesIndices = -pi:.01:pi;
-[kx,ky] = meshgrid(anglesIndices);
+lambertianAnglesIndices = linspace((-pi/2),(pi/2),500+1);
 
-hardAperture = (kx.^2 + ky.^2) < pi^2;
+hgAngleIndices = linspace(-pi,pi,600+1);
 
+[kx,ky] = meshgrid(lambertianAnglesIndices);
+hardAperture = (kx.^2 + ky.^2) < (pi/2)^2;
 
-pupilDiameter = 20;
-focalLength = 16.7;
-
-pupilFWHMAngle = atan((pupilDiameter/2)/focalLength);
-
-%AS_inc = exp(-4*log(2)*(kx.^2+ky.^2)/pupilFWHMAngle^2).*hardAperture;
 k = sqrt(kx.^2+ky.^2);
-AS_inc = cos(k);
+
+%AS=angular spectrum, inc=incident
+AS_inc = cos(k); %Lambertian angular spectrum
 AS_inc(AS_inc<0) = 0;
 
-hg = henyey_greenstein(sqrt(kx.^2 + ky.^2),0.99).*hardAperture;
+
+[kxHG,kyHG] = meshgrid(hgAngleIndices);
+hardApertureHG = (kxHG.^2 + kyHG.^2) < (pi/4)^2;
+hg = henyey_greenstein(sqrt(kxHG.^2 + kyHG.^2),0.995).*hardApertureHG;
 
 AS_out = conv2(AS_inc,hg./sum(hg(:)),'same');
 
@@ -33,16 +33,16 @@ AS_out7 = conv2(AS_out6,hg./sum(hg(:)),'same');
 AS_out8 = conv2(AS_out7,hg./sum(hg(:)),'same');
 
 
-plot(anglesIndices,AS_inc(round(end/2),:))
+plot(lambertianAnglesIndices,AS_inc(round(end/2),:))
 hold on;
-plot(anglesIndices,AS_out(round(end/2),:))
-plot(anglesIndices,AS_out2(round(end/2),:))
-plot(anglesIndices,AS_out3(round(end/2),:))
-plot(anglesIndices,AS_out4(round(end/2),:))
-plot(anglesIndices,AS_out5(round(end/2),:))
-plot(anglesIndices,AS_out6(round(end/2),:))
-plot(anglesIndices,AS_out7(round(end/2),:))
-plot(anglesIndices,AS_out8(round(end/2),:))
+plot(lambertianAnglesIndices,AS_out(round(end/2),:))
+plot(lambertianAnglesIndices,AS_out2(round(end/2),:))
+plot(lambertianAnglesIndices,AS_out3(round(end/2),:))
+plot(lambertianAnglesIndices,AS_out4(round(end/2),:))
+plot(lambertianAnglesIndices,AS_out5(round(end/2),:))
+plot(lambertianAnglesIndices,AS_out6(round(end/2),:))
+plot(lambertianAnglesIndices,AS_out7(round(end/2),:))
+plot(lambertianAnglesIndices,AS_out8(round(end/2),:))
 xlim([-pi/4,pi/4])
 xlabel('Angle (rad)')
 ylabel('Radiant Intensity')
@@ -60,4 +60,4 @@ y(7) = AS_out6(round(end/2),round(end/2));
 y(8) = AS_out7(round(end/2),round(end/2));
 y(9) = AS_out8(round(end/2),round(end/2));
 
-OD = -log(y);
+OD = -log10(y);

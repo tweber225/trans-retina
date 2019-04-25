@@ -32,13 +32,17 @@ for segmentIdx = 1:numSegments
     
     % Generate all the interpolation cross section locations and profiles
     numPoints = numel(interpSegments(segmentIdx).xPoints);
+    crossSectionsNormal = zeros(numPoints,2*crossSectionWidth+1);
     crossSections = zeros(numPoints,2*crossSectionWidth+1);
     crossSectionsNaNs = zeros(numPoints,2*crossSectionWidth+1);
+    vesselBackground = zeros(numPoints,1);
     for pointIdx = 1:numPoints
         xInterp = linspace(x1(pointIdx),x2(pointIdx),2*crossSectionWidth+1);
         yInterp = linspace(y1(pointIdx),y2(pointIdx),2*crossSectionWidth+1);
-        crossSections(pointIdx,:) = double(interp2(flattenedFundusImg,xInterp,yInterp));
+        crossSectionsNormal(pointIdx,:) = double(interp2(fundusImg,xInterp,yInterp));
+        crossSections(pointIdx,:) = double(interp2(flattenedFundusImg,xInterp,yInterp)); %should already be a double--fix?
         crossSectionsNaNs(pointIdx,:) = double(interp2(flattenedFundusImgNaNs,xInterp,yInterp));
+        vesselBackground(pointIdx) = double(interp2(estimatedBackgroundImg,interpSegments(segmentIdx).xPoints(pointIdx),interpSegments(segmentIdx).yPoints(pointIdx)));
     end
     
     % Loop through select points of the segment and fit the model
@@ -117,15 +121,38 @@ for segmentIdx = 1:numSegments
         uList = repmat(uList(selectPoints),[numPoints 1]);
         y0List = repmat(y0List(selectPoints),[numPoints 1]);
     end
-
+       
     % And extrapolate the NaNs at the end
     rList(isnan(rList)) = interp1(allPoints(~isnan(rList)),rList(~isnan(rList)),allPoints(isnan(rList)),'nearest','extrap');
     uList(isnan(uList)) = interp1(allPoints(~isnan(uList)),uList(~isnan(uList)),allPoints(isnan(uList)),'nearest','extrap');
     y0List(isnan(y0List)) = interp1(allPoints(~isnan(y0List)),y0List(~isnan(y0List)),allPoints(isnan(y0List)),'nearest','extrap');
 
-    % Add info to output structure
+    % Loop through each cross-section point, find min in vessel region and
+    % average of outside the vessel on either side
+    minList = zeros(numPoints,1);
+    surroundList = zeros(numPoints,1);
+    for pointIdx = 1:numPoints
+        % Find vessel boundaries
+        highBound = find(crossSectionIndices==ceil(y0List(pointIdx) + rList(pointIdx)));
+        lowBound = find(crossSectionIndices==floor(y0List(pointIdx) - rList(pointIdx)));
+        minList(pointIdx) = min(crossSectionsNormal(pointIdx,lowBound:highBound),[],2);
+        meanHigh = mean(crossSectionsNormal(pointIdx,(highBound+3):end),2);
+        meanLow = mean(crossSectionsNormal(pointIdx,1:(lowBound-3)),2);
+        surroundList(pointIdx) = (meanHigh + meanLow)/2;
+    end
+    
+    % Add fit parameters info to output structure
     fitSegments(segmentIdx).rList = rList;
     fitSegments(segmentIdx).uList = uList;
     fitSegments(segmentIdx).y0List = y0List;
     fitSegments(segmentIdx).rSquare = rSquare;
+    
+    % Add vessel signal and background values
+    fitSegments(segmentIdx).vesselBackground = vesselBackground;
+    fitSegments(segmentIdx).vesselSignal = vesselBackground.*exp(-2*rList.*uList);
+    
+    % Add min and estimated surround values
+    fitSegments(segmentIdx).minList = minList;
+    fitSegments(segmentIdx).surroundList = surroundList;
+
 end

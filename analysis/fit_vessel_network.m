@@ -20,8 +20,10 @@ masks = segment_vessel_segments(fundusImg,fitSegments,interpSegments,radiusMargi
 options.overwrite = true;
 saveastiff(uint8(masks),[analysisPath filesep channelName 'masks.tif'],options);
 
-% Load additional optic disc mask and add to end of masks stack
+% Load additional optic disc mask, dilate a bit, and add to end of masks stack
 OD_mask = logical(loadtiff([analysisPath filesep 'discmask.tif']));
+se = strel('ball',5,0);
+OD_mask = imdilate(OD_mask,se);
 masks(:,:,end+1) = OD_mask;
 
 % Repeat fitting with segmentation now available

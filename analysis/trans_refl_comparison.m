@@ -13,7 +13,6 @@ trans = loadtiff(transFilePath);
 
 % Load the segments
 segments = load_vessel_network([captureFilePath filesep 'analysis' filesep 'network.txt']);
-numSegments = numel(segments);
 
 % Subtract sensor background for the images
 backgroundLevel = 1603; % check this a priori
@@ -29,6 +28,4 @@ reflCorrected = double(refl-backgroundLevel);
 %% Save results
 saveFileName = [analysisPath filesep 'trans_refl_fits.mat'];
 save(saveFileName,'interpSegments','transFit','reflFit');
-
-
 

@@ -67,8 +67,8 @@ for segmentIdx = 1:numSegments
         title(['u = ' num2str(u) ', r = ' num2str(r) ', y0 = ' num2str(y0)])
         
         % Save analysis image
-        options.overwrite = true;
-        saveastiff(single(imgsScaled),[analysisPath filesep 'segments' filesep interpSegments(segmentIdx).ID '.tif'],options);
+        %options.overwrite = true;
+        %saveastiff(single(imgsScaled),[analysisPath filesep 'segments' filesep interpSegments(segmentIdx).ID '.tif'],options);
     end
         
     

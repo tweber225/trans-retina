@@ -3,10 +3,11 @@
 %% List the capture paths for the two image sets
 capturePathName1 = 'U:\eng_research_biomicroscopy\Data\BME-BIOMC-24\20190413\subject001_capture005';
 capturePathName2 = 'U:\eng_research_biomicroscopy\Data\BME-BIOMC-24\20190413\subject001_capture006';
-mkdir([analysisPath1 filesep '2capturecompare'])
 
 %% Load images
 analysisPath1 = [capturePathName1 filesep 'analysis']; 
+mkdir([analysisPath1 filesep 'capturecompare'])
+
 transImagePath1 = [analysisPath1 filesep 'channel2averaged.tif'];
 transImage1 = double(loadtiff(transImagePath1));
 

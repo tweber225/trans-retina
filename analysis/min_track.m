@@ -6,8 +6,9 @@ addpath(genpath('subcode'));
 % Parameters
 startSearchRad = 5;
 searchRad = 2;
-maxTracePoints = 150;
-seedSpacing = 30;
+maxTracePoints = 100;
+numDirectionsToAverage = 10;
+seedSpacing = 25;
 
 % Manually define where the optic disc is located in the image
 [ODXCenter,ODYCenter,ODRad,ODXPoints,ODYPoints] = label_optic_disc(fundusImg);
@@ -20,6 +21,7 @@ seedSpacing = 30;
 
 
 %% Tracing
+tic
 % Show the image
 imshow(norm_contrast(fundusImg));hold on;
 
@@ -40,7 +42,8 @@ imgInterpHand = griddedInterpolant(fundusImg,'nearest');
 tracks = zeros(maxTracePoints,2,numel(xStartGr),'single');
 
 typicalAngleRange = linspace(-pi/3,pi/3,8);
-for repIdx = 1:numel(xStartGr)
+parfor repIdx = 1:numel(xStartGr)
+    %disp(repIdx)
     % Find starting point
     xStart = xStartGr(repIdx);
     yStart = yStartGr(repIdx);
@@ -76,12 +79,12 @@ for repIdx = 1:numel(xStartGr)
     minPointY = newMinPointY;
 
     % Make an "average" direction vector
-    directionVector = zeros(8,1);
+    directionVector = zeros(numDirectionsToAverage,1);
     directionVector(1) = direction;
 
-    traceX = zeros(maxTracePoints,1);
-    traceY = zeros(maxTracePoints,1);
-    for traceIdx = 1:maxTracePoints
+    trackX = zeros(maxTracePoints,1);
+    trackY = zeros(maxTracePoints,1);
+    for trackIdx = 1:maxTracePoints
         averageDirection = mean(directionVector(directionVector~=0));
 
         % Based on rolling average direction, compute new search directions
@@ -98,11 +101,11 @@ for repIdx = 1:numel(xStartGr)
         newMinPointY = searchPointsY(minIdx);
 
         % Check whether the new point is inside OD zone or outside image
-        if (newMinPointX-xOD)^2 + (newMinPointY-yOD)^2 < ODRad^2
+        if (newMinPointX-ODXCenter)^2 + (newMinPointY-ODYCenter)^2 < ODRad^2
             % Then we've reached the optic disc, plot and exit
-            line(traceX(traceX~=0),traceY(traceY~=0))
-            plot(traceX(1),traceY(1),'go')
-            tracks(:,:,repIdx) = [traceX,traceY];
+            %line(trackX(trackX~=0),trackY(trackY~=0))
+            %plot(trackX(1),trackY(1),'go')
+            tracks(:,:,repIdx) = [trackX,trackY];
             break
         end
         % Check whether we're still in valid image
@@ -117,17 +120,24 @@ for repIdx = 1:numel(xStartGr)
         directionVector = circshift(directionVector,1);
         directionVector(1) = atan2(newMinPointY-minPointY,newMinPointX-minPointX);
         minPointX = newMinPointX;
-        traceX(traceIdx) = minPointX;
+        trackX(trackIdx) = minPointX;
         minPointY = newMinPointY;
-        traceY(traceIdx) = minPointY;
+        trackY(trackIdx) = minPointY;
         
     end % individual segment tracing
-    if traceIdx == maxTracePoints
-        line(traceX(traceX~=0),traceY(traceY~=0))
-        plot(traceX(1),traceY(1),'go')
-        tracks(:,:,repIdx) = [traceX,traceY];
+    if trackIdx == maxTracePoints
+        %line(trackX(trackX~=0),trackY(trackY~=0))
+        %plot(trackX(1),trackY(1),'go')
+        tracks(:,:,repIdx) = [trackX,trackY];
     end
-    drawnow
+    %drawnow
 end % repeated segment tracing
-
-% Take the tracks and make binary images from them
+toc
+%% Take the tracks and make binary images from them
+binaryTracks = zeros(size(fundusImg),numel(xStartGr),'logical');
+for repIdx = numel(xStartGr)
+    interpX = interp1(tracks(:,1,repIdx),1:.25:maxTracePoints);
+    interpY = interp1(tracks(:,2,repIdx),1:.25:maxTracePoints);
+    
+    binaryTracks(round(interpX),round(interpY),repIdx) = 1;
+end

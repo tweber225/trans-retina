@@ -22,13 +22,13 @@ switch camName
         settings.cycleMode = 'Continuous';
         
         % Starting AOI height and width, always centered
-        settings.initialNumCols = 1034;
-        settings.initialNumRows = 1034;
+        settings.initialNumCols = 1024;
+        settings.initialNumRows = 1024;
         settings.numCols = settings.initialNumCols; % temporary number
         settings.numRows = settings.initialNumRows; % temporary number
         
         % Set framerate (frames per second)--this is not the frameset rate
-        settings.frameRate = 20;
+        settings.frameRate = 16;
         
         % Data types and depths
         settings.simplePreAmpGainControl = '12-bit (high well capacity)'; % check next line
@@ -47,7 +47,7 @@ switch camName
         % Data buffering and framesets to acquire
         settings.numBufferFrames = int32(84); % Frames to use for SDK buffer
         settings.maxAllocationSize = 1*2^10; % in MB
-        settings.framesetsToCapture = 80;
+        settings.framesetsToCapture = 64;
         
         % Flash status and frame start
         settings.flash = 0;
@@ -72,8 +72,8 @@ switch camName
         settings.avgBufferSize = uint16(8); % Max number in buffer
         
         % Autoscale quantiles
-        settings.autoScaleLowQuantile = .01;
-        settings.autoScaleHighQuantile = .99;
+        settings.autoScaleLowQuantile = .001;
+        settings.autoScaleHighQuantile = .999;
         
         % Continuously auto-scale the levels
         settings.continuousAutoScale = 0;
